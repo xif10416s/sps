@@ -183,3 +183,7 @@ https://discord.gg/bR6cZDsFSX)
 
 [Telegram chat](https://t.me/splinterlandsbot) 
 
+set http_proxy=http://127.0.0.1:1081
+set http_proxy=https://127.0.0.1:1081
+
+npm start >> logs/sugelafei2-log.txt

@@ -42,6 +42,7 @@ async function checkEcr(page) {
         const ecr = await getElementTextByXpath(page, "//div[@class='dec-options'][1]/div[@class='value'][2]/div", 100);
         if(ecr) {
             console.log(chalk.bold.whiteBright.bgMagenta('Your current Energy Capture Rate is ' + ecr.split('.')[0] + "%"));
+            ask.logger.log(chalk.bold.whiteBright.bgMagenta('Your current Energy Capture Rate is ' + ecr.split('.')[0] + "%"));
             return parseFloat(ecr)
         }
     } catch (e) {
@@ -87,6 +88,7 @@ async function launchBattle(page) {
     const maxRetries = 3;
     let retriesNum = 1;
     let btnCreateTeamTimeout = 50000;
+    //
     let findOpponentDialogStatus = await findSeekingEnemyModal(page);
     let isStartBattleSuccess = await findCreateTeamButton(page, findOpponentDialogStatus);
 
@@ -328,6 +330,7 @@ async function startBotPlayMatch(page, browser) {
     
         //if quest done claim reward. default to true. to deactivate daily quest rewards claim, set CLAIM_DAILY_QUEST_REWARD false in the env file
         console.log('claim daily quest setting:', process.env.CLAIM_DAILY_QUEST_REWARD, 'Quest details: ', quest);
+        ask.logger.log('claim daily quest setting:', process.env.CLAIM_DAILY_QUEST_REWARD, 'Quest details: ', quest);
         const isClaimDailyQuestMode = process.env.CLAIM_DAILY_QUEST_REWARD === 'false' ? false : true; 
         if (isClaimDailyQuestMode === true) {
             try {
@@ -342,28 +345,56 @@ async function startBotPlayMatch(page, browser) {
         // LAUNCH the battle    
         if (!await launchBattle(page)) throw new Error('The Battle cannot start');
 
-        // GET MANA, RULES, SPLINTERS, AND POSSIBLE TEAM
+        // #666#  开始配置 GET MANA, RULES, SPLINTERS, AND POSSIBLE TEAM
         await page.waitForTimeout(10000);
-        let [mana, rules, splinters] = await Promise.all([
+        let [mana, rules, splinters,enemyRecent] = await Promise.all([
             splinterlandsPage.checkMatchMana(page).then((mana) => mana).catch(() => 'no mana'),
             splinterlandsPage.checkMatchRules(page).then((rulesArray) => rulesArray).catch(() => 'no rules'),
-            splinterlandsPage.checkMatchActiveSplinters(page).then((splinters) => splinters).catch(() => 'no splinters')
+            splinterlandsPage.checkMatchActiveSplinters(page).then((splinters) => splinters).catch(() => 'no splinters'),
+            splinterlandsPage.checkMatchEnemy(page).then((enemyRecent) => enemyRecent).catch(() => 'no enemyRecent')
         ]);
 
         const matchDetails = {
+            orgMana: mana,
             mana: mana,
             rules: rules,
             splinters: splinters,
-            myCards: myCards
+            myCards: myCards,
+            enemyRecent: enemyRecent,
         }
         await page.waitForTimeout(2000);
-        const possibleTeams = await ask.possibleTeams(matchDetails, account).catch(e=>console.log('Error from possible team API call: ',e));
+        // 根据 基础信息 获取可能的队伍  rule 全部匹配
+        let possibleTeams = await ask.possibleTeams(matchDetails, account).catch(e=>console.log('Error from possible team API call: ',e));
+
+        // 多个规则场景，单个都选择
+        if(matchDetails.rules.indexOf('|') != -1){
+            ask.logger.log("多个规则场景，单个都选择:" + matchDetails.rules)
+            matchDetails['singleMatch'] = true;
+            matchDetails['mana'] = mana;
+            let singeMatchPossibleTeams = await ask.possibleTeams(matchDetails, account).catch(e=>console.log('Error from possible team API call: ',e));
+            possibleTeams.concat(singeMatchPossibleTeams)
+        }
 
         if (possibleTeams && possibleTeams.length) {
-            console.log('Possible Teams based on your cards: ', possibleTeams.length);
+            console.log('1 Possible Teams based on your cards: ', possibleTeams.length);
         } else {
-            console.log('Error:', matchDetails, possibleTeams)
-            throw new Error('NO TEAMS available to be played');
+            // // 关键 单个 rule 匹配
+            // matchDetails['singleMatch'] = true;
+            // possibleTeams = await ask.possibleTeams(matchDetails, account).catch(e=>console.log('Error from possible team API call: ',e));
+            // if (possibleTeams && possibleTeams.length) {
+            //     console.log('2  singleMatch Possible Teams based on your cards: ', possibleTeams.length);
+            // } else {
+            //     // standrule 匹配
+                matchDetails['rules'] = 'Standard';
+                matchDetails['mana'] = mana;
+                possibleTeams = await ask.possibleTeams(matchDetails, account).catch(e=>console.log('Error from possible team API call: ',e));
+                if (possibleTeams && possibleTeams.length) {
+                    console.log('3 Standard Possible Teams based on your cards: ', possibleTeams.length);
+                } else {
+                    console.log('Error:', matchDetails, possibleTeams)
+                    throw new Error('NO TEAMS available to be played');
+                }
+            // }
         }
         
         //TEAM SELECTION
@@ -419,7 +450,8 @@ async function startBotPlayMatch(page, browser) {
         await page.waitForTimeout(5000);
             try {
                 const winner = await getElementText(page, 'section.player.winner .bio__name__display', 15000);
-                if (winner.trim() == account) {
+                console.log("result win : ",winner.trim() ,':' , account.toLowerCase()  )
+                if (winner.trim() == account.toLowerCase()) {
                     const decWon = await getElementText(page, '.player.winner span.dec-reward span', 1000);
                     console.log(chalk.green('You won! Reward: ' + decWon + ' DEC'));
                     totalDec += !isNaN(parseFloat(decWon)) ? parseFloat(decWon) : 0 ;
@@ -438,7 +470,10 @@ async function startBotPlayMatch(page, browser) {
 
             console.log('Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal));
             console.log(chalk.green('Total Earned: ' + totalDec + ' DEC'));
-            
+
+            ask.logger.log(account,'Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal));
+            ask.logger.log(account,chalk.green('Total Earned: ' + totalDec + ' DEC'));
+
     } catch (e) {
             console.log('Error handling browser not opened, internet connection issues, or battle cannot start:', e)
     }
@@ -487,6 +522,7 @@ const blockedResources = [
     'twitter.com',
 ];
 
+// #1#   入口程序
 async function run() {
     let start = true
 
@@ -541,8 +577,10 @@ async function run() {
                     await closeBrowser(browser);
                 } else {
                     await page.waitForTimeout(5000);
-                    console.log(account, 'waiting for the next battle in', sleepingTime / 1000 / 60 , 'minutes at', new Date(Date.now() + sleepingTime).toLocaleString());
-                    await sleep(sleepingTime);
+                    const randomTime = Math.ceil(Math.random()*5)* 60000 + sleepingTime ;
+                    console.log(account, 'waiting for the next battle in', randomTime / 1000 / 60 , 'minutes at', new Date(Date.now() + randomTime).toLocaleString());
+                    ask.logger.log(account, 'waiting for the next battle in', randomTime / 1000 / 60 , 'minutes at', new Date(Date.now() + randomTime).toLocaleString());
+                    await sleep(randomTime);
                 }
             })
             .catch((e) => {

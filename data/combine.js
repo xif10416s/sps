@@ -1,7 +1,7 @@
 const fs = require('fs');
 
-const history1 = require("./history.json");
-const history2 = require("./newHistory.json");
+const history1 = require("./history20211219.json");
+const history2 = require("./newHistory_20211219.json");
 
 const newHistory = history1.concat(history2)
 
