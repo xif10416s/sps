@@ -120,7 +120,7 @@ function getEnemyTeamPerfer(input, mana) {
     recentTeamManaMap[itemMana] = newItem;
   }
 
-  console.log(JSON.stringify(recentTeamManaMap))
+
 
   let matchTeams = {};
   let delta = 3;
@@ -139,16 +139,18 @@ function getSuitBattleSummoner(enemyRecentInfo,perferSummoners){
   var most = enemyRecentInfo[0];
   var secondMost = enemyRecentInfo[1];
   let perferSummonersInfo = getEnemyBufferRecentInfo(perferSummoners.map(summoner => [summoner,"1"]),"Summoner")
-  Object.keys(defaultRules).forEach( type =>{
-    if(checkType(type,most,secondMost,perferSummonersInfo)){
+  return Object.keys(defaultRules).flatMap( type =>{
+    if(checkType(type,most[0],secondMost[0],perferSummonersInfo)){
       return defaultRules[type];
     }
-  })
+  }).filter(x=> x!= null)
 }
 
 function checkType(target,most, secondMost, perferSummonersInfo) {
-  if(most == target || secondMost == target || perferSummonersInfo[target] > 0){
-      return true;
+  console.log(target,most,secondMost,perferSummonersInfo)
+  if(most == target  ||
+      (perferSummonersInfo && perferSummonersInfo.length > 0 && (perferSummonersInfo[0][0] == target && perferSummonersInfo[0][1] > 0))){
+    return true;
   } else {
     return false;
   }
@@ -164,7 +166,8 @@ exports.getSuitBattleSummoner = getSuitBattleSummoner;
 let test = [["Kelya Frendul","1"],["Serpent of Eld","1"],["Elven Defender","1"],["Flying Squid","1"],["Mantoid","1"],["Deeplurker","1"],["Goblin Chariot","1"],["Kelya Frendul","1"],["Serpent of Eld","1"],["Merdaali Guardian","1"],["Deeplurker","1"],["Ice Pixie","1"],["Albatross","1"],["",""],["Thaddius Brood","1"],["Cursed Windeku","1"],["Carrion Shade","1"],["Death Elemental","1"],["",""],["",""],["",""],["Obsidian","1"],["Unicorn Mustang","1"],["Mycelic Slipspawn","1"],["Goblin Psychic","1"],["Khmer Princess","1"],["",""],["",""],["Kelya Frendul","1"],["Hardy Stonefish","1"],["Albatross","1"],["Ice Pixie","1"],["Deeplurker","1"],["",""],["",""]]
 
 
-console.log(JSON.stringify(getEnemyBufferRecentInfo(test,"Summoner")))
+// console.log(JSON.stringify(getEnemyBufferRecentInfo(test,"Summoner")))
 // var enemyTeamPerfer = getEnemyTeamPerfer(test,"16");
 // console.log(JSON.stringify(Object.keys(enemyTeamPerfer)))
 
+// console.log(JSON.stringify(getSuitBattleSummoner(getEnemyBufferRecentInfo(test,"Summoner"),['Obsidian'])))

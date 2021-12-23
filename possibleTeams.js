@@ -6,6 +6,7 @@ const fetch = require("node-fetch");
 
 const cardsDetail = require('./data/cardsDetails');
 
+
 const summoners = [{260: 'fire'},
   {257: 'water'},
   {437: 'water'},
@@ -77,8 +78,12 @@ const summonerColor = (id) => {
   return summonerDetails ? summonerDetails[id] : '';
 }
 
-const historyBackup = require("./data/newHistory.json")
+// const historyBackup = require("./data/history/newHistory.json")
 // .filter( x => x['created_date'].split("T")[0]  > '2021-12-01');
+
+const dbUtils = require('./db/script/dbUtils');
+let historyBackup = [];
+
 const basicCards = require('./data/basicCards.js');
 
 
@@ -111,44 +116,66 @@ const getBattlesWithRuleset = (ruleset, mana, summoners) => {
 }
 
 // ### 融合点
+// const battlesFilterByManacap_bak = async (mana, ruleset, summoners,
+//     singleMatch) => {
+//   // const history = await getBattlesWithRuleset(ruleset, mana, summoners);
+//   const history = null;
+//   if (history) {
+//     console.log('API battles returned ', history.length)
+//     return history.filter(
+//         battle =>
+//             battle.mana_cap == mana &&
+//             (ruleset ? battle.ruleset === ruleset : true)
+//     )
+//   }
+//   const backupLength = historyBackup && historyBackup.length
+//   console.log('API battles did not return ', history)
+//   console.log('Using Backup ', backupLength)
+//
+//   if (ruleset && singleMatch != null && singleMatch == true) {
+//     let keySingleRules = process.env.KEY_SINGLE_RULES;
+//     return historyBackup.filter(
+//         battle => {
+//           let keyRules = ruleset.split('|')
+//           // .filter(rule => keySingleRules.indexOf(rule) != -1)
+//           let match = false;
+//           keyRules.forEach(keyRule => {
+//              if(battle.ruleset.indexOf(keyRule)  != -1 ){
+//                match = true;
+//              }
+//           } )
+//           battle.mana_cap == mana && match
+//         }
+//     )
+//   } else {
+//     return historyBackup.filter(
+//         battle =>
+//             battle.mana_cap == mana &&
+//             (ruleset ? battle.ruleset === ruleset : true)
+//     )
+//   }
+// }
+
+// ### 融合点
 const battlesFilterByManacap = async (mana, ruleset, summoners,
     singleMatch) => {
-  // const history = await getBattlesWithRuleset(ruleset, mana, summoners);
-  const history = null;
-  if (history) {
-    console.log('API battles returned ', history.length)
-    return history.filter(
-        battle =>
-            battle.mana_cap == mana &&
-            (ruleset ? battle.ruleset === ruleset : true)
-    )
-  }
-  const backupLength = historyBackup && historyBackup.length
-  console.log('API battles did not return ', history)
-  console.log('Using Backup ', backupLength)
 
+  let sql = 'select * from battle_history where  mana_cap = '+ mana +'  and ruleset = "' +  ruleset.trim() + '"';
   if (ruleset && singleMatch != null && singleMatch == true) {
-    let keySingleRules = process.env.KEY_SINGLE_RULES;
-    return historyBackup.filter(
-        battle => {
-          let keyRules = ruleset.split('|').filter(rule => keySingleRules.indexOf(rule) != -1)
-          let match = false;
-          keyRules.forEach(keyRule => {
-             if(battle.ruleset.indexOf(keyRule)  != -1 ){
-               match = true;
-             }
-          } )
-          battle.mana_cap == mana && match
-        }
-    )
-  } else {
-    return historyBackup.filter(
-        battle =>
-            battle.mana_cap == mana &&
-            (ruleset ? battle.ruleset === ruleset : true)
-    )
+    let keyRules = ruleset.split('|')
+    if(keyRules.length >=2) {
+      console.log("dbUtils.sqlQuery singleMatch  match ")
+       sql = 'select * from battle_history where  mana_cap = '+ mana +'  and  (ruleset like "%'+keyRules[0]+'%" or ruleset like "%'+keyRules[1]+'%")'
+    }
   }
+  console.log(sql)
+  const data = await dbUtils.sqlQuery(sql);
+  let string=JSON.stringify(data);
+  const rs =  JSON.parse(string);
+  // console.log("dbUtils.sqlQuery match data : "+ string)
+  return rs;
 }
+
 
 function compare(a, b) {
   const totA = a[9];
@@ -170,15 +197,15 @@ const cardsIdsforSelectedBattles = (mana, ruleset, splinters, summoners,
 .then(x => {
   return x.map(
       (x) => {
-        console.log("cardsIdsforSelectedBattles:" + JSON.stringify(x))
+        // console.log("cardsIdsforSelectedBattles:" + JSON.stringify(x))
         return [
-          x.summoner_id ? parseInt(x.summoner_id) : '',
-          x.monster_1_id ? parseInt(x.monster_1_id) : '',
-          x.monster_2_id ? parseInt(x.monster_2_id) : '',
-          x.monster_3_id ? parseInt(x.monster_3_id) : '',
-          x.monster_4_id ? parseInt(x.monster_4_id) : '',
-          x.monster_5_id ? parseInt(x.monster_5_id) : '',
-          x.monster_6_id ? parseInt(x.monster_6_id) : '',
+          x.summoner_id && parseInt(x.summoner_id) != -1 ? parseInt(x.summoner_id)  : '',
+          x.monster_1_id && parseInt(x.monster_1_id) != -1 ? parseInt(x.monster_1_id) : '',
+          x.monster_2_id && parseInt(x.monster_2_id) != -1 ? parseInt(x.monster_2_id) : '',
+          x.monster_3_id && parseInt(x.monster_3_id) != -1 ? parseInt(x.monster_3_id) : '',
+          x.monster_4_id && parseInt(x.monster_4_id) != -1 ? parseInt(x.monster_4_id) : '',
+          x.monster_5_id && parseInt(x.monster_5_id) != -1 ? parseInt(x.monster_5_id) : '',
+          x.monster_6_id && parseInt(x.monster_6_id) != -1 ? parseInt(x.monster_6_id) : '',
           summonerColor(x.summoner_id) ? summonerColor(x.summoner_id) : '',
           x.tot ? parseInt(x.tot) : '',
           x.ratio ? parseInt(x.ratio) : '',
@@ -217,8 +244,9 @@ const askFormation = function (matchDetails) {
 const possibleTeams = async (matchDetails, acc) => {
   let possibleTeams = [];
   while (matchDetails.mana > 10) {
-    if (matchDetails.mana === 98 ||matchDetails.mana === 99 ) {
-      matchDetails.mana = 45;
+    // 99 有 ，13-46
+    if (matchDetails.mana <= 98 && matchDetails.mana >=50) {
+      matchDetails.mana = 50;
     }
     console.log('check battles based on mana: ' + matchDetails.mana);
     account = acc;

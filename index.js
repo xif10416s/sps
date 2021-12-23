@@ -366,35 +366,30 @@ async function startBotPlayMatch(page, browser) {
         // 根据 基础信息 获取可能的队伍  rule 全部匹配
         let possibleTeams = await ask.possibleTeams(matchDetails, account).catch(e=>console.log('Error from possible team API call: ',e));
 
-        // 多个规则场景，单个都选择
-        if(matchDetails.rules.indexOf('|') != -1){
-            ask.logger.log("多个规则场景，单个都选择:" + matchDetails.rules)
-            matchDetails['singleMatch'] = true;
-            matchDetails['mana'] = mana;
-            let singeMatchPossibleTeams = await ask.possibleTeams(matchDetails, account).catch(e=>console.log('Error from possible team API call: ',e));
-            possibleTeams.concat(singeMatchPossibleTeams)
+        if (possibleTeams && possibleTeams.length) {
+            console.log('1 Possible Teams based on your cards: ', possibleTeams.length);
+        } else if(matchDetails.rules.indexOf('|') != -1) {
+            // 多个规则场景，单个都选择
+                console.log('全规则没有匹配，开始单个匹配: ', possibleTeams.length);
+                ask.logger.log("多个规则场景，单个都选择:" + matchDetails.rules)
+                matchDetails['singleMatch'] = true;
+                matchDetails['mana'] = mana;
+                possibleTeams = await ask.possibleTeams(matchDetails, account).catch(e=>console.log('Error from possible team API call: ',e));
         }
 
         if (possibleTeams && possibleTeams.length) {
-            console.log('1 Possible Teams based on your cards: ', possibleTeams.length);
+
         } else {
-            // // 关键 单个 rule 匹配
-            // matchDetails['singleMatch'] = true;
-            // possibleTeams = await ask.possibleTeams(matchDetails, account).catch(e=>console.log('Error from possible team API call: ',e));
-            // if (possibleTeams && possibleTeams.length) {
-            //     console.log('2  singleMatch Possible Teams based on your cards: ', possibleTeams.length);
-            // } else {
-            //     // standrule 匹配
-                matchDetails['rules'] = 'Standard';
-                matchDetails['mana'] = mana;
-                possibleTeams = await ask.possibleTeams(matchDetails, account).catch(e=>console.log('Error from possible team API call: ',e));
-                if (possibleTeams && possibleTeams.length) {
-                    console.log('3 Standard Possible Teams based on your cards: ', possibleTeams.length);
-                } else {
-                    console.log('Error:', matchDetails, possibleTeams)
-                    throw new Error('NO TEAMS available to be played');
-                }
-            // }
+            console.log('2 未匹配规则 Teams based on your cards: ', possibleTeams.length);
+            matchDetails['rules'] = 'Standard';
+            matchDetails['mana'] = mana;
+            possibleTeams = await ask.possibleTeams(matchDetails, account).catch(e=>console.log('Error from possible team API call: ',e));
+            if (possibleTeams && possibleTeams.length) {
+                console.log('3 Standard Possible Teams based on your cards: ', possibleTeams.length);
+            } else {
+                console.log('Error:', matchDetails, possibleTeams)
+                throw new Error('NO TEAMS available to be played');
+            }
         }
         
         //TEAM SELECTION
@@ -568,6 +563,11 @@ async function run() {
             console.log(chalk.bold.whiteBright.bgBlack('If you need support for the bot, join the telegram group https://t.me/splinterlandsbot and discord https://discord.gg/bR6cZDsFSX'));
             console.log(chalk.bold.greenBright.bgBlack('If you interested in a higher winning rate with the private API, contact the owner via discord or telegram'));     
         }
+        if(process.env.LIMIT_MATCH_COUNT && parseInt(process.env.LIMIT_MATCH_COUNT) != -1 &&  (winTotal + loseTotal + undefinedTotal) >=  parseInt(process.env.LIMIT_MATCH_COUNT) ){
+            start = false;
+            console.log("max match count  exit : " ,  process.env.LIMIT_MATCH_COUNT);
+            ask.logger.log("max match count  exit : " ,  process.env.LIMIT_MATCH_COUNT);
+        }
         await startBotPlayMatch(page, browser)
             .then(async () => {
                 console.log('Closing battle', new Date().toLocaleString());
@@ -577,7 +577,7 @@ async function run() {
                     await closeBrowser(browser);
                 } else {
                     await page.waitForTimeout(5000);
-                    const randomTime = Math.ceil(Math.random()*5)* 60000 + sleepingTime ;
+                    const randomTime = Math.ceil(Math.random()*2)* 60000 + sleepingTime ;
                     console.log(account, 'waiting for the next battle in', randomTime / 1000 / 60 , 'minutes at', new Date(Date.now() + randomTime).toLocaleString());
                     ask.logger.log(account, 'waiting for the next battle in', randomTime / 1000 / 60 , 'minutes at', new Date(Date.now() + randomTime).toLocaleString());
                     await sleep(randomTime);

@@ -1,4 +1,4 @@
-
+const ask = require('./possibleTeams');
 const mostWinningSummonerTank = (possibleTeamsList , preferSummoners = []) => {
     mostWinningDeck = { fire: 0, death: 0, earth: 0, water: 0, life: 0 }
     const mostWinningSummoner = {};
@@ -7,21 +7,24 @@ const mostWinningSummonerTank = (possibleTeamsList , preferSummoners = []) => {
     const mostWinningSecondBackline = {};
     const mostWinningThirdBackline = {};
     const mostWinningForthBackline = {};
-    console.log("mostWinningSummonerTank  possibleTeamsList:" + JSON.stringify(possibleTeamsList))
+    console.log("mostWinningSummonerTank  possibleTeamsList:" + possibleTeamsList.length)
+    ask.logger.log("mostWinningSummonerTank  possibleTeamsList:" + possibleTeamsList.length)
     possibleTeamsList.forEach(x => {
         const summoner = x[0];
         mostWinningSummoner[summoner] = mostWinningSummoner[summoner] ? mostWinningSummoner[summoner] + 1 : 1;
         // addition
-        var preferlevel = preferSummoners.indexOf(summoner);
-        if( preferlevel != -1){
-            preferlevel = preferlevel > 5 ? 1 : (5 - preferlevel);
-            console.log("preferSummoners matched : " +  summoner)
-            mostWinningSummoner[summoner] = mostWinningSummoner[summoner] + preferlevel;
+        if(preferSummoners && preferSummoners.length > 0) {
+            var preferlevel = preferSummoners.indexOf(summoner);
+            if( preferlevel != -1){
+                // console.log("preferSummoners matched : " +  summoner)
+                mostWinningSummoner[summoner] = mostWinningSummoner[summoner] + 1;
+            }
         }
 
     })
     const bestSummoner = Object.keys(mostWinningSummoner).length && Object.keys(mostWinningSummoner).reduce((a, b) => mostWinningSummoner[a] > mostWinningSummoner[b] ? a : b);
     console.log('BESTSUMMONER: ', bestSummoner)
+    ask.logger.log('BESTSUMMONER: ', bestSummoner)
     if (bestSummoner) {
         possibleTeamsList.filter(team => team[0] == bestSummoner).forEach(team => {
             const tank = team[1];

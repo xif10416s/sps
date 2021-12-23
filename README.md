@@ -187,3 +187,7 @@ set http_proxy=http://127.0.0.1:1081
 set http_proxy=https://127.0.0.1:1081
 
 npm start >> logs/sugelafei2-log.txt
+
+
+sudo service cron restart
+node battlesGetDataRawV1.js
