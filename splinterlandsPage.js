@@ -1,3 +1,4 @@
+const battlesGet = require('./battlesGet');
 async function login(page, account, password) {
     try {
         page.waitForSelector('#log_in_button > button').then(() => page.click('#log_in_button > button'))
@@ -63,23 +64,36 @@ async function checkMatchActiveSplinters(page) {
     return splinterUrls.map(splinter => splinterIsActive(splinter)).filter(x => x);
 }
 
+
 // 对手信息
 async function checkMatchEnemy(page) {
     console.log("checkMatchEnemy .........")
     try {
-        const recent_team = await page.$$eval("div.recent-team > div.recent-team-tooltip >  ul.team__monsters > li.team__monster",
-            el =>el.map(x => x.getAttribute("data-original-title")));
+        // const recent_team = await page.$$eval("div.recent-team > div.recent-team-tooltip >  ul.team__monsters > li.team__monster",
+        //     el =>el.map(x => x.getAttribute("data-original-title")));
+        //
+        // let rs = recent_team.map(sm => {
+        //     if(sm){
+        //         let sp = sm.split('★')
+        //         return [sp[0].trim(),sp[1].trim()]
+        //     } else {
+        //         return ['','']
+        //     }
+        // })
+        //-------------
+        const pName = await page.$$eval("div.bio__details > div.bio__name >  span.bio__name__display ",
+            el =>el.map(x => x.innerText));
+        console.log("Enemy name :" ,pName)
+        const enemyBattles = await battlesGet.getBattleDetail(pName[0]);
 
-        let rs = recent_team.map(sm => {
-            if(sm){
-                let sp = sm.split('★')
-                return [sp[0].trim(),sp[1].trim()]
-            } else {
-                return ['','']
-            }
-        })
-        console.log(JSON.stringify(rs));
-        return rs;
+        if(enemyBattles && enemyBattles.length >0){
+            // const len = enemyBattles.length > 30 ? 30 :  enemyBattles.length;
+            // let topBattles = enemyBattles.slice(0,len)
+            // console.log("enemyBattles ---:",enemyBattles.length , JSON.stringify(enemyBattles))
+            return enemyBattles;
+        } else {
+            return [];
+        }
     } catch (e) {
         console.log(e)
     }

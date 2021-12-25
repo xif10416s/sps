@@ -184,10 +184,23 @@ https://discord.gg/bR6cZDsFSX)
 [Telegram chat](https://t.me/splinterlandsbot) 
 
 set http_proxy=http://127.0.0.1:1081
-set http_proxy=https://127.0.0.1:1081
+set https_proxy=http://127.0.0.1:1081
 
-npm start >> logs/sugelafei2-log.txt
+set http_proxy=http://192.168.1.110:1081
+set https_proxy=http://192.168.1.110:1081
 
+
+
+npm start >> logs/sugelafei11-log.txt
+
+playname:
+//*[@id="dialog_container"]/div/div/div/div[2]/div[1]/div/section/div[2]/div[1]/span[2]
+
+图片：租赁
+//*[@id="mw-content-text"]/div[*]/ul[*]/li[*]/div/img/@src
+
+自己拥有：
+//*/img/@card_detail_id
 
 sudo service cron restart
 node battlesGetDataRawV1.js

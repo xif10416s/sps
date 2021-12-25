@@ -156,16 +156,16 @@ function checkType(target,most, secondMost, perferSummonersInfo) {
   }
 }
 
-exports.cardsDetailsNameMap = cardsDetailsNameMap;
-exports.cardsDetailsIDMap = cardsDetailsIDMap;
-exports.getEnemyBufferRecentInfo = getEnemyBufferRecentInfo;
-exports.getEnemyTeamPerfer = getEnemyTeamPerfer;
-exports.getSuitBattleSummoner = getSuitBattleSummoner;
+module.exports.cardsDetailsNameMap = cardsDetailsNameMap;
+module.exports.cardsDetailsIDMap = cardsDetailsIDMap;
+module.exports.getEnemyBufferRecentInfo = getEnemyBufferRecentInfo;
+module.exports.getEnemyTeamPerfer = getEnemyTeamPerfer;
+module.exports.getSuitBattleSummoner = getSuitBattleSummoner;
 
 
 let test = [["Kelya Frendul","1"],["Serpent of Eld","1"],["Elven Defender","1"],["Flying Squid","1"],["Mantoid","1"],["Deeplurker","1"],["Goblin Chariot","1"],["Kelya Frendul","1"],["Serpent of Eld","1"],["Merdaali Guardian","1"],["Deeplurker","1"],["Ice Pixie","1"],["Albatross","1"],["",""],["Thaddius Brood","1"],["Cursed Windeku","1"],["Carrion Shade","1"],["Death Elemental","1"],["",""],["",""],["",""],["Obsidian","1"],["Unicorn Mustang","1"],["Mycelic Slipspawn","1"],["Goblin Psychic","1"],["Khmer Princess","1"],["",""],["",""],["Kelya Frendul","1"],["Hardy Stonefish","1"],["Albatross","1"],["Ice Pixie","1"],["Deeplurker","1"],["",""],["",""]]
 
-
+// Object.keys(cardsDetailsNameMap).forEach(x => console.log(x))
 // console.log(JSON.stringify(getEnemyBufferRecentInfo(test,"Summoner")))
 // var enemyTeamPerfer = getEnemyTeamPerfer(test,"16");
 // console.log(JSON.stringify(Object.keys(enemyTeamPerfer)))

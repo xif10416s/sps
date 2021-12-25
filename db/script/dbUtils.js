@@ -140,7 +140,6 @@ function washdata(bt, fields) {
   });
 }
 
-
 function joinAbality(bt, field) {
   return bt[field].length >= 1 ? bt[field].join('|') : '';
 }
@@ -235,6 +234,7 @@ async function batchInsertRaw(history, fromScore, batchSize, fromDay) {
 module.exports.sqlQuery = sqlQuery;
 module.exports.batchInsert = batchInsert;
 module.exports.batchInsertRaw = batchInsertRaw;
+module.exports.washdata = washdata;
 module.exports.pool = pool;
 
 // test...............
@@ -252,3 +252,16 @@ module.exports.pool = pool;
 //   await batchInsertRaw(history,0,500,null)
 //   console.log("-----------")
 // })()
+
+// (async ()=>{
+//   let sql = 'select * from battle_history_raw where  mana_cap = ?  and summoner_id in (?)  and ( ruleset like ?  or ruleset like ?)';
+//   let summoners = [178,437,156,145,438,224];
+//   let mana = 12;
+//   let keyRules = 'Unprotected|Holy Protection'.split('|');
+//   let data = await sqlQuery(sql,[mana,summoners,"%"+keyRules[0]+"%","%"+keyRules[1]+"%"]);
+//   let string = JSON.stringify(data);
+//   let rs = JSON.parse(string)
+//   console.log(rs.length)
+//
+// })()
+

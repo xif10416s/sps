@@ -2,7 +2,7 @@
 const puppeteer = require('puppeteer');
 
 const splinterlandsPage = require('./splinterlandsPage');
-const user = require('./user');
+const user = require('./userV2');
 const card = require('./cards');
 const { clickOnElement, getElementText, getElementTextByXpath, teamActualSplinterToPlay, sleep, reload } = require('./helper');
 const quests = require('./quests');
@@ -22,7 +22,7 @@ const ecrRecoveryRatePerHour = 1.04;
 async function getCards() {
     const myCards = await user.getPlayerCards(account)
     return myCards;
-} 
+}
 
 async function getQuest() {
     return quests.getPlayerQuest(account)
@@ -57,7 +57,7 @@ async function findSeekingEnemyModal(page, visibleTimeout=10000) {
         1: modal #find_opponent_dialog has appeared and not closed
         2: modal #find_opponent_dialog has appeared and closed
     */
-    
+
     console.log('check #find_opponent_dialog modal visibility');
     findOpponentDialogStatus = await page.waitForSelector('#find_opponent_dialog', { timeout: visibleTimeout, visible: true })
         .then(()=> { console.log('find_opponent_dialog visible'); return 1; })
@@ -100,7 +100,7 @@ async function launchBattle(page) {
                 .then(button => { button.click(); console.log('Battle button clicked'); return true })
                 .catch(()=> { console.error('[ERROR] waiting for Battle button. is Splinterlands in maintenance?'); return false; });
             if (!isStartBattleSuccess) { await reload(page); await sleep(5000); retriesNum++; continue }
-        
+
             findOpponentDialogStatus = await findSeekingEnemyModal(page);
         }
 
@@ -205,25 +205,25 @@ async function clickCards(page, teamToPlay, matchDetails) {
             retriesNum++;
             continue
         }
-    
+
         if (card.color(teamToPlay.cards[0]) === 'Gold' && !await clickFilterElement(page, teamToPlay, matchDetails)) {
             retriesNum++;
             continue
         }
         await page.waitForTimeout(5000);
-    
+
         if (!await clickMembersCard(page, teamToPlay)) {
             retriesNum++;
             continue
         }
-        allCardsClicked = true;   
+        allCardsClicked = true;
     }
 
     return allCardsClicked
 }
 
 async function startBotPlayMatch(page, browser) {
-    
+
     console.log( new Date().toLocaleString(), 'opening browser...')
     try {
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3163.100 Safari/537.36');
@@ -257,32 +257,32 @@ async function startBotPlayMatch(page, browser) {
 
         const ecr = await checkEcr(page);
         if (ecr === undefined) throw new Error('Fail to get ECR.')
-    
+
         if (process.env.ECR_STOP_LIMIT && process.env.ECR_RECOVER_TO && ecr < parseFloat(process.env.ECR_STOP_LIMIT)) {
             if (ecr < parseFloat(process.env.ECR_STOP_LIMIT)) {
                 console.log(chalk.bold.red(`ECR lower than limit ${process.env.ECR_STOP_LIMIT}%. reduce the limit in the env file config or wait until ECR will be at ${process.env.ECR_RECOVER_TO || '100'}%`));
             } else if (ecr < parseFloat(process.env.ECR_RECOVER_TO)) {
                 console.log(chalk.bold.red(`ECR Not yet Recovered to ${process.env.ECR_RECOVER_TO}`));
             }
-            
+
             // calculating time needed for recovery
             ecrNeededToRecover = parseFloat(process.env.ECR_RECOVER_TO) - parseFloat(ecr);
             recoveryTimeInHours = Math.ceil(ecrNeededToRecover / ecrRecoveryRatePerHour);
-            
+
             console.log(chalk.bold.white(`Time needed to recover ECR, approximately ${recoveryTimeInHours * 60} minutes.`));
             await closeBrowser(browser);
             console.log(chalk.bold.white(`Initiating sleep mode. The bot will awaken at ${new Date(Date.now() + recoveryTimeInHours * 3600 * 1000).toLocaleString()}`));
             await sleep(recoveryTimeInHours * 3600 * 1000);
-    
+
             throw new Error(`Restart needed.`);
         }
-        
+
         console.log('getting user quest info from splinterlands API...')
         const quest = await getQuest();
         if(!quest) {
             console.log('Error for quest details. Splinterlands API didnt work or you used incorrect username, remove @ and dont use email')
         }
-    
+
         if(process.env.SKIP_QUEST && quest?.splinter && process.env.SKIP_QUEST.split(',').includes(quest?.splinter) && quest?.total !== quest?.completed) {
             try {
                 await page.click('#quest_new_btn')
@@ -290,23 +290,23 @@ async function startBotPlayMatch(page, browser) {
                         await page.reload();
                         console.log('New quest requested')})
                     .catch(e=>console.log('Cannot click on new quest'))
-    
+
             } catch(e) {
                 console.log('Error while skipping new quest')
             }
         }
-    
+
         console.log('getting user cards collection from splinterlands API...')
         const myCards = await getCards()
             .then((x)=>{console.log('cards retrieved'); return x})
-            .catch(()=>console.log('cards collection api didnt respond. Did you use username? avoid email!')); 
-    
+            .catch(()=>console.log('cards collection api didnt respond. Did you use username? avoid email!'));
+
         if(myCards) {
             console.log(account, ' deck size: '+myCards.length)
         } else {
             console.log(account, ' playing only basic cards')
         }
-    
+
         //check if season reward is available
         if (process.env.CLAIM_SEASON_REWARD === 'true') {
             try {
@@ -317,7 +317,7 @@ async function startBotPlayMatch(page, browser) {
                     console.log(`claiming the season reward. you can check them here https://peakmonsters.com/@${account}/explorer`);
                     await page.waitForTimeout(20000);
                     await page.reload();
-    
+
                 })
                 .catch(()=>console.log(`no season reward to be claimed, but you can still check your data here https://peakmonsters.com/@${account}/explorer`));
                 await page.waitForTimeout(3000);
@@ -327,11 +327,11 @@ async function startBotPlayMatch(page, browser) {
                 console.info('no season reward to be claimed')
             }
         }
-    
+
         //if quest done claim reward. default to true. to deactivate daily quest rewards claim, set CLAIM_DAILY_QUEST_REWARD false in the env file
         console.log('claim daily quest setting:', process.env.CLAIM_DAILY_QUEST_REWARD, 'Quest details: ', quest);
         ask.logger.log('claim daily quest setting:', process.env.CLAIM_DAILY_QUEST_REWARD, 'Quest details: ', quest);
-        const isClaimDailyQuestMode = process.env.CLAIM_DAILY_QUEST_REWARD === 'false' ? false : true; 
+        const isClaimDailyQuestMode = process.env.CLAIM_DAILY_QUEST_REWARD === 'false' ? false : true;
         if (isClaimDailyQuestMode === true) {
             try {
                 await page.waitForSelector('#quest_claim_btn', { timeout: 5000 })
@@ -342,7 +342,7 @@ async function startBotPlayMatch(page, browser) {
         }
         await page.waitForTimeout(5000);
 
-        // LAUNCH the battle    
+        // LAUNCH the battle
         if (!await launchBattle(page)) throw new Error('The Battle cannot start');
 
         // #666#  开始配置 GET MANA, RULES, SPLINTERS, AND POSSIBLE TEAM
@@ -368,30 +368,10 @@ async function startBotPlayMatch(page, browser) {
 
         if (possibleTeams && possibleTeams.length) {
             console.log('1 Possible Teams based on your cards: ', possibleTeams.length);
-        } else if(matchDetails.rules.indexOf('|') != -1) {
-            // 多个规则场景，单个都选择
-                console.log('全规则没有匹配，开始单个匹配: ', possibleTeams.length);
-                ask.logger.log("多个规则场景，单个都选择:" + matchDetails.rules)
-                matchDetails['singleMatch'] = true;
-                matchDetails['mana'] = mana;
-                possibleTeams = await ask.possibleTeams(matchDetails, account).catch(e=>console.log('Error from possible team API call: ',e));
-        }
-
-        if (possibleTeams && possibleTeams.length) {
-
         } else {
-            console.log('2 未匹配规则 Teams based on your cards: ', possibleTeams.length);
-            matchDetails['rules'] = 'Standard';
-            matchDetails['mana'] = mana;
-            possibleTeams = await ask.possibleTeams(matchDetails, account).catch(e=>console.log('Error from possible team API call: ',e));
-            if (possibleTeams && possibleTeams.length) {
-                console.log('3 Standard Possible Teams based on your cards: ', possibleTeams.length);
-            } else {
-                console.log('Error:', matchDetails, possibleTeams)
-                throw new Error('NO TEAMS available to be played');
-            }
+            throw new Error('NO TEAMS available to be played');
         }
-        
+
         //TEAM SELECTION
         const teamToPlay = await ask.teamSelection(possibleTeams, matchDetails, quest, page.favouriteDeck);
         let startFightFail = false;
@@ -415,10 +395,10 @@ async function startBotPlayMatch(page, browser) {
         }
 
         await page.waitForTimeout(5000);
-    
+
         // Click cards based on teamToPlay value.
         if (!await clickCards(page, teamToPlay, matchDetails)) return
-        
+
         // start fight
         await page.waitForTimeout(5000);
         await page.waitForSelector('.btn-green', { timeout: 1000 }).then(()=>console.log('btn-green visible')).catch(()=>console.log('btn-green not visible'));
@@ -477,7 +457,7 @@ async function startBotPlayMatch(page, browser) {
 // 30 MINUTES INTERVAL BETWEEN EACH MATCH (if not specified in the .env file)
 const sleepingTimeInMinutes = process.env.MINUTES_BATTLES_INTERVAL || 30;
 const sleepingTime = sleepingTimeInMinutes * 60000;
-const isHeadlessMode = process.env.HEADLESS === 'false' ? false : true; 
+const isHeadlessMode = process.env.HEADLESS === 'false' ? false : true;
 const executablePath = process.env.CHROME_EXEC || null;
 let puppeteer_options = {
     headless: isHeadlessMode, // default is true
@@ -485,13 +465,13 @@ let puppeteer_options = {
     '--disable-setuid-sandbox',
     //'--disable-dev-shm-usage',
     //'--disable-accelerated-2d-canvas',
-    // '--disable-canvas-aa', 
-    // '--disable-2d-canvas-clip-aa', 
-    //'--disable-gl-drawing-for-tests', 
+    // '--disable-canvas-aa',
+    // '--disable-2d-canvas-clip-aa',
+    //'--disable-gl-drawing-for-tests',
     // '--no-first-run',
-    // '--no-zygote', 
-    '--disable-dev-shm-usage', 
-    // '--use-gl=swiftshader', 
+    // '--no-zygote',
+    '--disable-dev-shm-usage',
+    // '--use-gl=swiftshader',
     // '--single-process', // <- this one doesn't works in Windows
     // '--disable-gpu',
     // '--enable-webgl',
@@ -523,7 +503,7 @@ async function run() {
 
     console.log('START ', account, new Date().toLocaleString())
     const browser = await puppeteer.launch(puppeteer_options);
-    
+
     //const page = await browser.newPage();
     let [page] = await browser.pages();
 
@@ -561,23 +541,18 @@ async function run() {
         if(!process.env.API) {
             console.log(chalk.bold.redBright.bgBlack('Dont pay scammers!'));
             console.log(chalk.bold.whiteBright.bgBlack('If you need support for the bot, join the telegram group https://t.me/splinterlandsbot and discord https://discord.gg/bR6cZDsFSX'));
-            console.log(chalk.bold.greenBright.bgBlack('If you interested in a higher winning rate with the private API, contact the owner via discord or telegram'));     
-        }
-        if(process.env.LIMIT_MATCH_COUNT && parseInt(process.env.LIMIT_MATCH_COUNT) != -1 &&  (winTotal + loseTotal + undefinedTotal) >=  parseInt(process.env.LIMIT_MATCH_COUNT) ){
-            start = false;
-            console.log("max match count  exit : " ,  process.env.LIMIT_MATCH_COUNT);
-            ask.logger.log("max match count  exit : " ,  process.env.LIMIT_MATCH_COUNT);
+            console.log(chalk.bold.greenBright.bgBlack('If you interested in a higher winning rate with the private API, contact the owner via discord or telegram'));
         }
         await startBotPlayMatch(page, browser)
             .then(async () => {
                 console.log('Closing battle', new Date().toLocaleString());
-                
+
                 if (isMultiAccountMode) {
                     start = false;
                     await closeBrowser(browser);
                 } else {
                     await page.waitForTimeout(5000);
-                    const randomTime = Math.ceil(Math.random()*2)* 60000 + sleepingTime ;
+                    const randomTime = Math.ceil(Math.random()*5)* 60000 + sleepingTime ;
                     console.log(account, 'waiting for the next battle in', randomTime / 1000 / 60 , 'minutes at', new Date(Date.now() + randomTime).toLocaleString());
                     ask.logger.log(account, 'waiting for the next battle in', randomTime / 1000 / 60 , 'minutes at', new Date(Date.now() + randomTime).toLocaleString());
                     await sleep(randomTime);

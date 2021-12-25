@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 const fs = require('fs');
 
-const newTopBattleUsers = require('./data/initUsers/topBattleUser');
+const newTopBattleUsers = require('./data/initUsers/topBattleUserJSON');
 const intUsers = require('./data/initUsers/init');
 let remainFile = `data/remain_raw.json`;
 const remainUsers = require(`./data/remain_raw`);
@@ -112,6 +112,7 @@ const extractMonsterLost = (team) => {
 let isInit = false;
 let battlesList = [];
 const usersToGrab = intUsers;
+
 const concatArr = usersToGrab.concat(newTopBattleUsers);
 // 排重
 let map = new Map();
@@ -141,9 +142,9 @@ if (isInit) {
 
 let extendArray = [];
 let count = 1;
-let delta = 100;
+let delta = 200;
 let batchCount = 5;
-let fromScore = 400;
+let fromScore = 500;
 
 
 function collectData(arr) {
