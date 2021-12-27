@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>xxx</title>
+  <script type="text/javascript" src="jquery-3.6.0.min.js"></script>
+  <script type="text/javascript" src="imageselect.js"></script>
+  <link href="imageselect.css" media="screen" rel="stylesheet" type="text/css"/>
+  <script src="../../../sps/popup.js"></script>
+</head>
+<style>
+  * {
+    padding: 0;
+    margin: 0;
+  }
+
+  table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    border: 1px solid #c0c0c0;
+  }
+
+  th, td {
+    border: 1px solid #d0d0d0;
+    color: #404060;
+    padding: 10px;
+  }
+
+  th {
+    background-color: #09c;
+    font: bold 16px "微软雅黑";
+    color: #fff;
+  }
+
+  td {
+    font: 14px "微软雅黑";
+  }
+
+  tbody tr {
+    background-color: #f0f0f0;
+  }
+
+  tbody tr:hover {
+    cursor: pointer;
+    background-color: #fafafa;
+  }
+</style>
+<script>
+  function getUrlParam(name) {
+    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+    var r = window.location.search.substr(1).match(reg);
+    if (r != null) return unescape(r[2]); return null;
+  }
+
+  $(document).ready(function(){
+
+    $("#player").val(getUrlParam("playName").toLowerCase())
+
+    $("#mana").val(getUrlParam("mana"))
+
+    $("#enemy").val(getUrlParam("enemyName").toLowerCase())
+
+    if(getUrlParam("rule")){
+      let rules = getUrlParam("rule").split("|");
+      if(rules.length == 1){
+        $("#rule1").val(rules[0])
+      }
+
+      if(rules.length == 2){
+        $("#rule1").val(rules[0])
+        $("#rule2").val(rules[1])
+      }
+
+    }
+    let sps = getUrlParam("sp");
+    if(sps){
+      $("input[name='category']").each(function () {
+         if(sps.indexOf( $(this).attr('value') ) != -1){
+           $(this).attr('checked',true);
+         }
+      });
+    }
+  });
+</script>
+<body>
+<h1>---------------------------------------------</h1>
+<div style="display:flex;float: right;padding-right: 50px;">
+  <div><label>Player:</label><input id="player"/>&nbsp; &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;</div>
+  <div>
+    <button id="init" style="width: 80px;height: 20px;">InitCards</button>
+  </div>
+</div>
+<div style="display:flex">
+  <div> &nbsp; &nbsp; &nbsp; <label>Mana:</label><input id="mana"/>
+    &nbsp; &nbsp; &nbsp;
+    <label>enemy:</label> <input id="enemy"/></div>
+  <label>splinters:</label>
+  <div style="font-size: 20px;">
+    <div>
+      <input type="checkbox" name="category" style="width:25px;height:25px;" value="fire"/>fire
+      <input type="checkbox" name="category" style="width:25px;height:25px;" value="water"/>water
+      <input type="checkbox" name="category" style="width:25px;height:25px;" value="earth"/>earth
+    </div>
+    <div>
+      <input type="checkbox" name="category" style="width:25px;height:25px;" value="life"/>life
+      <input type="checkbox" name="category" style="width:25px;height:25px;"  value="death"/>death
+      <input type="checkbox" name="category" style="width:25px;height:25px;" value="dragon"/>dragon
+    </div>
+
+  </div>
+  &nbsp; &nbsp; &nbsp; &nbsp;
+  <div>
+    <select name="rule1" id="rule1">
+      <option value="-1">null.jpg</option>
+      <option value="Aim True">aim-true.webp</option>
+      <option value="Armored Up">armored-up.webp</option>
+      <option value="Back to Basics">back-to-basics.webp</option>
+      <option value="Broken Arrows">broken-arrows.webp</option>
+      <option value="Close Range">close-range.webp</option>
+      <option value="Earthquake">earthquake.webp</option>
+      <option value="Equaliser">equalizer.webp</option>
+      <option value="Equal Opportunity">equal-opportunity.webp</option>
+      <option value="Even Stevens">even-stevens.webp</option>
+      <option value="Explosive Weaponry">Explosive-Weaponry.webp</option>
+      <option value="Fog of War">fog-of-war.webp</option>
+      <option value="Healed Out">healed-out.webp</option>
+      <option value="Heavy Hitters">heavy-hitters.webp</option>
+      <option value="Holy Protection">Holy-Protection.webp</option>
+      <option value="Keep Your Distance">keep-your-distance.webp</option>
+      <option value="Little League">little-league.webp</option>
+      <option value="Lost Legendaries">lost-legendaries.webp</option>
+      <option value="Lost Magic">lost-magic.webp</option>
+      <option value="Melee Mayhem">melee-mayhem.webp</option>
+      <option value="Noxious Fumes">noxious-fumes.webp</option>
+      <option value="Odd Ones Out">odd-ones-out.webp</option>
+      <option value="Reverse Speed">reverse-speed.webp</option>
+      <option value="Rise of the Commons">rise-of-the-commons.webp</option>
+      <option value="Silenced Summoners">silenced-summoners.webp</option>
+      <option value="Spreading Fury">Spreading-Fury.webp</option>
+      <option value="Stampede">stampede.webp</option>
+      <option value="Standard" selected>standard.webp</option>
+      <option value="Super Sneak">super-sneak.webp</option>
+      <option value="Taking Sides">taking-sides.webp</option>
+      <option value="Target Practice">target-practice.webp</option>
+      <option value="Unprotected">unprotected.webp</option>
+      <option value="Up Close and Personal">up-close-personal.webp</option>
+      <option value="Weak Magic">weak-magic.webp</option>
+    </select>
+  </div>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+  <div>
+    <select name="rule2" id="rule2">
+      <option value="-1">null.jpg</option>
+      <option value="Aim True">aim-true.webp</option>
+      <option value="Armored Up">armored-up.webp</option>
+      <option value="Back to Basics">back-to-basics.webp</option>
+      <option value="Broken Arrows">broken-arrows.webp</option>
+      <option value="Close Range">close-range.webp</option>
+      <option value="Earthquake">earthquake.webp</option>
+      <option value="Equaliser">equalizer.webp</option>
+      <option value="Equal Opportunity">equal-opportunity.webp</option>
+      <option value="Even Stevens">even-stevens.webp</option>
+      <option value="Explosive Weaponry">Explosive-Weaponry.webp</option>
+      <option value="Fog of War">fog-of-war.webp</option>
+      <option value="Healed Out">healed-out.webp</option>
+      <option value="Heavy Hitters">heavy-hitters.webp</option>
+      <option value="Holy Protection">Holy-Protection.webp</option>
+      <option value="Keep Your Distance">keep-your-distance.webp</option>
+      <option value="Little League">little-league.webp</option>
+      <option value="Lost Legendaries">lost-legendaries.webp</option>
+      <option value="Lost Magic">lost-magic.webp</option>
+      <option value="Melee Mayhem">melee-mayhem.webp</option>
+      <option value="Noxious Fumes">noxious-fumes.webp</option>
+      <option value="Odd Ones Out">odd-ones-out.webp</option>
+      <option value="Reverse Speed">reverse-speed.webp</option>
+      <option value="Rise of the Commons">rise-of-the-commons.webp</option>
+      <option value="Silenced Summoners">silenced-summoners.webp</option>
+      <option value="Spreading Fury">Spreading-Fury.webp</option>
+      <option value="Stampede">stampede.webp</option>
+      <option value="Standard">standard.webp</option>
+      <option value="Super Sneak">super-sneak.webp</option>
+      <option value="Taking Sides">taking-sides.webp</option>
+      <option value="Target Practice">target-practice.webp</option>
+      <option value="Unprotected">unprotected.webp</option>
+      <option value="Up Close and Personal">up-close-personal.webp</option>
+      <option value="Weak Magic">weak-magic.webp</option>
+    </select>
+  </div>
+  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+  <div>
+    <button id="bt" style="width: 80px;height: 40px;">test</button>
+  </div>
+</div>
+<div style="display:flex">
+  <div>
+    <table>
+      <thead>
+      <tr>
+        <th colspan="3">最佳结果</th>
+      </tr>
+      <tr>
+        <th>note</th>
+        <th>Summoner</th>
+        <th>team</th>
+      </tr>
+      <!--<tr>-->
+      <!--<th>DEMO</th>-->
+      <!--<th>-->
+      <!--<div style="float:left;padding-right: 2px;">-->
+      <!--<img src="./Almo_Cambio.png" style = 'width: 100px;'><br/>-->
+      <!--<label>Almo_Cambio</label>-->
+      <!--</div>-->
+      <!--</th>-->
+      <!--<td>-->
+      <!--<div style='display:flex '>-->
+      <!--<div style="float:left;padding-right: 2px;">-->
+      <!--<img src="./Almo_Cambio.png"  style = 'width: 100px;'><br/>-->
+      <!--<label>Almo_Cambio</label>-->
+      <!--</div>-->
+      <!--<div style="float:left;padding-right: 2px;">-->
+      <!--<img src="./Almo_Cambio.png" style = 'width: 100px;'><br/>-->
+      <!--<label>Almo_Cambio</label>-->
+      <!--</div>-->
+      <!--<div style="float:left;padding-right: 2px;">-->
+      <!--<img src="./Almo_Cambio.png" style = 'width: 100px;'><br/>-->
+      <!--<label>Almo_Cambio</label>-->
+      <!--</div>-->
+      <!--<div style="float:left;padding-right: 2px;">-->
+      <!--<img src="./Almo_Cambio.png" style = 'width: 100px;'><br/>-->
+      <!--<label>Almo_Cambio</label>-->
+      <!--</div>-->
+      <!--<div style="float:left;padding-right: 2px;">-->
+      <!--<img src="./Almo_Cambio.png" style = 'width: 100px;'><br/>-->
+      <!--<label>Almo_Cambio</label>-->
+      <!--</div>-->
+      <!--<div style="float:left;padding-right: 2px;">-->
+      <!--<img src="./Almo_Cambio.png" style = 'width: 100px;'><br/>-->
+      <!--<label>Almo_Cambio</label>-->
+      <!--</div>-->
+      <!--</div>-->
+      <!--</td>-->
+      <!--</tr>-->
+      </thead>
+      <tbody id="J_TbData">
+      </tbody>
+    </table>
+  </div>
+  <div>
+    <table>
+      <thead>
+      <tr>
+        <th colspan="3">对手信息</th>
+      </tr>
+      <tr>
+        <th>结果</th>
+        <th>Summoner</th>
+        <th>team</th>
+      </tr>
+      <!--<tr>-->
+      <!--<th>DEMO</th>-->
+      <!--<th>-->
+      <!--<div style="float:left;padding-right: 2px;">-->
+      <!--<img src="./Almo_Cambio.png" style = 'width: 100px;'><br/>-->
+      <!--<label>Almo_Cambio</label>-->
+      <!--</div>-->
+      <!--</th>-->
+      <!--<td>-->
+      <!--<div style='display:flex '>-->
+      <!--<div style="float:left;padding-right: 2px;">-->
+      <!--<img src="./Almo_Cambio.png"  style = 'width: 100px;'><br/>-->
+      <!--<label>Almo_Cambio</label>-->
+      <!--</div>-->
+      <!--<div style="float:left;padding-right: 2px;">-->
+      <!--<img src="./Almo_Cambio.png" style = 'width: 100px;'><br/>-->
+      <!--<label>Almo_Cambio</label>-->
+      <!--</div>-->
+      <!--<div style="float:left;padding-right: 2px;">-->
+      <!--<img src="./Almo_Cambio.png" style = 'width: 100px;'><br/>-->
+      <!--<label>Almo_Cambio</label>-->
+      <!--</div>-->
+      <!--<div style="float:left;padding-right: 2px;">-->
+      <!--<img src="./Almo_Cambio.png" style = 'width: 100px;'><br/>-->
+      <!--<label>Almo_Cambio</label>-->
+      <!--</div>-->
+      <!--<div style="float:left;padding-right: 2px;">-->
+      <!--<img src="./Almo_Cambio.png" style = 'width: 100px;'><br/>-->
+      <!--<label>Almo_Cambio</label>-->
+      <!--</div>-->
+      <!--<div style="float:left;padding-right: 2px;">-->
+      <!--<img src="./Almo_Cambio.png" style = 'width: 100px;'><br/>-->
+      <!--<label>Almo_Cambio</label>-->
+      <!--</div>-->
+      <!--</div>-->
+      <!--</td>-->
+      <!--</tr>-->
+      </thead>
+      <tbody id="J_TbData_emy">
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+</body>
+
+<script>
+  $(document).ready(function () {
+    $("#bt").click(function () {
+      $("#bt").attr("disabled", "disabled");
+      let rule = $("#rule1").val();
+      if ($("#rule2").val() != "-1") {
+        rule = rule + "|" + $("#rule2").val();
+      }
+      var spiners = ''
+      $("input[name='category']:checked").each(function () {
+        spiners += $(this).attr('value') + '|';
+      });
+
+      let reqUrl = "/api/search?rule=" + rule + "&mana=" + $("#mana").val() + "&enemy=" + $(
+          "#enemy").val() + "&player=" + $("#player").val() + "&sp=" + spiners
+      $.get(reqUrl, function (data, status) {
+        $("#bt").removeAttr("disabled");
+        $("input[name='category']").each(function () {
+          $(this).prop("checked", false);
+        });
+        $("#enemy").val('')
+        var html = "";
+        if (data.mostWinTeam && data.mostWinTeam.length > 0) {
+          html += "<tr>";
+          html += "<td>最佳组合 </td>"
+          html += "<td>" + createItemDiv(data.mostWinTeam[0]) + "</td>"
+          html += "<td>" + createTeamDiv(data.mostWinTeam) + "</td>"
+          html += "</tr>";
+        }
+
+        if (data.mostEnemyAgainstTeam && data.mostEnemyAgainstTeam.length > 0) {
+          html += "<tr>";
+          html += "<td>对手克制组 </td>"
+          html += "<td>" + createItemDiv(data.mostEnemyAgainstTeam[0]) + "</td>"
+          html += "<td>" + createTeamDiv(data.mostEnemyAgainstTeam) + "</td>"
+          html += "</tr>";
+        }
+
+        if (data.mostAgainstrevertTeam && data.mostAgainstrevertTeam.length > 0) {
+          html += "<tr>";
+          html += "<td>最佳队伍克制组</td>"
+          html += "<td>" + createItemDiv(data.mostAgainstrevertTeam[0]) + "</td>"
+          html += "<td>" + createTeamDiv(data.mostAgainstrevertTeam) + "</td>"
+          html += "</tr>";
+        }
+
+        if (data.summoners &&  Object.keys(data.summoners).length > 0) {
+
+          Object.keys(data.summoners).forEach(sum => {
+            html += "<tr>";
+            html += "<td>" + data.summoners[sum][7] + "系最佳</td>"
+            html += "<td>" + createItemDiv(data.summoners[sum][0]) + "</td>"
+            html += "<td>" + createTeamDiv(data.summoners[sum]) + "</td>"
+            html += "</tr>";
+          })
+        }
+
+        $("#J_TbData").html(html);
+
+        if (data.recentEenmyTeam) {
+          var html2 = "";
+          data.recentEenmyTeam.forEach(team => {
+            html2 += "<tr>";
+            html2 += "<td style='width:50px;'> mana:" + team[8] + "  win:" + team[9]+" "+team[10] + "</td>"
+            html2 += "<td>" + createItemDiv(team[0]) + "</td>"
+            html2 += "<td>" + createTeamDiv(team) + "</td>"
+            html2 += "</tr>";
+          })
+          $("#J_TbData_emy").html(html2);
+        }
+      });
+    });
+
+    function createTeamDiv(team) {
+      var html = "";
+      html += "<div>";
+      if (team[1]) {
+        html += createItemDiv(team[1])
+      }
+      if (team[2]) {
+        html += createItemDiv(team[2])
+      }
+      if (team[3]) {
+        html += createItemDiv(team[3])
+      }
+      if (team[4]) {
+        html += createItemDiv(team[4])
+      }
+      if (team[5]) {
+        html += createItemDiv(team[5])
+      }
+      if (team[6]) {
+        html += createItemDiv(team[6])
+      }
+      html += "</div>";
+      return html;
+    }
+
+    function createItemDiv(name) {
+      var html = "";
+      html += "<div style = \"float:left;padding-right: 2px;\" >";
+      html += "<img src='" + name.replaceAll("'", "").replaceAll(" ", "_")
+          + ".png' style = 'width: 100px;'/><br/>"
+      html += "<label>" + name + "</label>"
+      html += "</div>";
+      return html;
+    }
+
+    $("#init").click(function () {
+      let reqUrl = "/api/init?player=" + $("#player").val().toLowerCase()
+      $.get(reqUrl, function (data, status) {
+        alert("init success!")
+      });
+    });
+  });
+</script>
+<script>
+  var data = [{
+    name: "传智播客",
+    url: "http://www.itcast.cn",
+    type: "IT最强培训机构"
+  }, {
+    name: "黑马程序员",
+    url: "http://www.itheima.com",
+    type: "大学生IT培训机构"
+  }, {
+    name: "传智前端学院",
+    url: "http://web.itcast.cn",
+    type: "前端的黄埔军校"
+  }];
+
+  $(function () {
+    //第一种：动态创建表格的方式，使用拼接html的方式 （推荐）
+
+  });
+
+  $(document).ready(function () {
+    $('select[name=rule1]').ImageSelect({dropdownWidth: 25});
+    $('select[name=rule2]').ImageSelect({dropdownWidth: 25});
+  });
+</script>
+</html>

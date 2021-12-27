@@ -364,6 +364,7 @@ async function startBotPlayMatch(page, browser) {
         }
         await page.waitForTimeout(2000);
         // 根据 基础信息 获取可能的队伍  rule 全部匹配
+
         let possibleTeams = await ask.possibleTeams(matchDetails, account).catch(e=>console.log('Error from possible team API call: ',e));
 
         if (possibleTeams && possibleTeams.length) {

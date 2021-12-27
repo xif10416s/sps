@@ -144,7 +144,7 @@ let extendArray = [];
 let count = 1;
 let delta = 200;
 let batchCount = 5;
-let fromScore = 500;
+let fromScore = 800;
 
 
 function collectData(arr) {
@@ -225,7 +225,8 @@ async function checkAndSave(battles) {
               map.set(battle.player_1, true);
               extendArray.push(battle.player_1.trim());
             }
-
+          }
+          if(battle.player_2_rating_initial >= fromScore){
             if (!map.has(battle.player_2)) {
               map.set(battle.player_2, true);
               extendArray.push(battle.player_2.trim());

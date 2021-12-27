@@ -58,15 +58,15 @@ getDisitinct(historyTotal,'ruleset')
 
 
 // 规则培训
-// var reduce = history.map(x => x['ruleset']).reduce((acc, value) => {
-//   // Group initialization
-//   if (!acc[value]) {
-//     acc[value] = 1;
-//   }
-//   // Grouping
-//   acc[value]= acc[value] + 1;
-//   return acc;
-// }, {});
+var reduce = history.map(x => x['ruleset']).reduce((acc, value) => {
+  // Group initialization
+  if (!acc[value]) {
+    acc[value] = 1;
+  }
+  // Grouping
+  acc[value]= acc[value] + 1;
+  return acc;
+}, {});
 //
 // let entries = Object.entries(reduce);
 // let sorted = entries.sort((a, b) => b[1] - a[1]);

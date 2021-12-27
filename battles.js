@@ -10,7 +10,7 @@ const mostWinningSummonerTank = (possibleTeamsList) => {
     const mostWinningThirdBackline = {};
     const mostWinningForthBackline = {};
     console.log("mostWinningSummonerTank  possibleTeamsList:" + possibleTeamsList.length)
-    ask.logger.log("mostWinningSummonerTank  possibleTeamsList:" + possibleTeamsList.length)
+
     possibleTeamsList.forEach(x => {
         const summoner = x[0];
         mostWinningSummoner[summoner] = mostWinningSummoner[summoner] ? mostWinningSummoner[summoner] + 1 : 1;
@@ -120,17 +120,57 @@ const mostWinningSummonerTank = (possibleTeamsList) => {
 }
 
 //
-async function  mostWinningEnemy(possibleTeamsList , enemyPossbileTeams ){
+function getMustRules(ruleset){
+    let keyRules = ruleset.split('|');
+    let mustRule = "";
+    if(keyRules.length > 1){
+        if(process.env.KEY_SINGLE_RULES.indexOf(keyRules[0]) != -1 &&
+            process.env.KEY_SINGLE_RULES.indexOf(keyRules[1]) == -1) {
+            mustRule = keyRules[0];
+        }
+
+        if(process.env.KEY_SINGLE_RULES.indexOf(keyRules[0]) == -1 &&
+            process.env.KEY_SINGLE_RULES.indexOf(keyRules[1]) != -1) {
+            mustRule = keyRules[1];
+        }
+
+        if(process.env.KEY_SINGLE_RULES.indexOf(keyRules[0]) != -1 &&
+            process.env.KEY_SINGLE_RULES.indexOf(keyRules[1]) != -1) {
+            mustRule = "ALL";
+        }
+    }
+    return mustRule;
+}
+
+async function  mostWinningEnemy(possibleTeamsList , enemyPossbileTeams ,ruleset ){
     let matchTeams = [];
     if(enemyPossbileTeams && enemyPossbileTeams.length > 0){
-        // let winTeams = enemyPossbileTeams.filter(bt => bt['isWin'] == true)
-        // if(winTeams && winTeams.length >0) {
-        //     const ept = winTeams[0];
-        //     console.log("mostWinningEnemy win :",JSON.stringify(ept))
-        //     return findAgainstTeam(ept,possibleTeamsList)
-        // }
 
-        // if(matchTeams.length == 0){
+        let winTeams = enemyPossbileTeams.filter(bt => {
+            let mustRule = getMustRules(ruleset);
+            let ruleMatch = () => {
+
+                if(mustRule != "" && mustRule != "ALL"){
+                    return bt['ruleset'].index(mustRule) != -1;
+                }
+
+                if(mustRule == "ALL"){
+                    let keyRules = ruleset.split('|');
+                    let reserveRule = keyRules[1]+"|" +  keyRules[0]
+                    return bt['ruleset'] == ruleMatch || bt['ruleset'] == reserveRule;
+                }
+
+                return false;
+            }
+            return bt['isWin'] == true && ruleMatch
+        }  )
+        if(winTeams && winTeams.length >0) {
+            const ept = winTeams[0];
+            console.log("mostWinningEnemy win :",JSON.stringify(ept))
+            return findAgainstTeam(ept,possibleTeamsList)
+        }
+
+        if(matchTeams.length == 0){
             const mostSummoner = enemyPossbileTeams.reduce((acc, value) => {
                 // Group initialization
                 if (!acc[value['summoner_id']]) {
@@ -148,14 +188,14 @@ async function  mostWinningEnemy(possibleTeamsList , enemyPossbileTeams ){
                 const team = await findAgainstTeam(mostSummonerTeams[0],possibleTeamsList);
                 return [sorted[0][0],team];
             }
-        // }
+        }
     }
 }
 
 async function  mostWinningByEnemySummoner(possibleTeamsList ,  summoner, matchDetails){
     let sql = "select battle_queue_id from battle_history_raw where mana_cap = ?  and summoner_id_lost = ?  and ruleset = ?"
     const params = [matchDetails.orgMana, summoner, matchDetails.rules];
-    console.log("find target against mostWinningByEnemySummoner :", JSON.stringify(params))
+    // console.log("find target against mostWinningByEnemySummoner :", JSON.stringify(params))
     const rs = await dbUtils.sqlQuery(sql,params);
     console.log("find target against mostWinningByEnemySummoner team",rs.length )
     if( rs.length > 0 ){
@@ -169,19 +209,15 @@ async function  mostWinningByEnemySummoner(possibleTeamsList ,  summoner, matchD
 }
 
 async function findAgainstTeam(ept,possibleTeamsList){
-    const battle_ids = possibleTeamsList.map(x => {
-        return x[10]
-    })
-
-    let sql = "select battle_queue_id from battle_history_raw where battle_queue_id in (?)  and  summoner_id_lost = ? and  monster_1_id_lost = ? and  monster_2_id_lost = ?  and  monster_3_id_lost = ? and  monster_4_id_lost = ?  and  monster_5_id_lost = ?  and  monster_6_id_lost = ? "
+    let sql = "select battle_queue_id from battle_history_raw where   summoner_id_lost = ? and  monster_1_id_lost = ? and  monster_2_id_lost = ?  and  monster_3_id_lost = ? and  monster_4_id_lost = ?  and  monster_5_id_lost = ?  and  monster_6_id_lost = ? "
     dbUtils.washdata(ept,['summoner_id','monster_1_id',  'monster_2_id',
         'monster_3_id', 'monster_4_id',
         'monster_5_id', 'monster_6_id'])
-    const params = [battle_ids , ept.summoner_id,ept.monster_1_id
+    const params = [ ept.summoner_id,ept.monster_1_id
         ,ept.monster_2_id,ept.monster_3_id,ept.monster_4_id,ept.monster_5_id,ept.monster_6_id];
-    console.log("find target against :", JSON.stringify(params))
+    console.log("find target against :")
     const rs = await dbUtils.sqlQuery(sql,params);
-    console.log("find team",rs.length , JSON.stringify(rs))
+    console.log("find team",rs.length)
     if( rs.length > 0 ){
         let queue_ids = rs.map(x =>x['battle_queue_id'])
         const matchTeams = possibleTeamsList.filter(x => queue_ids.indexOf(x[10]) !=-1 )
