@@ -163,7 +163,7 @@ const selectBattleDate = async (mana, ruleset , summoners, mustSingleRule) =>{
   let keyRules = ruleset.split('|');
   let rs = [];
   if(keyRules.length > 1){
-    let sql = 'select * from battle_history_raw where  mana_cap = ?  and summoner_id in (?)  and (ruleset = ? or ruleset = ?)';
+    let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and (ruleset = ? or ruleset = ?)';
     let params = [mana,summoners,ruleset,keyRules[1]+"|"+keyRules[0]];
     let data = await dbUtils.sqlQuery(sql,params);
     let string = JSON.stringify(data);
@@ -175,7 +175,7 @@ const selectBattleDate = async (mana, ruleset , summoners, mustSingleRule) =>{
       return rs;
     }
   } else {
-    let sql = 'select * from battle_history_raw where  mana_cap = ?  and summoner_id in (?)  and ruleset = ?';
+    let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and ruleset = ?';
     let data = await dbUtils.sqlQuery(sql,[mana,summoners,ruleset]);
     let string = JSON.stringify(data);
     rs = JSON.parse(string);
@@ -192,7 +192,7 @@ const selectBattleDate = async (mana, ruleset , summoners, mustSingleRule) =>{
   if(rs.length <= leastCnt && keyRules.length > 1){
     if(mustSingleRule != null){
       console.log("mustSingleRule.. :",mustSingleRule)
-      let sql = 'select * from battle_history_raw where  mana_cap = ?  and summoner_id in (?)  and ruleset like ? ';
+      let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and ruleset like ? ';
       let data = await dbUtils.sqlQuery(sql,[mana,summoners,"%"+mustSingleRule+"%"]);
       let string = JSON.stringify(data);
       let rs2 = rs.concat(JSON.parse(string));
@@ -201,11 +201,11 @@ const selectBattleDate = async (mana, ruleset , summoners, mustSingleRule) =>{
       return rs2;
     }
 
-    let sql = 'select * from battle_history_raw where  mana_cap = ?  and summoner_id in (?)  and ( ruleset like ?  or ruleset like ?)';
-    let data = await dbUtils.sqlQuery(sql,[mana,summoners,"%"+keyRules[0]+"%","%"+keyRules[1]+"%"]);
+    let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and ( ruleset like ?  or ruleset like ?)';
+    let data = await dbUtils.sqlQuery(sql,[mana,summoners,keyRules[0]+"%",keyRules[1]+"%"]);
     let string = JSON.stringify(data);
     let rs3 = rs.concat(JSON.parse(string));
-    consoler.log("3 singlerule match : " , ruleset , rs3.length);
+    console.log("3 singlerule match : " , ruleset , rs3.length);
     logger.log("3 singlerule match : " , ruleset , rs3.length)
     return rs3;
   } else {
@@ -249,13 +249,13 @@ const battlesFilterByManacap = async (mana, ruleset , summoners) => {
     }
 
     if(rs.length == 0 && mustRule == null){
-      let sql = 'select * from battle_history_raw where  mana_cap = ' + orgMana;
+      let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)';
       console.log(sql);
-      const data3 = await dbUtils.sqlQuery(sql);
+      const data3 = await dbUtils.sqlQuery(sql,[orgMana,summoners]);
       let string3 = JSON.stringify(data3);
       rs = JSON.parse(string3);
-      console.log(3, mana, 'stand', rs.length, sql);
-      logger.log("1-3 first step select data no rules.",mana , rs.length)
+      console.log(3, orgMana, 'stand', rs.length, sql);
+      logger.log("1-3 first step select data no rules.",orgMana , rs.length)
       return rs;
     }
   } else {
@@ -689,8 +689,9 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
 
     const againstInfo = await battles.mostWinningEnemy(possibleTeams,matchDetails['enemyPossbileTeams'],matchDetails.rules);
 
-    console.log("againstInfo: " ,againstInfo.length)
+
     if(againstInfo && againstInfo.length > 1) {
+      console.log("againstInfo: " ,againstInfo.length)
       const possibleSummoner = againstInfo[0];
       const bestAgainst = againstInfo[1];
       if(bestAgainst && bestAgainst.length > 0){
@@ -761,4 +762,4 @@ module.exports.getSummoners = getSummoners
 module.exports.teamSelectionForWeb = teamSelectionForWeb
 module.exports.logger = logger;
 
-// selectBattleDate(23,"Standard",[437,227,429])
+// selectBattleDate(23,"Standard",
