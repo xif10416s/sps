@@ -80,6 +80,8 @@
          }
       });
     }
+
+
   });
 </script>
 <body>
@@ -305,7 +307,7 @@
 
 <script>
   $(document).ready(function () {
-    $("#bt").click(function () {
+    function queryData(){
       $("#bt").attr("disabled", "disabled");
       let rule = $("#rule1").val();
       if ($("#rule2").val() != "-1") {
@@ -374,6 +376,10 @@
           $("#J_TbData_emy").html(html2);
         }
       });
+    }
+
+    $("#bt").click(function () {
+      queryData();
     });
 
     function createTeamDiv(team) {
@@ -417,7 +423,10 @@
         alert("init success!")
       });
     });
+    queryData();
   });
+
+
 </script>
 <script>
   var data = [{

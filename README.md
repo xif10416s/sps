@@ -204,3 +204,7 @@ playname:
 
 sudo service cron restart
 node battlesGetDataRawV1.js
+
+// -e "MAX_QUEUE_LENGTH=300"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=200"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"
+docker run -e "MAX_QUEUE_LENGTH=300"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=200"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3000:3000 --restart always -d --name browserless browserless/chrome
+http://192.168.99.100:3000

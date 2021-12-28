@@ -19,7 +19,7 @@ const pool = mysql.createPool({
 var insertTemplate = 'INSERT  ignore  INTO battle_history(battle_queue_id ,summoner_id,summoner_level ,monster_1_id ,monster_1_level ,monster_1_abilities ,monster_2_id ,monster_2_level ,monster_2_abilities ,monster_3_id ,monster_3_level ,monster_3_abilities ,monster_4_id ,monster_4_level ,monster_4_abilities ,monster_5_id ,monster_5_level,monster_5_abilities ,monster_6_id,monster_6_level ,monster_6_abilities ,created_date ,created_date_day,match_type ,mana_cap ,ruleset ,inactive ,player_rating_initial ,player_rating_final ,winner ) '
     + 'VALUES ? ';
 
-var insertTemplateRaw = 'INSERT  ignore  INTO battle_history_raw(battle_queue_id ,summoner_id,summoner_level ,monster_1_id ,monster_1_level ,monster_1_abilities ,monster_2_id ,monster_2_level ,monster_2_abilities ,monster_3_id ,monster_3_level ,monster_3_abilities ,monster_4_id ,monster_4_level ,monster_4_abilities ,monster_5_id ,monster_5_level,monster_5_abilities ,monster_6_id,monster_6_level ,monster_6_abilities ,created_date ,created_date_day,match_type ,mana_cap ,ruleset ,inactive ,player_rating_initial ,player_rating_final ,winner,' +
+var insertTemplateRaw = 'INSERT  ignore  INTO battle_history_raw_v2(battle_queue_id ,summoner_id,summoner_level ,monster_1_id ,monster_1_level ,monster_1_abilities ,monster_2_id ,monster_2_level ,monster_2_abilities ,monster_3_id ,monster_3_level ,monster_3_abilities ,monster_4_id ,monster_4_level ,monster_4_abilities ,monster_5_id ,monster_5_level,monster_5_abilities ,monster_6_id,monster_6_level ,monster_6_abilities ,created_date ,created_date_day,match_type ,mana_cap ,ruleset ,inactive ,player_rating_initial ,player_rating_final ,winner,' +
     ' battle_queue_id_lost ,summoner_id_lost,summoner_level_lost ,monster_1_id_lost ,monster_1_level_lost ,monster_1_abilities_lost ,monster_2_id_lost ,monster_2_level_lost ,monster_2_abilities_lost ,monster_3_id_lost ,monster_3_level_lost ,monster_3_abilities_lost ,monster_4_id_lost ,monster_4_level_lost ,monster_4_abilities_lost ,monster_5_id_lost ,monster_5_level_lost,monster_5_abilities_lost ,monster_6_id_lost,monster_6_level_lost ,monster_6_abilities_lost,player_rating_initial_lost ,player_rating_final_lost ,loser) '
     + 'VALUES ? ';
 
@@ -215,7 +215,7 @@ async function batchInsertRaw(history, fromScore, batchSize, fromDay) {
   for (const [i, v] of values.entries()) {
     tmp.push(v);
     if (i % batchSize == 0) {
-      // console.log("batch insert start ..." + new Date());
+      // console.log("batch insert start ..." + new Date(),tmp.length);
       await sqlQuery(insertTemplateRaw, [tmp]);
       tmp = [];
       // console.log("batch insert end ..." + new Date());
@@ -223,7 +223,7 @@ async function batchInsertRaw(history, fromScore, batchSize, fromDay) {
   }
 
   if (tmp.length > 0) {
-    console.log('last batch insert start ...' + new Date());
+    console.log('last batch insert start ...' + new Date() ,tmp.length);
     await sqlQuery(insertTemplateRaw, [tmp]);
     console.log('last batch insert end ...' + new Date());
   }

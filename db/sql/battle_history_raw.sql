@@ -81,7 +81,6 @@ CREATE TABLE `battle_history_raw`  (
   INDEX `index_created_date_day`(`created_date_day`) USING BTREE,
   INDEX `index_ruleset`(`ruleset`) USING BTREE,
   INDEX `index_mana_cap`(`mana_cap`) USING BTREE,
-  INDEX `index_winner`(`winner`) USING BTREE,
   INDEX `index_lost_team`(`summoner_id_lost`,`monster_1_id_lost`,`monster_2_id_lost`,`monster_3_id_lost`,`monster_4_id_lost`,`monster_5_id_lost`,`monster_6_id_lost`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 

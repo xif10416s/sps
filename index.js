@@ -87,7 +87,7 @@ async function findCreateTeamButton(page, findOpponentDialogStatus=0, btnCreateT
 async function launchBattle(page) {
     const maxRetries = 3;
     let retriesNum = 1;
-    let btnCreateTeamTimeout = 50000;
+    let btnCreateTeamTimeout = 50000*2;
     //
     let findOpponentDialogStatus = await findSeekingEnemyModal(page);
     let isStartBattleSuccess = await findCreateTeamButton(page, findOpponentDialogStatus);
@@ -234,7 +234,7 @@ async function startBotPlayMatch(page, browser) {
         });
 
         await page.goto('https://splinterlands.io/');
-        await page.waitForTimeout(8000);
+        await page.waitForTimeout(8000*3);
 
         let item = await page.waitForSelector('#log_in_button > button', {
             visible: true,
@@ -251,7 +251,7 @@ async function startBotPlayMatch(page, browser) {
         }
 
         await page.goto('https://splinterlands.io/?p=battle_history');
-        await page.waitForTimeout(8000);
+        await page.waitForTimeout(8000*3);
         await closePopups(page);
         await closePopups(page);
 
@@ -311,16 +311,16 @@ async function startBotPlayMatch(page, browser) {
         if (process.env.CLAIM_SEASON_REWARD === 'true') {
             try {
                 console.log('Season reward check: ');
-                await page.waitForSelector('#claim-btn', { visible:true, timeout: 3000 })
+                await page.waitForSelector('#claim-btn', { visible:true, timeout: 10000 })
                 .then(async (button) => {
                     button.click();
                     console.log(`claiming the season reward. you can check them here https://peakmonsters.com/@${account}/explorer`);
-                    await page.waitForTimeout(20000);
+                    await page.waitForTimeout(20000*2);
                     await page.reload();
 
                 })
                 .catch(()=>console.log(`no season reward to be claimed, but you can still check your data here https://peakmonsters.com/@${account}/explorer`));
-                await page.waitForTimeout(3000);
+                await page.waitForTimeout(3000*3);
                 await page.reload();
             }
             catch (e) {
@@ -334,19 +334,19 @@ async function startBotPlayMatch(page, browser) {
         const isClaimDailyQuestMode = process.env.CLAIM_DAILY_QUEST_REWARD === 'false' ? false : true;
         if (isClaimDailyQuestMode === true) {
             try {
-                await page.waitForSelector('#quest_claim_btn', { timeout: 5000 })
+                await page.waitForSelector('#quest_claim_btn', { timeout: 5000*2 })
                     .then(button => button.click());
             } catch (e) {
                 console.info('no quest reward to be claimed waiting for the battle...')
             }
         }
-        await page.waitForTimeout(5000);
+        await page.waitForTimeout(5000*4);
 
         // LAUNCH the battle
         if (!await launchBattle(page)) throw new Error('The Battle cannot start');
 
         // #666#  开始配置 GET MANA, RULES, SPLINTERS, AND POSSIBLE TEAM
-        await page.waitForTimeout(10000);
+        await page.waitForTimeout(10000*2);
         let [mana, rules, splinters,enemyRecent] = await Promise.all([
             splinterlandsPage.checkMatchMana(page).then((mana) => mana).catch(() => 'no mana'),
             splinterlandsPage.checkMatchRules(page).then((rulesArray) => rulesArray).catch(() => 'no rules'),
@@ -362,7 +362,7 @@ async function startBotPlayMatch(page, browser) {
             myCards: myCards,
             enemyRecent: enemyRecent,
         }
-        await page.waitForTimeout(2000);
+        await page.waitForTimeout(2000*2);
         // 根据 基础信息 获取可能的队伍  rule 全部匹配
 
         let possibleTeams = await ask.possibleTeams(matchDetails, account).catch(e=>console.log('Error from possible team API call: ',e));
@@ -382,7 +382,7 @@ async function startBotPlayMatch(page, browser) {
                 .catch(async ()=>{
                     console.log('Create team didnt work, waiting 5 sec and retry');
                     await page.reload();
-                    await page.waitForTimeout(5000);
+                    await page.waitForTimeout(5000*2);
                     await page.$eval('.btn--create-team', elem => elem.click())
                         .then(()=>console.log('btn--create-team clicked'))
                         .catch(()=>{
@@ -395,14 +395,14 @@ async function startBotPlayMatch(page, browser) {
             throw new Error('Team Selection error: no possible team to play');
         }
 
-        await page.waitForTimeout(5000);
+        await page.waitForTimeout(5000*2);
 
         // Click cards based on teamToPlay value.
         if (!await clickCards(page, teamToPlay, matchDetails)) return
 
         // start fight
         await page.waitForTimeout(5000);
-        await page.waitForSelector('.btn-green', { timeout: 1000 }).then(()=>console.log('btn-green visible')).catch(()=>console.log('btn-green not visible'));
+        await page.waitForSelector('.btn-green', { timeout: 3000 }).then(()=>console.log('btn-green visible')).catch(()=>console.log('btn-green not visible'));
         await page.$eval('.btn-green', elem => elem.click())
             .then(()=>console.log('btn-green clicked'))
             .catch(async ()=>{
@@ -441,8 +441,8 @@ async function startBotPlayMatch(page, browser) {
                 console.log('Could not find winner - draw?');
                 undefinedTotal += 1;
             }
-            await clickOnElement(page, '.btn--done', 20000, 10000);
-            await clickOnElement(page, '#menu_item_battle', 20000, 10000);
+            await clickOnElement(page, '.btn--done', 22000, 12000);
+            await clickOnElement(page, '#menu_item_battle', 22000, 12000);
 
             console.log('Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal));
             console.log(chalk.green('Total Earned: ' + totalDec + ' DEC'));
@@ -503,8 +503,8 @@ async function run() {
     let start = true
 
     console.log('START ', account, new Date().toLocaleString())
-    const browser = await puppeteer.launch(puppeteer_options);
-
+    // const browser = await puppeteer.launch(puppeteer_options);
+    const browser = await puppeteer.connect({ browserWSEndpoint: 'ws://192.168.99.100:3000' });
     //const page = await browser.newPage();
     let [page] = await browser.pages();
 
