@@ -193,7 +193,7 @@ async function  mostWinningEnemy(possibleTeamsList , enemyPossbileTeams ,ruleset
 }
 
 async function  mostWinningByEnemySummoner(possibleTeamsList ,  summoner, matchDetails){
-    let sql = "select battle_queue_id from battle_history_raw where mana_cap = ?  and summoner_id_lost = ?  and ruleset = ?"
+    let sql = "select battle_queue_id from battle_history_raw_v2 where mana_cap = ?  and summoner_id_lost = ?  and ruleset = ?"
     const params = [matchDetails.orgMana, summoner, matchDetails.rules];
     // console.log("find target against mostWinningByEnemySummoner :", JSON.stringify(params))
     const rs = await dbUtils.sqlQuery(sql,params);
@@ -209,7 +209,7 @@ async function  mostWinningByEnemySummoner(possibleTeamsList ,  summoner, matchD
 }
 
 async function findAgainstTeam(ept,possibleTeamsList){
-    let sql = "select battle_queue_id from battle_history_raw where   summoner_id_lost = ? and  monster_1_id_lost = ? and  monster_2_id_lost = ?  and  monster_3_id_lost = ? and  monster_4_id_lost = ?  and  monster_5_id_lost = ?  and  monster_6_id_lost = ? "
+    let sql = "select battle_queue_id from battle_history_raw_v2 where   summoner_id_lost = ? and  monster_1_id_lost = ? and  monster_2_id_lost = ?  and  monster_3_id_lost = ? and  monster_4_id_lost = ?  and  monster_5_id_lost = ?  and  monster_6_id_lost = ? "
     dbUtils.washdata(ept,['summoner_id','monster_1_id',  'monster_2_id',
         'monster_3_id', 'monster_4_id',
         'monster_5_id', 'monster_6_id'])
