@@ -162,9 +162,12 @@ const getBattlesWithRuleset = (ruleset, mana, summoners) => {
 const selectBattleDate = async (mana, ruleset , summoners, mustSingleRule) =>{
   let keyRules = ruleset.split('|');
   let rs = [];
+  let date = new Date();
+  let endDate =  new Date(date.setDate(date.getDate()+2))
+  let endDateStr = endDate.toISOString().split("T")[0];
   if(keyRules.length > 1){
-    let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and (ruleset = ? or ruleset = ?)';
-    let params = [mana,summoners,ruleset,keyRules[1]+"|"+keyRules[0]];
+    let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and (ruleset = ? or ruleset = ?) and created_date_day <= ? ';
+    let params = [mana,summoners,ruleset,keyRules[1]+"|"+keyRules[0],endDateStr];
     let data = await dbUtils.sqlQuery(sql,params);
     let string = JSON.stringify(data);
     rs = JSON.parse(string);
@@ -175,8 +178,8 @@ const selectBattleDate = async (mana, ruleset , summoners, mustSingleRule) =>{
       return rs;
     }
   } else {
-    let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and ruleset = ?';
-    let data = await dbUtils.sqlQuery(sql,[mana,summoners,ruleset]);
+    let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and ruleset = ? and created_date_day <= ?';
+    let data = await dbUtils.sqlQuery(sql,[mana,summoners,ruleset,endDateStr]);
     let string = JSON.stringify(data);
     rs = JSON.parse(string);
     console.log("1.2 full match rs :"+rs.length)
@@ -192,8 +195,8 @@ const selectBattleDate = async (mana, ruleset , summoners, mustSingleRule) =>{
   if(rs.length <= leastCnt && keyRules.length > 1){
     if(mustSingleRule != null){
       console.log("mustSingleRule.. :",mustSingleRule)
-      let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and ruleset like ? ';
-      let data = await dbUtils.sqlQuery(sql,[mana,summoners,"%"+mustSingleRule+"%"]);
+      let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and ruleset like ? and created_date_day <= ? ';
+      let data = await dbUtils.sqlQuery(sql,[mana,summoners,"%"+mustSingleRule+"%",endDateStr]);
       let string = JSON.stringify(data);
       let rs2 = rs.concat(JSON.parse(string));
       console.log("2 mustsingeRule match : ",mustSingleRule ,"org rule:" , ruleset, rs2.length)
@@ -201,8 +204,8 @@ const selectBattleDate = async (mana, ruleset , summoners, mustSingleRule) =>{
       return rs2;
     }
 
-    let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and ( ruleset like ?  or ruleset like ?)';
-    let data = await dbUtils.sqlQuery(sql,[mana,summoners,keyRules[0]+"%",keyRules[1]+"%"]);
+    let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and ( ruleset like ?  or ruleset like ?) and created_date_day <= ?';
+    let data = await dbUtils.sqlQuery(sql,[mana,summoners,keyRules[0]+"%",keyRules[1]+"%",endDateStr]);
     let string = JSON.stringify(data);
     let rs3 = rs.concat(JSON.parse(string));
     console.log("3 singlerule match : " , ruleset , rs3.length);
@@ -356,7 +359,7 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
   if(againstInfo && againstInfo.length > 1 && matchDetails.orgMana >= 17) {
     const possibleSummoner = againstInfo[0];
     const bestAgainst = againstInfo[1];
-    if(bestAgainst && bestAgainst.length > 50){
+    if(bestAgainst && bestAgainst.length >= 1){
       console.log("bestAgainst: " ,JSON.stringify(bestAgainst))
       bestCombination = await battles.mostWinningSummonerTank(bestAgainst);
       console.log("bestAgainst best combination:" , JSON.stringify(bestCombination))
@@ -367,7 +370,7 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
 
     if(possibleSummoner && matchDetails.orgMana >= 17) {
       let byEnemySummor =  await battles.mostWinningByEnemySummoner(possibleTeams,possibleSummoner , matchDetails)
-      if(byEnemySummor && byEnemySummor.length > 50){
+      if(byEnemySummor && byEnemySummor.length >= 1){
         console.log("byEnemySummor: " ,JSON.stringify(byEnemySummor))
         bestCombination = await battles.mostWinningSummonerTank(byEnemySummor);
         console.log("byEnemySummor best combination:" , JSON.stringify(bestCombination))
@@ -555,13 +558,14 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
     let manaMatchTeams = enemy.filterManaMatch(matchDetails.enemyRecent, matchDetails.orgMana, 1);
     if (manaMatchTeams && Object.keys(manaMatchTeams).length > 0) {
       let manaRuleMatchTeams = enemy.filterRuleMatch(manaMatchTeams, matchDetails.rules);
-      console.log("-------",JSON.stringify(manaMatchTeams));
-      console.log("-------",JSON.stringify(manaRuleMatchTeams));
+      console.log("manaMatchTeams-------",manaMatchTeams.length);
+      console.log("manaRuleMatchTeams-------",manaRuleMatchTeams.length);
       if (manaRuleMatchTeams && manaRuleMatchTeams.length > 0) {
         enemyPossbileTeams = manaRuleMatchTeams;
-      } else {
-        enemyPossbileTeams = Object.values(manaMatchTeams);
       }
+      // else {
+      //   enemyPossbileTeams = Object.values(manaMatchTeams);
+      // }
     }
     if (enemyPossbileTeams.length == 0) {
       let manaMatchTeams2 = enemy.filterManaMatch(matchDetails.enemyRecent, matchDetails.orgMana, 2);
@@ -569,9 +573,10 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
         let manaRuleMatchTeams2 = enemy.filterRuleMatch(manaMatchTeams2, matchDetails.rules);
         if (manaRuleMatchTeams2 && manaRuleMatchTeams2.length > 0) {
           enemyPossbileTeams = manaRuleMatchTeams2;
-        } else {
-          enemyPossbileTeams = Object.values(manaMatchTeams);
         }
+        // else {
+        //   enemyPossbileTeams = Object.values(manaMatchTeams);
+        // }
       }
     }
 

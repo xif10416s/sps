@@ -16,12 +16,17 @@ Date.prototype.Format = function(fmt)
       fmt = fmt.replace(RegExp.$1, (RegExp.$1.length==1) ? (o[k]) : (('00'+ o[k]).substr((''+ o[k]).length)));
   return fmt;
 };
-let date = new Date(2021,12,5);
-date.Format('yyyyMMdd')
-for (let i = 0; i <365 ; i++) {
-  date = date.setDate(date.getDate()+1)
-  date = new Date(date);
-  let pstr = date.Format("yyyyMMdd")
-  let pt = date.Format("yyyy-MM-dd")
-  console.log(`alter table battle_history_raw_v2 add partition (partition p${pstr} values less than('${pt}'))`);
-}
+// let date = new Date(2021,11,5);
+// date.Format('yyyyMMdd')
+// for (let i = 0; i <365 ; i++) {
+//   date = date.setDate(date.getDate()+1)
+//   date = new Date(date);
+//   let pstr = date.Format("yyyyMMdd")
+//   let pt = date.Format("yyyy-MM-dd")
+//   console.log(`alter table battle_history_raw_v2 add partition (partition p${pstr} values less than('${pt}'))`);
+// }
+
+
+var date = new Date();
+var fromDate =  new Date(date.setDate(date.getDate()+2))
+console.log(fromDate.toISOString().split("T")[0])

@@ -77,7 +77,6 @@ CREATE TABLE `battle_history_raw_v2`  (
   `player_rating_initial_lost` int(11) NOT NULL,
   `player_rating_final_lost` int(11) NOT NULL,
   `loser` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
-  `insert_time` datetime(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
   PRIMARY KEY (`id`,`created_date_day`) USING BTREE,
   INDEX `index_lost_team`(`summoner_id_lost`, `monster_1_id_lost`, `monster_2_id_lost`, `monster_3_id_lost`, `monster_4_id_lost`, `monster_5_id_lost`, `monster_6_id_lost`) USING BTREE,
   INDEX `index_mana_sum_rule`(`mana_cap`, `summoner_id`, `ruleset`) USING BTREE
@@ -91,6 +90,37 @@ alter table battle_history_raw_v2 partition by range columns(created_date_day)(
 	partition p20211205 values less than('2021-12-05')
 );
 
+alter table battle_history_raw_v2 add partition (partition p20211206 values less than('2021-12-06'));
+alter table battle_history_raw_v2 add partition (partition p20211207 values less than('2021-12-07'));
+alter table battle_history_raw_v2 add partition (partition p20211208 values less than('2021-12-08'));
+alter table battle_history_raw_v2 add partition (partition p20211209 values less than('2021-12-09'));
+alter table battle_history_raw_v2 add partition (partition p20211210 values less than('2021-12-10'));
+alter table battle_history_raw_v2 add partition (partition p20211211 values less than('2021-12-11'));
+alter table battle_history_raw_v2 add partition (partition p20211212 values less than('2021-12-12'));
+alter table battle_history_raw_v2 add partition (partition p20211213 values less than('2021-12-13'));
+alter table battle_history_raw_v2 add partition (partition p20211214 values less than('2021-12-14'));
+alter table battle_history_raw_v2 add partition (partition p20211215 values less than('2021-12-15'));
+alter table battle_history_raw_v2 add partition (partition p20211216 values less than('2021-12-16'));
+alter table battle_history_raw_v2 add partition (partition p20211217 values less than('2021-12-17'));
+alter table battle_history_raw_v2 add partition (partition p20211218 values less than('2021-12-18'));
+alter table battle_history_raw_v2 add partition (partition p20211219 values less than('2021-12-19'));
+alter table battle_history_raw_v2 add partition (partition p20211220 values less than('2021-12-20'));
+alter table battle_history_raw_v2 add partition (partition p20211221 values less than('2021-12-21'));
+alter table battle_history_raw_v2 add partition (partition p20211222 values less than('2021-12-22'));
+alter table battle_history_raw_v2 add partition (partition p20211223 values less than('2021-12-23'));
+alter table battle_history_raw_v2 add partition (partition p20211224 values less than('2021-12-24'));
+alter table battle_history_raw_v2 add partition (partition p20211225 values less than('2021-12-25'));
+alter table battle_history_raw_v2 add partition (partition p20211226 values less than('2021-12-26'));
+alter table battle_history_raw_v2 add partition (partition p20211227 values less than('2021-12-27'));
+alter table battle_history_raw_v2 add partition (partition p20211228 values less than('2021-12-28'));
+alter table battle_history_raw_v2 add partition (partition p20211229 values less than('2021-12-29'));
+alter table battle_history_raw_v2 add partition (partition p20211230 values less than('2021-12-30'));
+alter table battle_history_raw_v2 add partition (partition p20211231 values less than('2021-12-31'));
+alter table battle_history_raw_v2 add partition (partition p20220101 values less than('2022-01-01'));
+alter table battle_history_raw_v2 add partition (partition p20220102 values less than('2022-01-02'));
+alter table battle_history_raw_v2 add partition (partition p20220103 values less than('2022-01-03'));
+alter table battle_history_raw_v2 add partition (partition p20220104 values less than('2022-01-04'));
+alter table battle_history_raw_v2 add partition (partition p20220105 values less than('2022-01-05'));
 alter table battle_history_raw_v2 add partition (partition p20220106 values less than('2022-01-06'));
 alter table battle_history_raw_v2 add partition (partition p20220107 values less than('2022-01-07'));
 alter table battle_history_raw_v2 add partition (partition p20220108 values less than('2022-01-08'));
@@ -425,35 +455,6 @@ alter table battle_history_raw_v2 add partition (partition p20221202 values less
 alter table battle_history_raw_v2 add partition (partition p20221203 values less than('2022-12-03'));
 alter table battle_history_raw_v2 add partition (partition p20221204 values less than('2022-12-04'));
 alter table battle_history_raw_v2 add partition (partition p20221205 values less than('2022-12-05'));
-alter table battle_history_raw_v2 add partition (partition p20221206 values less than('2022-12-06'));
-alter table battle_history_raw_v2 add partition (partition p20221207 values less than('2022-12-07'));
-alter table battle_history_raw_v2 add partition (partition p20221208 values less than('2022-12-08'));
-alter table battle_history_raw_v2 add partition (partition p20221209 values less than('2022-12-09'));
-alter table battle_history_raw_v2 add partition (partition p20221210 values less than('2022-12-10'));
-alter table battle_history_raw_v2 add partition (partition p20221211 values less than('2022-12-11'));
-alter table battle_history_raw_v2 add partition (partition p20221212 values less than('2022-12-12'));
-alter table battle_history_raw_v2 add partition (partition p20221213 values less than('2022-12-13'));
-alter table battle_history_raw_v2 add partition (partition p20221214 values less than('2022-12-14'));
-alter table battle_history_raw_v2 add partition (partition p20221215 values less than('2022-12-15'));
-alter table battle_history_raw_v2 add partition (partition p20221216 values less than('2022-12-16'));
-alter table battle_history_raw_v2 add partition (partition p20221217 values less than('2022-12-17'));
-alter table battle_history_raw_v2 add partition (partition p20221218 values less than('2022-12-18'));
-alter table battle_history_raw_v2 add partition (partition p20221219 values less than('2022-12-19'));
-alter table battle_history_raw_v2 add partition (partition p20221220 values less than('2022-12-20'));
-alter table battle_history_raw_v2 add partition (partition p20221221 values less than('2022-12-21'));
-alter table battle_history_raw_v2 add partition (partition p20221222 values less than('2022-12-22'));
-alter table battle_history_raw_v2 add partition (partition p20221223 values less than('2022-12-23'));
-alter table battle_history_raw_v2 add partition (partition p20221224 values less than('2022-12-24'));
-alter table battle_history_raw_v2 add partition (partition p20221225 values less than('2022-12-25'));
-alter table battle_history_raw_v2 add partition (partition p20221226 values less than('2022-12-26'));
-alter table battle_history_raw_v2 add partition (partition p20221227 values less than('2022-12-27'));
-alter table battle_history_raw_v2 add partition (partition p20221228 values less than('2022-12-28'));
-alter table battle_history_raw_v2 add partition (partition p20221229 values less than('2022-12-29'));
-alter table battle_history_raw_v2 add partition (partition p20221230 values less than('2022-12-30'));
-alter table battle_history_raw_v2 add partition (partition p20221231 values less than('2022-12-31'));
-alter table battle_history_raw_v2 add partition (partition p20230101 values less than('2023-01-01'));
-alter table battle_history_raw_v2 add partition (partition p20230102 values less than('2023-01-02'));
-alter table battle_history_raw_v2 add partition (partition p20230103 values less than('2023-01-03'));
 
 
  sed -i "s/\`battle_history_raw\`/\`battle_history_raw_v2\`(battle_queue_id,summoner_id,summoner_level ,monster_1_id ,monster_1_level ,monster_1_abilities ,monster_2_id ,monster_2_level ,monster_2_abilities ,monster_3_id ,monster_3_level ,monster_3_abilities ,monster_4_id ,monster_4_level ,monster_4_abilities ,monster_5_id ,monster_5_level ,monster_5_abilities ,monster_6_id ,monster_6_level ,monster_6_abilities ,created_date ,created_date_day , match_type , mana_cap ,ruleset ,inactive,player_rating_initial ,player_rating_final ,winner ,battle_queue_id_lost ,summoner_id_lost ,summoner_level_lost ,monster_1_id_lost ,monster_1_level_lost ,monster_1_abilities_lost ,monster_2_id_lost ,monster_2_level_lost,monster_2_abilities_lost ,monster_3_id_lost ,monster_3_level_lost ,monster_3_abilities_lost ,monster_4_id_lost ,monster_4_level_lost ,monster_4_abilities_lost ,monster_5_id_lost,monster_5_level_lost ,monster_5_abilities_lost ,monster_6_id_lost ,monster_6_level_lost ,monster_6_abilities_lost ,player_rating_initial_lost ,player_rating_final_lost ,loser) /g" battle_history_raw.sql

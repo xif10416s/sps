@@ -1,4 +1,5 @@
 const cardsDetails = require('../../data/cardsDetails');
+const battles = require('../../battles');
 
 /**
  * isWin: created_date : match_type : mana_cap :ruleset ：s,m1
@@ -8,7 +9,7 @@ function filterManaMatch(input, mana , manaDelta = 1) {
   let matchTeams = {};
   input.forEach(x => {
     let totalMana = parseInt(x['mana_cap'])
-    if (totalMana >= (parseInt(mana) - manaDelta) && totalMana <= (parseInt(mana) + manaDelta)) {
+    if (totalMana >= (parseInt(mana) - manaDelta) && totalMana <= (parseInt(mana))) {
       matchTeams[x['summoner_id']] = x;
     }
   });
@@ -19,18 +20,10 @@ function filterManaMatch(input, mana , manaDelta = 1) {
 function filterRuleMatch(input, ruleset) {
   let matchList = [];
   Object.keys(input).forEach(sid => {
-    const btRule = input[sid]['ruleset'];
-    if (btRule === ruleset) {
-      matchList.push(input[sid])
-    }
-
-    const rules = ruleset.split('|');
-    if (rules.length > 0) {
-      for (let i = 0; i < rules.length; i++) {
-        if (btRule.indexOf(rules[i]) != -1) {
-           matchList.push(input[sid])
-        }
-      }
+    const mustRules = battles.getMustRules(ruleset);
+    const ruleMatch = battles.getRuleMatch(input[sid]['ruleset'],ruleset , mustRules);
+    if(ruleMatch) {
+       matchList.push(input[sid])
     }
   });
   return matchList;
