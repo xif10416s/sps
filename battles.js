@@ -142,26 +142,27 @@ function getMustRules(ruleset){
     return mustRule;
 }
 
+function getRuleMatch(hisBattleRuleset, matchRuleset,mustRule) {
+    console.log("hisBattleRuleset : ", hisBattleRuleset , "matchRuleset :" , matchRuleset , "mustRule :", mustRule)
+    if(mustRule != "" && mustRule != "ALL"){
+        return hisBattleRuleset.indexOf(mustRule) != -1;
+    }
+
+    if(mustRule == "ALL"){
+        let keyRules = matchRuleset.split('|');
+        let reserveRule = keyRules[1]+"|" +  keyRules[0]
+        return  hisBattleRuleset == matchRuleset || hisBattleRuleset == reserveRule;
+    }
+
+    return false;
+}
+
 async function  mostWinningEnemy(possibleTeamsList , enemyPossbileTeams ,ruleset ){
     let matchTeams = [];
     if(enemyPossbileTeams && enemyPossbileTeams.length > 0){
-
         let winTeams = enemyPossbileTeams.filter(bt => {
             let mustRule = getMustRules(ruleset);
-            let ruleMatch = () => {
-
-                if(mustRule != "" && mustRule != "ALL"){
-                    return bt['ruleset'].index(mustRule) != -1;
-                }
-
-                if(mustRule == "ALL"){
-                    let keyRules = ruleset.split('|');
-                    let reserveRule = keyRules[1]+"|" +  keyRules[0]
-                    return bt['ruleset'] == ruleMatch || bt['ruleset'] == reserveRule;
-                }
-
-                return false;
-            }
+            let ruleMatch = getRuleMatch(bt['ruleset'],ruleset,mustRule);
             return bt['isWin'] == true && ruleMatch
         }  )
         if(winTeams && winTeams.length >0) {
@@ -215,7 +216,7 @@ async function findAgainstTeam(ept,possibleTeamsList){
         'monster_5_id', 'monster_6_id'])
     const params = [ ept.summoner_id,ept.monster_1_id
         ,ept.monster_2_id,ept.monster_3_id,ept.monster_4_id,ept.monster_5_id,ept.monster_6_id];
-    console.log("find target against :")
+    console.log("find target against :",params)
     const rs = await dbUtils.sqlQuery(sql,params);
     console.log("find team",rs.length)
     if( rs.length > 0 ){
@@ -232,6 +233,8 @@ module.exports.mostWinningSummonerTank = mostWinningSummonerTank;
 module.exports.mostWinningEnemy = mostWinningEnemy;
 module.exports.findAgainstTeam = findAgainstTeam;
 module.exports.mostWinningByEnemySummoner=mostWinningByEnemySummoner
+module.exports.getMustRules = getMustRules;
+module.exports.getRuleMatch = getRuleMatch;
 
 let test = [{
     'summoner_id': 440,
