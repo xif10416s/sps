@@ -5,7 +5,8 @@ const user = require('../../userV2');
 const ptm = require('../../possibleTeams');
 const battlesGet = require('../../battlesGet');
 const cardDetail = require('../../data/cardsDetails');
-
+const dbAnalysis = require('../../db/script/analysis');
+const mostUsefullMonster = require('../../db/data/mostUsefull');
 const splinters = ['fire', 'life', 'earth', 'water', 'death', 'dragon'];
 
 // 创建服务器
@@ -29,7 +30,13 @@ http.createServer( async  function (request, response) {
       let player = arg1.player
       console.log(rule,mana,enemy,sp,player)
       const enemyRecentTeams = await battlesGet.getBattleDetail(enemy)
-      const myCards = require("../../data/playcards/"+player+"_cards")
+      let myCards = []
+      try{
+        myCards = require("../../data/playcards/"+player+"_cards")
+      } catch (e) {
+        return {msg:"error"}
+      }
+      
 
       const matchDetails = {
         orgMana: mana,
@@ -102,6 +109,22 @@ http.createServer( async  function (request, response) {
 
         }
       }
+      response.writeHead(200, {'Content-Type': 'application/json'});
+      response.write(JSON.stringify(result))
+      response.end()
+      return;
+    }
+
+    //------------------------------
+    if(pathname.startsWith("/api/analysis")) {
+      let fromScore = arg1.fromScore;
+      let endScore = arg1.endScore;
+      console.log("/api/analysis ...........")
+      const result =  mostUsefullMonster;
+      result.forEach(item =>{
+        const cardInfo = cardDetail.cardsDetailsIDMap[item['id']];
+        item['name'] = cardInfo['name'];
+      })
       response.writeHead(200, {'Content-Type': 'application/json'});
       response.write(JSON.stringify(result))
       response.end()

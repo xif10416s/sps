@@ -1,0 +1,18 @@
+[
+   {"name" : "Furious Chicken",
+    "skipRules": ["Odd Ones Out","Taking Sides"],
+    "monsterMaxSize": 5,
+    "position": [1],
+    "positionStrategy": 1 ,
+    "replaceMana" : 0,
+     "order" : 999
+  },
+  {"name" : "Creeping Ooze",
+    "skipRules": ["Back to Basics","Taking Sides","Even Stevens","Reverse Speed"],
+    "monsterMaxSize": 6,
+    "position": [3,2,4,5,6],
+    "positionStrategy": 2 ,
+    "replaceMana" : 1,
+    "order" : 5
+  }
+]

@@ -10,7 +10,8 @@ const {  sleep } = require('./helper');
 
 
 async function getBattleHistory(player = '', data = {}) {
-    const battleHistory = await fetch('https://api.steemmonsters.io/battle/history?player=' + player.toLocaleLowerCase())
+    // const battleHistory = await fetch('https://api.steemmonsters.io/battle/history?player=' + player.toLocaleLowerCase())
+    const battleHistory = await fetch('https://api2.splinterlands.com/battle/history?player=' + player.toLocaleLowerCase())
         .then((response) => {
             if (!response.ok) {
                 console.log('Network response was not ok');

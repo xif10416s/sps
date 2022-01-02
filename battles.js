@@ -123,6 +123,10 @@ const mostWinningSummonerTank = (possibleTeamsList) => {
 function getMustRules(ruleset){
     let keyRules = ruleset.split('|');
     let mustRule = "";
+    if(ruleset.indexOf("|") == -1 && process.env.KEY_SINGLE_RULES.indexOf(ruleset) != -1){
+        return ruleset;
+    }
+
     if(keyRules.length > 1){
         if(process.env.KEY_SINGLE_RULES.indexOf(keyRules[0]) != -1 &&
             process.env.KEY_SINGLE_RULES.indexOf(keyRules[1]) == -1) {
@@ -138,16 +142,36 @@ function getMustRules(ruleset){
             process.env.KEY_SINGLE_RULES.indexOf(keyRules[1]) != -1) {
             mustRule = "ALL";
         }
+
+        if(process.env.KEY_SINGLE_RULES.indexOf(keyRules[0]) == -1 &&
+            process.env.KEY_SINGLE_RULES.indexOf(keyRules[1]) == -1) {
+            mustRule = "ANY";
+        }
     }
     return mustRule;
 }
 
 function getRuleMatch(hisBattleRuleset, matchRuleset,mustRule) {
     console.log("hisBattleRuleset : ", hisBattleRuleset , "matchRuleset :" , matchRuleset , "mustRule :", mustRule)
+    // single any
+    if(mustRule == "") {
+        return true;
+    }
+
+    // double any
+    if(mustRule == "ANY" ) {
+        let keyRules = matchRuleset.split('|');
+        if(hisBattleRuleset.indexOf(keyRules[0]) != -1 || hisBattleRuleset.indexOf(keyRules[1]) != -1){
+            return true;
+        }
+    }
+
+    // single must rule
     if(mustRule != "" && mustRule != "ALL"){
         return hisBattleRuleset.indexOf(mustRule) != -1;
     }
 
+    // double must rule
     if(mustRule == "ALL"){
         let keyRules = matchRuleset.split('|');
         let reserveRule = keyRules[1]+"|" +  keyRules[0]

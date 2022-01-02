@@ -19,10 +19,11 @@ let undefinedTotal = 0;
 const ecrRecoveryRatePerHour = 1.04;
 
 // LOAD MY CARDS
-async function getCards() {
-    const myCards = await user.getPlayerCards(account)
-    return myCards;
-}
+// async function getCards() {
+//     let myCards = []
+//     await user.getPlayerCards(account).then(x => myCards.push(x))
+//     return myCards;
+// }
 
 async function getQuest() {
     return quests.getPlayerQuest(account)
@@ -297,9 +298,12 @@ async function startBotPlayMatch(page, browser) {
         }
 
         console.log('getting user cards collection from splinterlands API...')
-        const myCards = await getCards()
-            .then((x)=>{console.log('cards retrieved'); return x})
-            .catch(()=>console.log('cards collection api didnt respond. Did you use username? avoid email!'));
+        // const myCards = await getCards()
+        //     .then((x)=>{console.log('cards retrieved'); return x})
+        //     .catch(()=>console.log('cards collection api didnt respond. Did you use username? avoid email!'));
+
+        let myCards = []
+        await user.getPlayerCards(account.toLowerCase()).then(x => myCards.push(...x))
 
         if(myCards) {
             console.log(account, ' deck size: '+myCards.length)

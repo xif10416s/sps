@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>xxx</title>
+  <script type="text/javascript" src="jquery-3.6.0.min.js"></script>
+  <script type="text/javascript" src="imageselect.js"></script>
+  <link href="imageselect.css" media="screen" rel="stylesheet" type="text/css"/>
+  <script src="../../../sps/popup.js"></script>
+</head>
+<style>
+  * {
+    padding: 0;
+    margin: 0;
+  }
+
+  table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    border: 1px solid #c0c0c0;
+  }
+
+  th, td {
+    border: 1px solid #d0d0d0;
+    color: #404060;
+    padding: 10px;
+  }
+
+  th {
+    background-color: #09c;
+    font: bold 16px "微软雅黑";
+    color: #fff;
+  }
+
+  td {
+    font: 14px "微软雅黑";
+  }
+
+  tbody tr {
+    background-color: #f0f0f0;
+  }
+
+  tbody tr:hover {
+    cursor: pointer;
+    background-color: #fafafa;
+  }
+</style>
+<script>
+
+</script>
+<body>
+
+<div style="display:flex">
+  <div> &nbsp; &nbsp; &nbsp; <label>fromScore:</label><input id="fromScore"/>
+    &nbsp; &nbsp; &nbsp;
+    <label>endScore:</label> <input id="endScore"/>
+  </div>
+  <div>
+    <button id="bt" style="width: 80px;height: 40px;">test</button>
+  </div>
+</div>
+<div style="display:flex">
+  <div>
+    <table>
+      <thead>
+      <tr>
+        <th colspan="3">最佳结果</th>
+      </tr>
+      <!--<tr>-->
+        <!--<th>name</th>-->
+        <!--<th>Summoner</th>-->
+        <!--<th>winCount</th>-->
+      <!--</tr>-->
+      <!--<tr>-->
+      <!--<th>DEMO</th>-->
+      <!--<th>-->
+      <!--<div style="float:left;padding-right: 2px;">-->
+      <!--<img src="./Almo_Cambio.png" style = 'width: 100px;'><br/>-->
+      <!--<label>Almo_Cambio</label>-->
+      <!--</div>-->
+      <!--</th>-->
+      <!--<td>-->
+      <!--<div style='display:flex '>-->
+      <!--<div style="float:left;padding-right: 2px;">-->
+      <!--<img src="./Almo_Cambio.png"  style = 'width: 100px;'><br/>-->
+      <!--<label>Almo_Cambio</label>-->
+      <!--</div>-->
+      <!--<div style="float:left;padding-right: 2px;">-->
+      <!--<img src="./Almo_Cambio.png" style = 'width: 100px;'><br/>-->
+      <!--<label>Almo_Cambio</label>-->
+      <!--</div>-->
+      <!--<div style="float:left;padding-right: 2px;">-->
+      <!--<img src="./Almo_Cambio.png" style = 'width: 100px;'><br/>-->
+      <!--<label>Almo_Cambio</label>-->
+      <!--</div>-->
+      <!--<div style="float:left;padding-right: 2px;">-->
+      <!--<img src="./Almo_Cambio.png" style = 'width: 100px;'><br/>-->
+      <!--<label>Almo_Cambio</label>-->
+      <!--</div>-->
+      <!--<div style="float:left;padding-right: 2px;">-->
+      <!--<img src="./Almo_Cambio.png" style = 'width: 100px;'><br/>-->
+      <!--<label>Almo_Cambio</label>-->
+      <!--</div>-->
+      <!--<div style="float:left;padding-right: 2px;">-->
+      <!--<img src="./Almo_Cambio.png" style = 'width: 100px;'><br/>-->
+      <!--<label>Almo_Cambio</label>-->
+      <!--</div>-->
+      <!--</div>-->
+      <!--</td>-->
+      <!--</tr>-->
+      </thead>
+      <tbody id="J_TbData">
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+</body>
+
+<script>
+  $(document).ready(function () {
+    function queryData(){
+      let reqUrl = "/api/analysis?fromScore=" + $("#fromScore").val() + "&endScore=" + $("#endScore").val();
+
+      $.get(reqUrl, function (data, status) {
+          let html = '';
+          data.forEach(item =>{
+            html += createItemDiv(item);
+          })
+          $("#J_TbData").html(html);
+      })
+    }
+
+    $("#bt").click(function () {
+      queryData();
+    });
+
+    function createItemDiv(item) {
+      let name = item['name']
+      let cnt  = item['cnt']
+      var html = "";
+      html += "<div style = \"float:left;padding-right: 2px;\" >";
+      html += "<img src='" + name.replaceAll("'", "").replaceAll(" ", "_")
+          + ".png' style = 'width: 100px;'/><br/>"
+      html += "<div>"
+      html += "<label>" + name + "</label>"
+      html += "</div>"
+      html += "<div>"
+      html += "<label>" + cnt + "</label>"
+      html += "</div>"
+      html += "</div>";
+      return html;
+    }
+
+    $("#init").click(function () {
+      let reqUrl = "/api/init?player=" + $("#player").val().toLowerCase()
+      $.get(reqUrl, function (data, status) {
+        alert("init success!")
+      });
+    });
+    queryData();
+  });
+
+
+</script>
+<script>
+
+
+  $(document).ready(function () {
+    $('select[name=rule1]').ImageSelect({dropdownWidth: 25});
+    $('select[name=rule2]').ImageSelect({dropdownWidth: 25});
+  });
+</script>
+</html>

@@ -21,4 +21,9 @@ getPlayerCards = (username) => (fetch(`https://api2.splinterlands.com/cards/coll
 )
 
 module.exports.getPlayerCards = getPlayerCards;
-// getPlayerCards("sugelafei").then(x => console.log(JSON.stringify(x)))
+
+// (async ()=>{
+//   let a = []
+//   await getPlayerCards("sugelafei2").then(x => a.push(...x))
+//   console.log(JSON.stringify(a))
+// })()

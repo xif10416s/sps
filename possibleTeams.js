@@ -3,6 +3,7 @@ const card = require('./cards');
 const helper = require('./helper');
 const battles = require('./battles');
 const fetch = require('node-fetch');
+const extendsHandler = require("./data/strategy/extendsHandler")
 
 const cardsDetail = require('./data/cardsDetails');
 
@@ -359,8 +360,8 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
   if(againstInfo && againstInfo.length > 1 && matchDetails.orgMana >= 17) {
     const possibleSummoner = againstInfo[0];
     const bestAgainst = againstInfo[1];
-    if(bestAgainst && bestAgainst.length >= 1){
-      console.log("bestAgainst: " ,JSON.stringify(bestAgainst))
+    if(bestAgainst && bestAgainst.length >= 30){
+      console.log("bestAgainst: " ,bestAgainst.length)
       bestCombination = await battles.mostWinningSummonerTank(bestAgainst);
       console.log("bestAgainst best combination:" , JSON.stringify(bestCombination))
       let mostWinEnemyTeam = await findBestTeam(bestCombination,possibleTeams)
@@ -370,8 +371,8 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
 
     if(possibleSummoner && matchDetails.orgMana >= 17) {
       let byEnemySummor =  await battles.mostWinningByEnemySummoner(possibleTeams,possibleSummoner , matchDetails)
-      if(byEnemySummor && byEnemySummor.length >= 1){
-        console.log("byEnemySummor: " ,JSON.stringify(byEnemySummor))
+      if(byEnemySummor && byEnemySummor.length >= 30){
+        console.log("byEnemySummor: " ,byEnemySummor.length)
         bestCombination = await battles.mostWinningSummonerTank(byEnemySummor);
         console.log("byEnemySummor best combination:" , JSON.stringify(bestCombination))
         let mostWinEmenyBySummonr = await findBestTeam(bestCombination,possibleTeams)
@@ -558,7 +559,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
     let manaMatchTeams = enemy.filterManaMatch(matchDetails.enemyRecent, matchDetails.orgMana, 1);
     if (manaMatchTeams && Object.keys(manaMatchTeams).length > 0) {
       let manaRuleMatchTeams = enemy.filterRuleMatch(manaMatchTeams, matchDetails.rules);
-      console.log("manaMatchTeams-------",manaMatchTeams.length);
+      console.log("manaMatchTeams-------",Object.keys(manaMatchTeams).length);
       console.log("manaRuleMatchTeams-------",manaRuleMatchTeams.length);
       if (manaRuleMatchTeams && manaRuleMatchTeams.length > 0) {
         enemyPossbileTeams = manaRuleMatchTeams;
@@ -646,6 +647,8 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
         matchDetails);
     if (res[0] && res[1]) {
       console.log('Dont play for the quest, and play this:', res);
+      res[1] = extendsHandler.doExtendsHandler(res[1],matchDetails.rules,matchDetails.myCards);
+      console.log('Dont play for the quest, and play this doExtendsHandler :', res);
       return {summoner: res[0], cards: res[1]};
     }
   }
@@ -748,7 +751,15 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
         ,getCardNameByID(b['monster_3_id']),getCardNameByID(b['monster_4_id']),getCardNameByID(b['monster_5_id']),getCardNameByID(b['monster_6_id']),'',b['mana_cap'],b['isWin'],b['ruleset']]
     })
   }
-  return {mostWinTeam:mostWinningSummonerTankComboTeam && mostWinningSummonerTankComboTeam.length >1 ? mostWinningSummonerTankComboTeam[1] : [] ,mostEnemyAgainstTeam: mostEnemyAgainstTeam && mostEnemyAgainstTeam.length >1? mostEnemyAgainstTeam[1] :[],mostAgainstrevertTeam:mostAgainstrevertTeam && mostAgainstrevertTeam.length >1 ?mostAgainstrevertTeam[1] :[],summoners:summonerTeamMap , recentEenmyTeam: recentEenmyTeam }
+  const mostWinTeam  =  extendsHandler.doExtendsHandler(mostWinningSummonerTankComboTeam && mostWinningSummonerTankComboTeam.length >1 ? mostWinningSummonerTankComboTeam[1] : []
+      ,matchDetails.rules,matchDetails.myCards);
+  const enemyAgainstTeam =  extendsHandler.doExtendsHandler( mostEnemyAgainstTeam && mostEnemyAgainstTeam.length >1? mostEnemyAgainstTeam[1] :[]
+      ,matchDetails.rules,matchDetails.myCards);
+  const againstrevertTeam = extendsHandler.doExtendsHandler( mostAgainstrevertTeam && mostAgainstrevertTeam.length >1 ?mostAgainstrevertTeam[1] :[]
+      ,matchDetails.rules,matchDetails.myCards);
+
+
+  return {mostWinTeam: mostWinTeam,mostEnemyAgainstTeam: enemyAgainstTeam ,mostAgainstrevertTeam: againstrevertTeam, summoners:summonerTeamMap , recentEenmyTeam: recentEenmyTeam }
 }
 
 function getCardNameByID(cardId){
