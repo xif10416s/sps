@@ -9,7 +9,7 @@ function filterManaMatch(input, mana , manaDelta = 1) {
   let matchTeams = {};
   input.forEach(x => {
     let totalMana = parseInt(x['mana_cap'])
-    if (totalMana >= (parseInt(mana) - manaDelta) && totalMana <= (parseInt(mana))) {
+    if (totalMana >= (parseInt(mana) - manaDelta) && totalMana <= (parseInt(mana) + manaDelta)) {
       matchTeams[x['summoner_id']] = x;
     }
   });

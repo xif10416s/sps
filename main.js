@@ -3,8 +3,12 @@ const { run, setupAccount } = require('./index');
 const { sleep } = require('./helper');
 const chalk = require('chalk');
 
-const isMultiAccountMode = (process.env.MULTI_ACCOUNT?.toLowerCase() === 'true') ? true : false; 
+const isMultiAccountMode = (process.env.MULTI_ACCOUNT?.toLowerCase() === 'true') ? true : false;
 
+const config = require('./config/config');
+const username = process.argv[process.argv.indexOf('--username')+1]
+console.log("config username :",username)
+config.doConfigInit(username)
 
 async function startMulti() {
     const sleepingTimeInMinutes = process.env.MINUTES_BATTLES_INTERVAL || 30;

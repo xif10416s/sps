@@ -209,5 +209,25 @@ node battlesGetDataRawV1.js
 docker run -e "MAX_QUEUE_LENGTH=300"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=200"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3000:3000 --restart always -d --name browserless browserless/chrome
 http://192.168.99.100:3000
 
+docker run -e "MAX_QUEUE_LENGTH=300"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=200"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3001:3000 --restart always -d --name browserless3001 browserless/chrome
+
+
+
 //WSL
 npm --max-old-space-size=5192 start >> logs/sugelafei5-log.txt
+
+
+npm --max-old-space-size=4192  start  -- --username sugelafei2  >> logs/sugelafei2/sugelafei10-log.txt
+npm --max-old-space-size=4192  start  -- --username sugelafei  >> logs/sugelafei/sugelafei11-log.txt
+
+
+
+// python
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/spark && source bin/activate && source ~/.bashrc
+pyspark --driver-memory 25g
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/spark && jupyter notebook
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/spark && source bin/activate && jupyter notebook list
+
+
+//
+/mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --master local[10] --driver-memory 25g  --name test

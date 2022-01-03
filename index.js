@@ -434,11 +434,13 @@ async function startBotPlayMatch(page, browser) {
                 if (winner.trim() == account.toLowerCase()) {
                     const decWon = await getElementText(page, '.player.winner span.dec-reward span', 1000);
                     console.log(chalk.green('You won! Reward: ' + decWon + ' DEC'));
+                    ask.logger.log('You won! Reward: ', decWon , ' DEC');
                     totalDec += !isNaN(parseFloat(decWon)) ? parseFloat(decWon) : 0 ;
                     winTotal += 1;
                 }
                 else {
                     console.log(chalk.red('You lost'));
+                    ask.logger.log('You lost');
                     loseTotal += 1;
                 }
             } catch {
@@ -508,7 +510,7 @@ async function run() {
 
     console.log('START ', account, new Date().toLocaleString())
     // const browser = await puppeteer.launch(puppeteer_options);
-    const browser = await puppeteer.connect({ browserWSEndpoint: 'ws://192.168.99.100:3000' });
+    const browser = await puppeteer.connect({ browserWSEndpoint: 'ws://192.168.99.100:'+ process.env.wsport });
     //const page = await browser.newPage();
     let [page] = await browser.pages();
 
