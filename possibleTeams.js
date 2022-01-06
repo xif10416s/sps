@@ -75,6 +75,20 @@ const getSummoners = (myCards, splinters) => {
   }
 };
 
+
+const getSplintersSummoners = (splinters) =>{
+  try {
+    const sumArray = summoners.map(x => Number(Object.keys(x)[0]));
+    const availableSummoners = sumArray.filter(
+        id => splinters.includes(summonerColor(id)));
+    return availableSummoners;
+  } catch (e) {
+    console.log(e);
+    return [];
+  }
+
+}
+
 const summonerColor = (id) => {
   const summonerDetails = summoners.find(x => x[id]);
   return summonerDetails ? summonerDetails[id] : '';
@@ -411,7 +425,7 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
   console.log("mostWinningSummonerTankComboTeam : ", JSON.stringify(mst))
   const againstMostWin = await battles.findAgainstTeam(mst[0], mst.slice(1, 7),
       possibleTeams)
-  if (againstMostWin && againstMostWin.length > 0) {
+  if (againstMostWin && againstMostWin.length > 20) {
     bestCombination = await battles.mostWinningSummonerTank(againstMostWin);
     const revert = await findBestTeam(bestCombination, possibleTeams)
     console.log("do revert ,ORG :",
@@ -592,7 +606,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
         "2-3 second step teamSelection collect enemy teams, recent teams:",
         matchDetails.enemyRecent.length)
     let manaMatchTeams = enemy.filterManaMatch(matchDetails.enemyRecent,
-        matchDetails.orgMana, 1);
+        matchDetails.orgMana, 1, matchDetails.splinters);
     if (manaMatchTeams && Object.keys(manaMatchTeams).length > 0) {
       let manaRuleMatchTeams = enemy.filterRuleMatch(manaMatchTeams,
           matchDetails.rules);
@@ -607,7 +621,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
     }
     if (enemyPossbileTeams.length == 0) {
       let manaMatchTeams2 = enemy.filterManaMatch(matchDetails.enemyRecent,
-          matchDetails.orgMana, 2);
+          matchDetails.orgMana, 2, matchDetails.splinters);
       if (manaMatchTeams2 && Object.keys(manaMatchTeams2).length > 0) {
         let manaRuleMatchTeams2 = enemy.filterRuleMatch(manaMatchTeams2,
             matchDetails.rules);
@@ -713,7 +727,7 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
   let mostEnemyAgainstTeam = [];
   if (matchDetails.enemyRecent && matchDetails.enemyRecent.length > 0) {
     let manaMatchTeams = enemy.filterManaMatch(matchDetails.enemyRecent,
-        matchDetails.orgMana, 1);
+        matchDetails.orgMana, 1 , matchDetails.splinters);
     if (manaMatchTeams && Object.keys(manaMatchTeams).length > 0) {
       let manaRuleMatchTeams = enemy.filterRuleMatch(manaMatchTeams,
           matchDetails.rules);
@@ -727,7 +741,7 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
     }
     if (enemyPossbileTeams.length == 0) {
       let manaMatchTeams2 = enemy.filterManaMatch(matchDetails.enemyRecent,
-          matchDetails.orgMana, 2);
+          matchDetails.orgMana, 2, matchDetails.splinters);
       if (manaMatchTeams2 && Object.keys(manaMatchTeams2).length > 0) {
         let manaRuleMatchTeams2 = enemy.filterRuleMatch(manaMatchTeams2,
             matchDetails.rules);
@@ -780,7 +794,7 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
     mostAgainstrevertTeam = await findBestTeam(bestCombination, possibleTeams)
     console.log("do revert ,ORG :",
         JSON.stringify(mostWinningSummonerTankComboTeam[1]), " TO : ",
-        JSON.stringify(revert))
+        JSON.stringify(mostAgainstrevertTeam))
   } else {
     console.log("no revert team")
   }
@@ -865,7 +879,8 @@ function getCardNameByID(cardId) {
 
 module.exports.possibleTeams = possibleTeams;
 module.exports.teamSelection = teamSelection;
-module.exports.getSummoners = getSummoners
+module.exports.getSummoners = getSummoners;
+module.exports.getSplintersSummoners=getSplintersSummoners;
 module.exports.teamSelectionForWeb = teamSelectionForWeb
 module.exports.logger = logger;
 

@@ -19,6 +19,7 @@ http.createServer(async function (request, response) {
     var arg1 = url.parse(request.url, true).query;
     if (pathname.startsWith("/api/search")) {
       let rule = arg1.rule;
+      rule = rule.replace("and","&").replace("and","&").replace("and","&");
       let mana = arg1.mana;
       let enemy = arg1.enemy
       let sp = arg1.sp
@@ -123,7 +124,10 @@ http.createServer(async function (request, response) {
       let endScore = arg1.endScore;
       let rule = arg1.rule;
 
-      console.log("/api/analysis ...........")
+
+      console.log("------------",rule)
+
+      console.log("/api/analysis ...........",rule)
       const result = mostUsefullMonster.slice(0, 50);
       result.forEach(item => {
         const cardInfo = cardDetail.cardsDetailsIDMap[item['id']];
@@ -136,7 +140,6 @@ http.createServer(async function (request, response) {
           mostByRule = require(
               "../../data/ruleswin/" + rule.replace("|", "_") + "_cards")
         } catch (e) {
-          let rule = rule;
           if (rule.length > 1) {
             let rules = rule.split("|");
             let reserve = rules[1] + "_" + rules[0]
@@ -148,6 +151,7 @@ http.createServer(async function (request, response) {
         }
 
         if (mostByRule && mostByRule.length == 0) {
+          rule = rule.replace("and","&").replace("and","&").replace("and","&");
           mostByRule = await dbAnalysis.getMostUsefullMonster(fromScore,
               endScore, rule);
           mostByRule.forEach(item => {

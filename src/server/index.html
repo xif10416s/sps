@@ -61,6 +61,7 @@
     $("#enemy").val(getUrlParam("enemyName").toLowerCase())
 
     if(getUrlParam("rule")){
+      console.log(getUrlParam("rule"))
       let rules = getUrlParam("rule").split("|");
       if(rules.length == 1){
         $("#rule1").val(rules[0])
@@ -145,7 +146,7 @@
       <option value="Taking Sides">taking-sides.webp</option>
       <option value="Target Practice">target-practice.webp</option>
       <option value="Unprotected">unprotected.webp</option>
-      <option value="Up Close & Personal">up-close-personal.webp</option>
+      <option value="Up Close and Personal">up-close-personal.webp</option>
       <option value="Weak Magic">weak-magic.webp</option>
     </select>
   </div>
@@ -184,7 +185,7 @@
       <option value="Taking Sides">taking-sides.webp</option>
       <option value="Target Practice">target-practice.webp</option>
       <option value="Unprotected">unprotected.webp</option>
-      <option value="Up Close & Personal">up-close-personal.webp</option>
+      <option value="Up Close and Personal">up-close-personal.webp</option>
       <option value="Weak Magic">weak-magic.webp</option>
     </select>
   </div>

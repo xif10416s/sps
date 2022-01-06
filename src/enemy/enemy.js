@@ -1,15 +1,19 @@
 const cardsDetails = require('../../data/cardsDetails');
 const battles = require('../../battles');
+const pt = require('../../possibleTeams')
 
 /**
  * isWin: created_date : match_type : mana_cap :ruleset ：s,m1
  */
 
-function filterManaMatch(input, mana , manaDelta = 1) {
+function filterManaMatch(input, mana , manaDelta = 1, splinters) {
   let matchTeams = {};
+  const splintersSummoners =pt.getSplintersSummoners(splinters)
+  console.log("splintersSummoners:",JSON.stringify(splintersSummoners))
   input.forEach(x => {
     let totalMana = parseInt(x['mana_cap'])
-    if (totalMana >= (parseInt(mana) - manaDelta) && totalMana <= (parseInt(mana) + manaDelta)) {
+    if (totalMana >= (parseInt(mana) - manaDelta) && totalMana <= (parseInt(mana) + manaDelta)
+       && splintersSummoners.indexOf(x['summoner_id']) != -1) {
       matchTeams[x['summoner_id']] = x;
     }
   });
