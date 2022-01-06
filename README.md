@@ -220,7 +220,10 @@ npm --max-old-space-size=5192 start >> logs/sugelafei5-log.txt
 npm --max-old-space-size=4192  start  -- --username sugelafei2  >> logs/sugelafei2/sugelafei10-log.txt
 npm --max-old-space-size=4192  start  -- --username sugelafei  >> logs/sugelafei/sugelafei11-log.txt
 
-
+// shell
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/
+./shell/start.sh sugelafei2 1
+./shell/start.sh sugelafei 1
 
 // python
 cd /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/spark && source bin/activate && source ~/.bashrc
@@ -230,4 +233,4 @@ cd /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/spark && source bin/ac
 
 
 //
-/mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --master local[10] --driver-memory 25g  --name test
+/mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --conf spark.local.dir=/mnt/d/.temp  --master local[10] --driver-memory 25g  --name test

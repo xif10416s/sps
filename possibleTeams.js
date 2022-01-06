@@ -385,21 +385,21 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
       return mostWinEnemyTeam;
     }
 
-    if (possibleSummoner && matchDetails.orgMana >= 17) {
-      let byEnemySummor = await battles.mostWinningByEnemySummoner(
-          possibleTeams, possibleSummoner, matchDetails)
-      if (byEnemySummor && byEnemySummor.length >= 30) {
-        console.log("byEnemySummor: ", byEnemySummor.length)
-        bestCombination = await battles.mostWinningSummonerTank(byEnemySummor);
-        console.log("byEnemySummor best combination:",
-            JSON.stringify(bestCombination))
-        let mostWinEmenyBySummonr = await findBestTeam(bestCombination,
-            possibleTeams)
-        logger.log("4-4 third step most mostWinEmenyBySummonr team  :",
-            JSON.stringify(mostWinEmenyBySummonr))
-        return mostWinEmenyBySummonr;
-      }
-    }
+    // if (possibleSummoner && matchDetails.orgMana >= 17) {
+    //   let byEnemySummor = await battles.mostWinningByEnemySummoner(
+    //       possibleTeams, possibleSummoner, matchDetails)
+    //   if (byEnemySummor && byEnemySummor.length >= 30) {
+    //     console.log("byEnemySummor: ", byEnemySummor.length)
+    //     bestCombination = await battles.mostWinningSummonerTank(byEnemySummor);
+    //     console.log("byEnemySummor best combination:",
+    //         JSON.stringify(bestCombination))
+    //     let mostWinEmenyBySummonr = await findBestTeam(bestCombination,
+    //         possibleTeams)
+    //     logger.log("4-4 third step most mostWinEmenyBySummonr team  :",
+    //         JSON.stringify(mostWinEmenyBySummonr))
+    //     return mostWinEmenyBySummonr;
+    //   }
+    // }
   } else {
 
   }
