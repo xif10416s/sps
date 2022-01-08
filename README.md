@@ -221,9 +221,10 @@ npm --max-old-space-size=4192  start  -- --username sugelafei2  >> logs/sugelafe
 npm --max-old-space-size=4192  start  -- --username sugelafei  >> logs/sugelafei/sugelafei11-log.txt
 
 // shell
-cd /mnt/d/source/python/spsAuto/splinterlands-bot/
-./shell/start.sh sugelafei2 1
-./shell/start.sh sugelafei 1
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh sugelafei2 9
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh sugelafei 8
+
+
 
 // python
 cd /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/spark && source bin/activate && source ~/.bashrc

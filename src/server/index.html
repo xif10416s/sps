@@ -328,6 +328,14 @@
         });
         $("#enemy").val('')
         var html = "";
+        if (data.mostBcTeam && data.mostBcTeam.length > 0) {
+          html += "<tr>";
+          html += "<td>組合优先（测试） </td>"
+          html += "<td>" + createItemDiv(data.mostBcTeam[0]) + "</td>"
+          html += "<td>" + createTeamDiv(data.mostBcTeam) + "</td>"
+          html += "</tr>";
+        }
+
         if (data.mostWinTeam && data.mostWinTeam.length > 0) {
           html += "<tr>";
           html += "<td>最佳组合 </td>"

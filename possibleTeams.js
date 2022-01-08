@@ -784,6 +784,13 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
       }
     }
   }
+
+  // by card cs
+  const bcTeams = await  makeBestCombine(possibleTeams,matchDetails);
+  let bcCombine = await battles.mostWinningSummonerTank(bcTeams);
+  const mostWinningBcTeam = await findBestTeam(bcCombine, bcTeams)
+
+
   let mostAgainstrevertTeam = [];
   const mst = mostWinningSummonerTankComboTeam[1];
   console.log("mostWinningSummonerTankComboTeam : ", JSON.stringify(mst))
@@ -856,13 +863,19 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
 
     }
   })
+  const mostBcTeam = extendsHandler.doExtendsHandler(
+      mostWinningBcTeam
+      && mostWinningBcTeam.length > 1
+          ? mostWinningBcTeam[1] : []
+      , matchDetails.rules, matchDetails.myCards);
 
   return {
     mostWinTeam: mostWinTeam,
     mostEnemyAgainstTeam: enemyAgainstTeam,
     mostAgainstrevertTeam: againstrevertTeam,
     summoners: summonerTeamMap,
-    recentEenmyTeam: [...possbiletEnemyTeam, ...recentEenmyTeam]
+    recentEenmyTeam: [...possbiletEnemyTeam, ...recentEenmyTeam],
+    mostBcTeam:mostBcTeam
   }
 }
 
@@ -875,6 +888,109 @@ function getCardNameByID(cardId) {
     return ""
   }
 
+}
+
+async  function makeBestCombine(possibleTeams, matchDetails) {
+  const matchSplintersSummoners =  getSplintersSummoners(matchDetails.splinters)
+  const myAviableSummoners = getSummoners(matchDetails.myCards,matchDetails.splinters)
+  let sql = "select cs , sum(teams)/sum(teams+lostTeams) as tl   from   battle_stat_V2 where ( " ;
+  let csLike = "";
+  for (var i = 0; i < myAviableSummoners.length; i++) {
+    if(i != 0) {
+      csLike+=" or "
+    }
+    csLike+="cs like '"+ myAviableSummoners[i] + "%'";
+  }
+  csLike+=" ) and "
+  sql+=csLike;
+  sql+=" summonerId in ( " + matchSplintersSummoners.join(",") + ") and "
+  let mustRules = battles.getMustRules(matchDetails.rules);
+  if(mustRules  == "ALL") {
+    let keyRules = mustRules.split('|');
+    let reserveRule = keyRules[1] + "|" + keyRules[0]
+    sql += "( rule = '" +mustRules +"' or rule = '" + reserveRule +"' )  and "
+  } else if(mustRules == "" || mustRules == "ANY") {
+    sql += " rule = 'default'  and "
+  } else {
+    sql += " rule = '"+mustRules+"'  and "
+  }
+  sql += "  startMana <="+ matchDetails.mana +" and endMana >= "+ matchDetails.mana  +"   GROUP BY cs  HAVING   sum(teams) > 50   and tl >= 0.60  order by   tl desc  ,sum(teams -lostTeams ) desc "
+  const data = await dbUtils.sqlQuery(sql);
+  const string = JSON.stringify(data);
+  const rs = JSON.parse(string);
+  console.log('makeBestCombine', rs.length, sql);
+  const matchCS = matchCsTeam(rs,possibleTeams)
+  let cs =   matchCS[0]
+  let matchTeams = matchCS[1]
+  if(matchCS && cs.length > 0 && matchTeams.length > 0){
+    console.log("----",JSON.stringify( matchTeams.length))
+    let next = true;
+    while(next){
+      let extendsResult = await extendsCombineSearch(cs,matchTeams,matchDetails,matchSplintersSummoners)
+      if(extendsResult[1] && extendsResult[1].length > 0) {
+        cs = extendsResult[0];
+        matchTeams = extendsResult[1]
+      }else {
+        next = false;
+      }
+    }
+  }
+  console.log("--makeBestCombine--final--",cs,JSON.stringify( matchTeams.length))
+  return matchTeams;
+}
+
+function matchCsTeam(rs , possibleTeams) {
+  let matchTeams = [];
+  let matchCs = "";
+  if(rs && rs.length > 0){
+    for (var i = 0; i < rs.length; i++) {
+      const cs = rs[i]['cs']
+      const teamCS =  cs.split("-")
+      matchTeams = possibleTeams.filter( t =>{
+        let isMatch = true;
+        teamCS.slice(1,teamCS.length).forEach(t =>{
+          if(cs.indexOf(t) == -1){
+            isMatch = false;
+          }
+        })
+        return  t[0] == teamCS[0] && isMatch
+      })
+      if(matchTeams && matchTeams.length > 0){
+        matchCs = cs;
+        console.log(cs,rs[i]['tl'])
+        console.log("matchTeams .......",matchTeams.length)
+        break;
+      }
+    }
+  }
+  return [matchCs,matchTeams];
+}
+
+async function extendsCombineSearch(cs , matchTeams,matchDetails,matchSplintersSummoners){
+  let sql = "select cs , sum(teams)/sum(teams+lostTeams) as tl   from   battle_stat_V2 where  " ;
+  let csLike = "cs like '";
+  let spCs =  cs.split("-")
+  let lastCs = spCs[spCs.length - 1]
+  csLike +=cs.replace(lastCs,"_%"+lastCs+"%'")
+  csLike+="  and "
+  sql+=csLike;
+  sql+=" summonerId in ( " + matchSplintersSummoners.join(",") + ") and "
+  let mustRules = battles.getMustRules(matchDetails.rules);
+  if(mustRules  == "ALL") {
+    let keyRules = mustRules.split('|');
+    let reserveRule = keyRules[1] + "|" + keyRules[0]
+    sql += "( rule = '" +mustRules +"' or rule = '" + reserveRule +"' )  and "
+  } else if(mustRules == "" || mustRules == "ANY") {
+    sql += " rule = 'default'  and "
+  } else {
+    sql += " rule = '"+mustRules+"'  and "
+  }
+  sql += "  startMana <="+ matchDetails.mana +" and endMana >= "+ matchDetails.mana  +"   GROUP BY cs   order by   tl desc  ,sum(teams -lostTeams ) desc "
+  const data = await dbUtils.sqlQuery(sql);
+  const string = JSON.stringify(data);
+  const rs = JSON.parse(string);
+  console.log('extendsCombineSearch',rs, sql);
+  return matchCsTeam(rs, matchTeams)
 }
 
 module.exports.possibleTeams = possibleTeams;

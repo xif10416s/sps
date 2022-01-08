@@ -227,7 +227,7 @@ async function startBotPlayMatch(page, browser) {
 
     console.log( new Date().toLocaleString(), 'opening browser...')
     try {
-        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3163.100 Safari/537.36');
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36');
         await page.setViewport({
             width: 1800,
             height: 1500,

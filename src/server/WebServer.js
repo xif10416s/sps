@@ -71,6 +71,18 @@ http.createServer(async function (request, response) {
           })
         }
 
+        if (result.mostBcTeam) {
+          result.mostBcTeam = result.mostBcTeam.map(cardId => {
+            let card = cardDetail.cardsDetailsIDMap[cardId];
+            if (card) {
+              return card["name"]
+            } else {
+              // console.log("----------:",card)
+              return cardId;
+            }
+          })
+        }
+
         if (result.mostEnemyAgainstTeam) {
           result.mostEnemyAgainstTeam = result.mostEnemyAgainstTeam.map(
               cardId => {
@@ -170,6 +182,21 @@ http.createServer(async function (request, response) {
 
       response.writeHead(200, {'Content-Type': 'application/json'});
       response.write(JSON.stringify({mostUser: result, mostByRule: mostByRule}))
+      response.end()
+      return;
+    }
+
+    //------------------------------
+    if (pathname.startsWith("/api/csAnalysis")) {
+      let cs = arg1.cs;
+      let result = []
+      cs.split("-").forEach(item => {
+        const cardInfo = cardDetail.cardsDetailsIDMap[item];
+        result.push({"name": cardInfo['name']})
+      })
+
+      response.writeHead(200, {'Content-Type': 'application/json'});
+      response.write(JSON.stringify({mostUser: result}))
       response.end()
       return;
     }
