@@ -5,17 +5,15 @@
 //  .master("local[*]")
 //  .getOrCreate()
 //
-
-
-val jdbcDF = spark.read
-.format("jdbc")
-.option("url", "jdbc:mysql://10.100.3.27:3306/demo_test?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC")
-.option("dbtable", "(select mana_cap,ruleset , summoner_id,monster_1_id,monster_2_id,monster_3_id,monster_4_id,monster_5_id,monster_6_id , summoner_id_lost ,monster_1_id_lost ,monster_2_id_lost ,monster_3_id_lost ,monster_4_id_lost ,monster_5_id_lost ,monster_6_id_lost  from battle_history_raw_v2 where created_date_day  <= '2021-12-28') battle_history_raw_v2 ")
-.option("user", "root")
-.option("password", "xsmysql")
-.load()
-
-
+//
+//
+//val jdbcDF = spark.read
+//.format("jdbc")
+//.option("url", "jdbc:mysql://10.100.3.27:3306/demo_test?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC")
+//.option("dbtable", "(select mana_cap,ruleset , summoner_id,monster_1_id,monster_2_id,monster_3_id,monster_4_id,monster_5_id,monster_6_id , summoner_id_lost ,monster_1_id_lost ,monster_2_id_lost ,monster_3_id_lost ,monster_4_id_lost ,monster_5_id_lost ,monster_6_id_lost  from battle_history_raw_v2 where created_date_day  <= '2021-12-28') battle_history_raw_v2 ")
+//.option("user", "root")
+//.option("password", "xsmysql")
+//.load()
 
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -181,7 +179,6 @@ def splitAMLost(t:Item): Array[AgainstMap] = {
   rsArr.toArray
 }
 
-splitAM(Item(12,"test",1,14,13,12,5,6,7,8,9,10,11,2,3,4))
 
 def doAggMap(ds:Dataset[AgainstMap],fromMana:Int , endMana:Int):Dataset[StatCS] ={
   val aggDs = ds.map( x => {
@@ -212,7 +209,7 @@ def doAggMap(ds:Dataset[AgainstMap],fromMana:Int , endMana:Int):Dataset[StatCS] 
 }
 
 //  2021-12-25 19
-def doAnalysis(startTime:String, dayLen:Int ,fromMana:Int, endMana:Int): Unit = {
+def doAnalysis(startTime:String, endTime:String ,fromMana:Int, endMana:Int): Unit = {
   var jdbcDF = spark.read
     .format("jdbc")
     .option("url", URL)
@@ -222,6 +219,8 @@ def doAnalysis(startTime:String, dayLen:Int ,fromMana:Int, endMana:Int): Unit = 
     .load()
   val sdf =new SimpleDateFormat("yyyy-MM-dd")
   val dayDate :Date = sdf.parse(startTime)
+  val endDate :Date = sdf.parse(endTime)
+  val dayLen = ((endDate.getTime() - dayDate.getTime()) / (1000*3600*24)).toInt
   val cal = Calendar.getInstance()
   cal.setTime(dayDate)
   for(i <- 1 to dayLen) {
@@ -253,7 +252,7 @@ def doAnalysis(startTime:String, dayLen:Int ,fromMana:Int, endMana:Int): Unit = 
   aggDS.join(aggDSLost,aggDS("rule") === aggDSLost("rule")
     && aggDS("startMana") === aggDSLost("startMana")  && aggDS("endMana") === aggDSLost("endMana")
     && aggDS("cs") === aggDSLost("cs") && aggDS("summonerId") === aggDSLost("summonerId"),"left").select(aggDS("startMana"),aggDS("endMana"),aggDS("cs"),aggDS("len"),aggDS("rule"),aggDS("summonerId")
-      ,aggDS("teams"),aggDS("totalCnt"),aggDSLost("teams").as("lostTeams"),aggDSLost("totalCnt").as("lostTotalCnt")).as[StatCSResult].write.format("jdbc").option("url", URL).option("dbtable", "battle_stat").mode("append").option("user", USER).option("password", PASS).save()
+      ,aggDS("teams"),aggDS("totalCnt"),aggDSLost("teams").as("lostTeams"),aggDSLost("totalCnt").as("lostTotalCnt")).as[StatCSResult].toDF().na.fill(0.0).write.format("jdbc").option("url", URL).option("dbtable", "battle_stat_v3").mode("append").option("user", USER).option("password", PASS).save()
 
   ds.unpersist
 }
@@ -261,28 +260,10 @@ def doAnalysis(startTime:String, dayLen:Int ,fromMana:Int, endMana:Int): Unit = 
 
 def  doRangeByMana(arr:Array[(Int, Int)]):Unit = {
   arr.foreach(ms =>{
-    doAnalysis("2021-12-25",22,ms._1,ms._2)
+    doAnalysis("2021-12-25","2022-01-09",ms._1,ms._2)
   })
 }
 
 doRangeByMana(manaArr)
-
-
-
-
-var v1 = Map("a" -> Map(("439",1),("440",1)), "b" ->Map(("432",1),("431",1)) , "c" ->Map(("339",1),("340",1)))
-var v2 = Map("b" -> Map(("432",1),("431",1)), "c" ->Map(("432",1),("431",1)) , "d" ->Map(("339",1),("340",1)))
-
-v1 ++ v2.map {
-  case (sk,ms) => {
-    val matchMap = v1.getOrElse(sk,Map())
-    sk -> (ms ++ matchMap.map {
-      case(name,count) => name -> (count + ms.getOrElse(name,0))
-    })
-  }
-}
-
-val mergedMap = v1 ++ v2.map {
-  case (name,count) => name -> (count + v1.getOrElse(name,0)) }
 
 

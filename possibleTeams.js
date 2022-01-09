@@ -398,7 +398,6 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
           JSON.stringify(mostWinEnemyTeam))
       return mostWinEnemyTeam;
     }
-
     // if (possibleSummoner && matchDetails.orgMana >= 17) {
     //   let byEnemySummor = await battles.mostWinningByEnemySummoner(
     //       possibleTeams, possibleSummoner, matchDetails)
@@ -417,6 +416,18 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
   } else {
 
   }
+
+  console.log("4-4 third step makeBestCombine  start ............",new Date())
+  const bcTeams = await  makeBestCombine(possibleTeams,matchDetails);
+  if(bcTeams && bcTeams.length > 0 ){
+    let bcCombine = await battles.mostWinningSummonerTank(bcTeams);
+    const mostWinningBcTeam = await findBestTeam(bcCombine, bcTeams)
+    console.log("4-4 third step makeBestCombine  used ............",new Date())
+    logger.log("4-4 third step makeBestCombine  used ............",new Date())
+    return mostWinningBcTeam;
+  }
+
+
 
   const mostWinningSummonerTankComboTeam = await findBestTeam(bestCombination,
       possibleTeams)
@@ -529,7 +540,49 @@ const filterOutUnplayableDragonsAnfUnplayableSplinters = (teams = [],
               && matchDetails.splinters.includes(
                   helper.teamActualSplinterToPlay(
                       team?.slice(0, 6)).toLowerCase())));
-  return filteredTeamsForAvailableSplinters || teams;
+  const filteredTeams =  filteredTeamsForAvailableSplinters || teams;
+  console.log("filterOutUnplayableDragonsAnfUnplayableSplinters :",filteredTeams.length)
+
+  // big mana or rule:Little League etc...
+  let maxMana = 0 ;
+  filteredTeams.forEach(ft => {
+    let totalMana = 0 ;
+    ft.slice(0,6).forEach(item =>{
+      if(cardsDetail.cardsDetailsIDMap[item]){
+        totalMana +=parseInt(cardsDetail.cardsDetailsIDMap[item]['statSum1']['mana'])
+      }
+    })
+    if(totalMana >= maxMana){
+      maxMana = totalMana;
+    }
+  })
+
+  console.log("filterOutUnplayableDragonsAnfUnplayableSplinters max : ",maxMana , matchDetails.mana)
+
+  let resultTeams =   filteredTeams.filter(ft => {
+    let totalMana = 0 ;
+    ft.slice(0,6).forEach(item =>{
+       if(cardsDetail.cardsDetailsIDMap[item]){
+          totalMana +=parseInt(cardsDetail.cardsDetailsIDMap[item]['statSum1']['mana'])
+       }
+    })
+    return maxMana -  totalMana <= 1 ;
+  })
+
+  if(resultTeams.length <= 1000) {
+     resultTeams =   filteredTeams.filter(ft => {
+      let totalMana = 0 ;
+      ft.slice(0,6).forEach(item =>{
+        if(cardsDetail.cardsDetailsIDMap[item]){
+          totalMana +=parseInt(cardsDetail.cardsDetailsIDMap[item]['statSum1']['mana'])
+        }
+      })
+      return maxMana -  totalMana <= 3 ;
+    })
+    return resultTeams;
+  } else {
+    return resultTeams;
+  }
 };
 
 const teamSelection = async (possibleTeams, matchDetails, quest,
@@ -539,7 +592,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
   console.log('quest custom option set as:', priorityToTheQuest);
   logger.log("2-1 second step teamSelection start ...possibleteam len :",
       possibleTeams.length)
-  const availableTeamsToPlay = await filterOutUnplayableDragonsAnfUnplayableSplinters(
+  let availableTeamsToPlay = await filterOutUnplayableDragonsAnfUnplayableSplinters(
       possibleTeams, matchDetails);
 
   logger.log(
@@ -548,53 +601,6 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
   // TODO
   if (availableTeamsToPlay && availableTeamsToPlay.length == 0) {
 
-  }
-
-  //CHECK FOR QUEST:
-  if (priorityToTheQuest && availableTeamsToPlay.length > 10 && quest
-      && quest.total) {
-    const left = quest.total - quest.completed;
-    const questCheck = matchDetails.splinters.includes(quest.splinter) && left
-        > 0;
-    const filteredTeamsForQuest = availableTeamsToPlay.filter(
-        team => team[7] === quest.splinter);
-    console.log(left + ' battles left for the ' + quest.splinter + ' quest');
-    console.log('play for the quest ', quest.splinter, '? ', questCheck);
-
-    //QUEST FOR V2
-    console.log('process.env.API_VERSION : ', process.env.API_VERSION);
-    if (process.env.API_VERSION == 2 && availableTeamsToPlay[0][8]) {
-      console.log('V2 try to play for the quest?');
-      if (left > 0 && filteredTeamsForQuest?.length >= 1 && questCheck
-          && filteredTeamsForQuest[0][8]) {
-        console.log('PLAY for the quest with Teams choice of size (V2): ',
-            filteredTeamsForQuest.length, 'PLAY this: ',
-            filteredTeamsForQuest[0]);
-        return {
-          summoner: filteredTeamsForQuest[0][0],
-          cards: filteredTeamsForQuest[0]
-        };
-      } else {
-        console.log(
-            'quest already completed or not enough teams for the quest (V2)');
-      }
-    } else if (process.env.API_VERSION != 2 && availableTeamsToPlay[0][0]) {
-      // QUEST FOR V1
-      console.log('play quest for V1');
-      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 3
-          && splinters.includes(quest.splinter)) {
-        console.log('Try to play for the quest with Teams size (V1): ',
-            filteredTeamsForQuest.length);
-        const res = await mostWinningSummonerTankCombo(filteredTeamsForQuest,
-            matchDetails);
-        if (res[0] && res[1]) {
-          console.log('Play this for the quest:', res);
-          return {summoner: res[0], cards: res[1]};
-        } else {
-          console.log('not enough teams for the quest (V1)');
-        }
-      }
-    }
   }
 
   // check for enemy
@@ -615,9 +621,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
       if (manaRuleMatchTeams && manaRuleMatchTeams.length > 0) {
         enemyPossbileTeams = manaRuleMatchTeams;
       }
-      // else {
-      //   enemyPossbileTeams = Object.values(manaMatchTeams);
-      // }
+
     }
     if (enemyPossbileTeams.length == 0) {
       let manaMatchTeams2 = enemy.filterManaMatch(matchDetails.enemyRecent,
@@ -628,9 +632,6 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
         if (manaRuleMatchTeams2 && manaRuleMatchTeams2.length > 0) {
           enemyPossbileTeams = manaRuleMatchTeams2;
         }
-        // else {
-        //   enemyPossbileTeams = Object.values(manaMatchTeams);
-        // }
       }
     }
 
@@ -641,74 +642,59 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
     matchDetails['enemyPossbileTeams'] = enemyPossbileTeams;
   }
 
-  //CHECK for Favourite DECK
+  //CHECK FOR QUEST:
+  if (priorityToTheQuest && availableTeamsToPlay.length > 2000 && quest
+      && quest.total) {
+    const left = quest.total - quest.completed;
+    const questCheck = matchDetails.splinters.includes(quest.splinter) && left
+        > 0;
+    const filteredTeamsForQuest = availableTeamsToPlay.filter(
+        team => team[7] === quest.splinter);
+    console.log("2-3-1",left + ' battles left for the ' + quest.splinter + ' quest');
+    logger.log("2-3-1", left + ' battles left for the ' + quest.splinter + ' quest')
+    console.log("2-3-1",'play for the quest ', quest.splinter, '? ', questCheck);
+
+    if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 1000
+        && splinters.includes(quest.splinter)) {
+      console.log('Try to play for the quest with Teams size (V1): ',
+          filteredTeamsForQuest.length);
+      logger.log('Try to play for the quest with Teams size (V1): ',
+          filteredTeamsForQuest.length);
+      availableTeamsToPlay = filteredTeamsForQuest;
+    }
+  }
+
+  //CHECK for Favourite DECK TODO
   const favDeckfilteredTeams = availableTeamsToPlay.filter(
       team => team[7] === favouriteDeck);
   if (favDeckfilteredTeams?.length && favouriteDeck
       && matchDetails.splinters.includes(favouriteDeck?.toLowerCase())) {
-    //FAV DECK FOR V2
-    if (process.env.API_VERSION == 2 && availableTeamsToPlay?.[0]?.[8]) {
-      console.log('play splinter:', favouriteDeck, 'from ',
-          favDeckfilteredTeams?.length, 'teams fro V2');
-      if (favDeckfilteredTeams && favDeckfilteredTeams?.length >= 1
-          && favDeckfilteredTeams[0][8]) {
-        console.log('play this as favourite deck for V2:',
-            favDeckfilteredTeams[0]);
-        return {
-          summoner: favDeckfilteredTeams[0][0],
-          cards: favDeckfilteredTeams[0]
-        };
+    console.log('play splinter:', favouriteDeck, 'from ',
+        favDeckfilteredTeams?.length, 'teams from V1');
+    if (favDeckfilteredTeams && favDeckfilteredTeams?.length >= 1
+        && favDeckfilteredTeams[0][0]) {
+      const res = await mostWinningSummonerTankCombo(favDeckfilteredTeams,
+          matchDetails);
+      if (res[0] && res[1]) {
+        console.log('play this as favourite deck for V1:', res);
+        return {summoner: res[0], cards: res[1]};
+      } else {
+        console.log('not enough teams for the favourite deck (V1)');
       }
-      console.log('No possible teams for splinter ', favouriteDeck, ' V2');
-    } else if (process.env.API_VERSION != 2 && favDeckfilteredTeams[0][0]) {
-      // FAV DECK FOR V1
-      console.log('play splinter:', favouriteDeck, 'from ',
-          favDeckfilteredTeams?.length, 'teams from V1');
-      if (favDeckfilteredTeams && favDeckfilteredTeams?.length >= 1
-          && favDeckfilteredTeams[0][0]) {
-
-        const res = await mostWinningSummonerTankCombo(favDeckfilteredTeams,
-            matchDetails);
-        if (res[0] && res[1]) {
-          console.log('play this as favourite deck for V1:', res);
-          return {summoner: res[0], cards: res[1]};
-        } else {
-          console.log('not enough teams for the favourite deck (V1)');
-        }
-      }
-      console.log('No possible teams for splinter ', favouriteDeck, ' V1');
     }
+    console.log('No possible teams for splinter ', favouriteDeck, ' V1');
   }
 
-  //V2 Strategy ONLY FOR PRIVATE API
-  if (process.env.API_VERSION == 2 && availableTeamsToPlay?.[0]?.[8]) {
-    if (availableTeamsToPlay?.length) {
-      console.log('play the highest winning rate team: ',
-          availableTeamsToPlay[0]);
-      return {
-        summoner: availableTeamsToPlay[0][0],
-        cards: availableTeamsToPlay[0]
-      };
-    } else {
-      console.log('NO available team to be played for V2');
-      return null;
-    }
-  } else if (process.env.API_VERSION != 2 && availableTeamsToPlay[0][0]) {
-    //V1 Strategy
-    //find best combination (most used)
-    // ######## 最合适
-    const res = await mostWinningSummonerTankCombo(availableTeamsToPlay,
-        matchDetails);
-    if (res[0] && res[1]) {
-      console.log('Dont play for the quest, and play this:', res);
-      res[1] = extendsHandler.doExtendsHandler(res[1], matchDetails.rules,
-          matchDetails.myCards);
-      console.log('Dont play for the quest, and play this doExtendsHandler :',
-          res);
-      return {summoner: res[0], cards: res[1]};
-    }
+  const res = await mostWinningSummonerTankCombo(availableTeamsToPlay,
+      matchDetails);
+  if (res[0] && res[1]) {
+    console.log('Dont play for the quest, and play this:', res);
+    res[1] = extendsHandler.doExtendsHandler(res[1], matchDetails.rules,
+        matchDetails.myCards);
+    console.log('Dont play for the quest, and play this doExtendsHandler :',
+        res);
+    return {summoner: res[0], cards: res[1]};
   }
-
   console.log('No available team to be played...');
   return null;
 };
@@ -786,10 +772,11 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
   }
 
   // by card cs
+  console.log("makeBestCombine  start ............")
   const bcTeams = await  makeBestCombine(possibleTeams,matchDetails);
   let bcCombine = await battles.mostWinningSummonerTank(bcTeams);
   const mostWinningBcTeam = await findBestTeam(bcCombine, bcTeams)
-
+  console.log("makeBestCombine  end ............")
 
   let mostAgainstrevertTeam = [];
   const mst = mostWinningSummonerTankComboTeam[1];
@@ -914,7 +901,7 @@ async  function makeBestCombine(possibleTeams, matchDetails) {
   } else {
     sql += " rule = '"+mustRules+"'  and "
   }
-  sql += "  startMana <="+ matchDetails.mana +" and endMana >= "+ matchDetails.mana  +"   GROUP BY cs  HAVING   sum(teams) > 50   and tl >= 0.60  order by   tl desc  ,sum(teams -lostTeams ) desc "
+  sql += "  startMana <="+ matchDetails.mana +" and endMana >= "+ matchDetails.mana  +"   GROUP BY cs  HAVING   sum(teams) > 100   and tl >= 0.70  order by   tl desc  ,sum(teams -lostTeams ) desc "
   const data = await dbUtils.sqlQuery(sql);
   const string = JSON.stringify(data);
   const rs = JSON.parse(string);
@@ -946,14 +933,14 @@ function matchCsTeam(rs , possibleTeams) {
     for (var i = 0; i < rs.length; i++) {
       const cs = rs[i]['cs']
       const teamCS =  cs.split("-")
-      matchTeams = possibleTeams.filter( t =>{
+      matchTeams = possibleTeams.filter( pt =>{ // must
         let isMatch = true;
-        teamCS.slice(1,teamCS.length).forEach(t =>{
-          if(cs.indexOf(t) == -1){
+        teamCS.slice(1,teamCS.length).forEach(csCard =>{
+          if(pt.indexOf(parseInt(csCard)) == -1){
             isMatch = false;
           }
         })
-        return  t[0] == teamCS[0] && isMatch
+        return  pt[0] == teamCS[0] && isMatch
       })
       if(matchTeams && matchTeams.length > 0){
         matchCs = cs;

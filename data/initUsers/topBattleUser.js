@@ -61,10 +61,13 @@ async function getBattleHistory() {
   var battleHistory1 = await getTopBattleHistory(0);
   battleHistory1 = battleHistory1.concat(await getTopBattleHistory(1))
   battleHistory1 = battleHistory1.concat(await getTopBattleHistory(2))
+  battleHistory1 = battleHistory1.concat(await getTopBattleHistory(3))
+  battleHistory1 = battleHistory1.concat(await getTopBattleHistory(4))
 
   battleHistory1 = battleHistory1.concat(await getLeaderboardBattleHistory(0))
   battleHistory1 = battleHistory1.concat(await getLeaderboardBattleHistory(1))
   battleHistory1 = battleHistory1.concat(await getLeaderboardBattleHistory(2))
+  battleHistory1 = battleHistory1.concat(await getLeaderboardBattleHistory(3))
   console.log("getBattleHistory .........", battleHistory1.length)
   return battleHistory1;
 }

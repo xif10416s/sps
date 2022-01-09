@@ -26,7 +26,7 @@ const ecrRecoveryRatePerHour = 1.04;
 // }
 
 async function getQuest() {
-    return quests.getPlayerQuest(account)
+    return quests.getPlayerQuest(account.toLowerCase())
         .then(x=>x)
         .catch(e=>console.log('No quest data, splinterlands API didnt respond, or you are wrongly using the email and password instead of username and posting key'))
 }
@@ -76,13 +76,24 @@ async function findSeekingEnemyModal(page, visibleTimeout=10000) {
 
 async function findCreateTeamButton(page, findOpponentDialogStatus=0, btnCreateTeamTimeout=5000) {
     console.log(`waiting for create team button`);
-    return await page.waitForSelector('.btn--create-team', { timeout: btnCreateTeamTimeout })
+    let startFlag =  await page.waitForSelector('.btn--create-team', { timeout: btnCreateTeamTimeout })
         .then(()=> { console.log('start the match'); return true; })
         .catch(async ()=> {
             if (findOpponentDialogStatus === 2) console.error('Is this account timed out from battle?');
             console.error('btn--create-team not detected');
             return false;
         });
+    if(!startFlag) {
+       return await page.waitForSelector('.btn--create-team', { timeout: btnCreateTeamTimeout })
+        .then(()=> { console.log('start the match'); return true; })
+        .catch(async ()=> {
+            if (findOpponentDialogStatus === 2) console.error('Is this account timed out from battle?');
+            console.error('btn--create-team not detected');
+            return false;
+        });
+    } else {
+        return startFlag;
+    }
 }
 
 async function launchBattle(page) {
@@ -179,8 +190,8 @@ async function clickCreateTeamButton(page) {
     let clicked = true;
 
     await reload(page);
-    await page.waitForTimeout(5000);
-    await page.waitForSelector('.btn--create-team', { timeout: 10000 })
+    await page.waitForTimeout(8000);
+    await page.waitForSelector('.btn--create-team', { timeout: 15000 })
         .then(e=> { e.click(); console.log('btn--create-team clicked'); })
         .catch(()=>{
             clicked = false;
@@ -282,6 +293,8 @@ async function startBotPlayMatch(page, browser) {
         const quest = await getQuest();
         if(!quest) {
             console.log('Error for quest details. Splinterlands API didnt work or you used incorrect username, remove @ and dont use email')
+        } else {
+            console.log("quest:",quest)
         }
 
         if(process.env.SKIP_QUEST && quest?.splinter && process.env.SKIP_QUEST.split(',').includes(quest?.splinter) && quest?.total !== quest?.completed) {

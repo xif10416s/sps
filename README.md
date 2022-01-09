@@ -221,8 +221,8 @@ npm --max-old-space-size=4192  start  -- --username sugelafei2  >> logs/sugelafe
 npm --max-old-space-size=4192  start  -- --username sugelafei  >> logs/sugelafei/sugelafei11-log.txt
 
 // shell
-cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh sugelafei2 9
-cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh sugelafei 8
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh sugelafei2 3
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh sugelafei 3
 
 
 
@@ -233,5 +233,10 @@ cd /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/spark && jupyter noteb
 cd /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/spark && source bin/activate && jupyter notebook list
 
 
-//
-/mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --conf spark.local.dir=/mnt/d/.temp  --master local[10] --driver-memory 25g  --name test
+// static weekly
+/mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --conf spark.local.dir=/mnt/h/temp  --master local[10] --driver-memory 10g  --name test
+/mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --conf spark.local.dir=/mnt/h/temp  --master local[10] --driver-memory 10g  --name test -i /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/scala/test2.scala
+
+-- wsl 
+net stop LxssManager
+net start LxssManager
