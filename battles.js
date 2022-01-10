@@ -273,7 +273,7 @@ async function mostWinningByEnemySummoner(possibleTeamsList, summoner,
   let date = new Date();
   let endDate = new Date(date.setDate(date.getDate() + 2))
   let endDateStr = endDate.toISOString().split("T")[0];
-  let sql = "select battle_queue_id from battle_history_raw_v2 where mana_cap = ?  and summoner_id_lost = ?  and ruleset = ? and created_date_day <= ?"
+  let sql = "select battle_queue_id from battle_history_raw_v2 where mana_cap = ?  and summoner_id_lost = ?  and ruleset = ? and created_date_day <= ?  limit 40000"
   const params = [matchDetails.orgMana, summoner, matchDetails.rules,
     endDateStr];
   // console.log("find target against mostWinningByEnemySummoner :", JSON.stringify(params))
@@ -296,7 +296,7 @@ async function findAgainstTeam(summoner_id,monsters , possibleTeamsList) {
   let date = new Date();
   let endDate = new Date(date.setDate(date.getDate() + 2))
   let endDateStr = endDate.toISOString().split("T")[0];
-  let sql = "select battle_queue_id from battle_history_raw_v2 where   summoner_id_lost = ? and  monster_1_id_lost in (?) and  monster_2_id_lost in (?)  and  monster_3_id_lost in (?) and  monster_4_id_lost in (?) and  monster_5_id_lost in (?) and   monster_6_id_lost in (?) and created_date_day <= ? "
+  let sql = "select battle_queue_id from battle_history_raw_v2 where   summoner_id_lost = ? and  monster_1_id_lost in (?) and  monster_2_id_lost in (?)  and  monster_3_id_lost in (?) and  monster_4_id_lost in (?) and  monster_5_id_lost in (?) and   monster_6_id_lost in (?) and created_date_day <= ? limit 40000 "
 
   const params = [summoner_id, monsters, monsters, monsters, monsters,
     monsters, monsters, endDateStr];

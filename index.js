@@ -84,7 +84,7 @@ async function findCreateTeamButton(page, findOpponentDialogStatus=0, btnCreateT
             return false;
         });
     if(!startFlag) {
-       return await page.waitForSelector('.btn--create-team', { timeout: btnCreateTeamTimeout })
+       return await page.waitForSelector('.btn--create-team', { timeout: btnCreateTeamTimeout * 2 })
         .then(()=> { console.log('start the match'); return true; })
         .catch(async ()=> {
             if (findOpponentDialogStatus === 2) console.error('Is this account timed out from battle?');
@@ -300,6 +300,7 @@ async function startBotPlayMatch(page, browser) {
         if(process.env.SKIP_QUEST && quest?.splinter && process.env.SKIP_QUEST.split(',').includes(quest?.splinter) && quest?.total !== quest?.completed) {
             try {
                 await page.click('#quest_new_btn')
+                    .then(() => page.waitForTimeout(5000))
                     .then(async a=>{
                         await page.reload();
                         console.log('New quest requested')})

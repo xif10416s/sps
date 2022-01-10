@@ -542,7 +542,7 @@ const filterOutUnplayableDragonsAnfUnplayableSplinters = (teams = [],
                       team?.slice(0, 6)).toLowerCase())));
   const filteredTeams =  filteredTeamsForAvailableSplinters || teams;
   console.log("filterOutUnplayableDragonsAnfUnplayableSplinters :",filteredTeams.length)
-
+  logger.log("filterOutUnplayableDragonsAnfUnplayableSplinters :",filteredTeams.length)
   // big mana or rule:Little League etc...
   let maxMana = 0 ;
   filteredTeams.forEach(ft => {
@@ -558,6 +558,11 @@ const filterOutUnplayableDragonsAnfUnplayableSplinters = (teams = [],
   })
 
   console.log("filterOutUnplayableDragonsAnfUnplayableSplinters max : ",maxMana , matchDetails.mana)
+  logger.log("filterOutUnplayableDragonsAnfUnplayableSplinters max : ",maxMana , matchDetails.mana)
+
+  if(filteredTeams.length <= 1000){
+    return  filteredTeams;
+  }
 
   let resultTeams =   filteredTeams.filter(ft => {
     let totalMana = 0 ;
@@ -595,6 +600,8 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
   let availableTeamsToPlay = await filterOutUnplayableDragonsAnfUnplayableSplinters(
       possibleTeams, matchDetails);
 
+  console.log( "2-2 second step teamSelection after filger dragons ...availableTeamsToPlay len :",
+      availableTeamsToPlay.length);
   logger.log(
       "2-2 second step teamSelection after filger dragons ...availableTeamsToPlay len :",
       availableTeamsToPlay.length)
@@ -661,6 +668,11 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
       logger.log('Try to play for the quest with Teams size (V1): ',
           filteredTeamsForQuest.length);
       availableTeamsToPlay = filteredTeamsForQuest;
+    } else {
+      console.log('CHECK FOR QUEST skip: ',
+          filteredTeamsForQuest.length);
+      logger.log('CHECK FOR QUEST skip: ',
+          filteredTeamsForQuest.length);
     }
   }
 
@@ -901,7 +913,7 @@ async  function makeBestCombine(possibleTeams, matchDetails) {
   } else {
     sql += " rule = '"+mustRules+"'  and "
   }
-  sql += "  startMana <="+ matchDetails.mana +" and endMana >= "+ matchDetails.mana  +"   GROUP BY cs  HAVING   sum(teams) > 100   and tl >= 0.70  order by   tl desc  ,sum(teams -lostTeams ) desc "
+  sql += "  startMana <="+ matchDetails.mana +" and endMana >= "+ matchDetails.mana  +"   GROUP BY cs  HAVING   sum(teams) > 100   and tl >= 0.66  order by   tl desc  ,sum(teams -lostTeams ) desc "
   const data = await dbUtils.sqlQuery(sql);
   const string = JSON.stringify(data);
   const rs = JSON.parse(string);
@@ -957,9 +969,11 @@ async function extendsCombineSearch(cs , matchTeams,matchDetails,matchSplintersS
   let sql = "select cs , sum(teams)/sum(teams+lostTeams) as tl   from   battle_stat_V2 where  " ;
   let csLike = "cs like '";
   let spCs =  cs.split("-")
-  let lastCs = spCs[spCs.length - 1]
-  csLike +=cs.replace(lastCs,"_%"+lastCs+"%'")
-  csLike+="  and "
+  spCs.slice(2,spCs.length).forEach(itemCs =>{
+    cs = cs.replace(itemCs,"%"+itemCs+"%")
+  })
+  csLike +=cs
+  csLike+="'  and "
   sql+=csLike;
   sql+=" summonerId in ( " + matchSplintersSummoners.join(",") + ") and "
   let mustRules = battles.getMustRules(matchDetails.rules);
@@ -972,7 +986,7 @@ async function extendsCombineSearch(cs , matchTeams,matchDetails,matchSplintersS
   } else {
     sql += " rule = '"+mustRules+"'  and "
   }
-  sql += "  startMana <="+ matchDetails.mana +" and endMana >= "+ matchDetails.mana  +"   GROUP BY cs   order by   tl desc  ,sum(teams -lostTeams ) desc "
+  sql += "len > "+ (spCs.length - 1)  +" and startMana <="+ matchDetails.mana +" and endMana >= "+ matchDetails.mana  +"   GROUP BY cs   order by   tl desc  ,sum(teams -lostTeams ) desc "
   const data = await dbUtils.sqlQuery(sql);
   const string = JSON.stringify(data);
   const rs = JSON.parse(string);
