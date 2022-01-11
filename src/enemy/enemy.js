@@ -7,29 +7,31 @@ const pt = require('../../possibleTeams')
  */
 
 function filterManaMatch(input, mana , manaDelta = 1, splinters) {
-  let matchTeams = {};
+  // mana = mana >= 48 ? 48 : mana;
   const splintersSummoners =pt.getSplintersSummoners(splinters)
   console.log("splintersSummoners:",JSON.stringify(splintersSummoners))
-  input.forEach(x => {
-    let totalMana = parseInt(x['mana_cap'])
-    if (totalMana >= (parseInt(mana) - manaDelta) && totalMana <= (parseInt(mana) + manaDelta)
-       && splintersSummoners.indexOf(x['summoner_id']) != -1) {
-      matchTeams[x['summoner_id']] = x;
-    }
+  let matchTeams = input.filter(x => {
+    // let totalMana = parseInt(x['mana_cap']) //totalMana >= (parseInt(mana) - manaDelta) && totalMana <= (parseInt(mana) + manaDelta) &&
+    return splintersSummoners.indexOf(x['summoner_id']) != -1 ;
   });
-  console.log('filterManaMatch target:', mana, manaDelta, ' size : ' + Object.keys(matchTeams).length);
+  console.log('filterManaMatch target:', mana, 'matchTeams size : ' + matchTeams.length);
   return matchTeams;
 }
 
 function filterRuleMatch(input, ruleset) {
   let matchList = [];
-  Object.keys(input).forEach(sid => {
+  let orgInputList = [];
+  input.forEach(item => {
     const mustRules = battles.getMustRules(ruleset);
-    const ruleMatch = battles.getRuleMatch(input[sid]['ruleset'],ruleset , mustRules);
+    const ruleMatch = battles.getRuleMatch(item['ruleset'],ruleset , mustRules);
     if(ruleMatch) {
-       matchList.push(input[sid])
+       matchList.push(item)
     }
+    orgInputList.push(item)
   });
+  if(matchList.length == 0){
+    matchList = orgInputList;
+  }
   return matchList;
 }
 
