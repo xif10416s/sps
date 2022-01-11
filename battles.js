@@ -161,7 +161,7 @@ function getMustRules(ruleset) {
   let mustRule = "";
   if (ruleset.indexOf("|") == -1 && process.env.KEY_SINGLE_RULES.indexOf(
       ruleset) != -1) {
-    return ruleset;
+    mustRule =  ruleset;
   }
 
   if (keyRules.length > 1) {
@@ -189,8 +189,8 @@ function getMustRules(ruleset) {
 }
 
 function getRuleMatch(hisBattleRuleset, matchRuleset, mustRule) {
-  console.log("hisBattleRuleset : ", hisBattleRuleset, "matchRuleset :",
-      matchRuleset, "mustRule :", mustRule)
+  // console.log("hisBattleRuleset : ", hisBattleRuleset, "matchRuleset :",
+  //     matchRuleset, "mustRule :", mustRule)
   // single any
   if (mustRule == "") {
     return true;
@@ -252,20 +252,48 @@ async function mostWinningEnemy(possibleTeamsList, enemyPossbileTeams,
           ep => ep['summoner_id'] == sorted[0][0]);
       if (mostSummonerTeams && mostSummonerTeams.length > 0) {
         const mostTeam = mostSummonerTeams[0];
-        dbUtils.washdata(mostTeam, ['summoner_id', 'monster_1_id', 'monster_2_id',
-          'monster_3_id',
-          'monster_4_id',
-          'monster_5_id',
-          'monster_6_id'])
+        dbUtils.washdata(mostTeam,
+            ['summoner_id', 'monster_1_id', 'monster_2_id',
+              'monster_3_id',
+              'monster_4_id',
+              'monster_5_id',
+              'monster_6_id'])
         const monsters = [mostTeam.monster_1_id
-          , mostTeam.monster_2_id, mostTeam.monster_3_id, mostTeam.monster_4_id, mostTeam.monster_5_id,
+          , mostTeam.monster_2_id, mostTeam.monster_3_id, mostTeam.monster_4_id,
+          mostTeam.monster_5_id,
           mostTeam.monster_6_id]
-        const team = await findAgainstTeam(mostTeam['summoner_id'],monsters,
+        const team = await findAgainstTeam(mostTeam['summoner_id'], monsters,
             possibleTeamsList);
         return [sorted[0][0], team];
       }
     }
   }
+}
+
+function matchedEnemyPossbileSummoners(matchDetails) {
+  let enemyPossbileTeams = matchDetails['enemyPossbileTeams']
+  let enemyPs = [];
+  if (enemyPossbileTeams && enemyPossbileTeams.length > 0) {
+    const mostSummoner = enemyPossbileTeams.reduce((acc, value) => {
+      // Group initialization
+      if (!acc[value['summoner_id']]) {
+        acc[value['summoner_id']] = 1;
+      }
+      // Grouping
+      acc[value['summoner_id']] = acc[value['summoner_id']] + 1;
+      return acc;
+    }, {});
+    let entries = Object.entries(mostSummoner);
+    let sorted = entries.sort((a, b) => b[1] - a[1]);
+    console.log("-------sorted[0][0]---", sorted)
+    enemyPs = sorted.map(ep => ep[0]);
+    if(sorted.length >= 3) {
+      enemyPs = enemyPs.slice(0,3)
+    }
+
+  }
+  console.log("-------enemyPs---", enemyPs)
+  return enemyPs;
 }
 
 async function mostWinningByEnemySummoner(possibleTeamsList, summoner,
@@ -291,8 +319,8 @@ async function mostWinningByEnemySummoner(possibleTeamsList, summoner,
   }
 }
 
-async function findAgainstTeam(summoner_id,monsters , possibleTeamsList) {
-  console.log("findAgainstTeam ept:",JSON.stringify(monsters))
+async function findAgainstTeam(summoner_id, monsters, possibleTeamsList) {
+  console.log("findAgainstTeam ept:", JSON.stringify(monsters))
   let date = new Date();
   let endDate = new Date(date.setDate(date.getDate() + 2))
   let endDateStr = endDate.toISOString().split("T")[0];
@@ -300,7 +328,7 @@ async function findAgainstTeam(summoner_id,monsters , possibleTeamsList) {
 
   const params = [summoner_id, monsters, monsters, monsters, monsters,
     monsters, monsters, endDateStr];
-  console.log("find target against :", params , sql)
+  console.log("find target against :", params, sql)
   const rs = await dbUtils.sqlQuery(sql, params);
   console.log("find team", rs.length)
   if (rs.length > 0) {
@@ -320,6 +348,7 @@ module.exports.findAgainstTeam = findAgainstTeam;
 module.exports.mostWinningByEnemySummoner = mostWinningByEnemySummoner
 module.exports.getMustRules = getMustRules;
 module.exports.getRuleMatch = getRuleMatch;
+module.exports.matchedEnemyPossbileSummoners = matchedEnemyPossbileSummoners;
 
 let test = [{
   'summoner_id': 440,

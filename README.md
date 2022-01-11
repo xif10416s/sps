@@ -210,7 +210,7 @@ docker run -e "MAX_QUEUE_LENGTH=300"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_
 http://192.168.99.100:3000
 
 docker run -e "MAX_QUEUE_LENGTH=300"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=200"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3001:3000 --restart always -d --name browserless3001 browserless/chrome
-
+docker run -e "MAX_QUEUE_LENGTH=300"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=200"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3002:3000 --restart always -d --name browserless3002 browserless/chrome
 
 
 //WSL
@@ -221,9 +221,9 @@ npm --max-old-space-size=4192  start  -- --username sugelafei2  >> logs/sugelafe
 npm --max-old-space-size=4192  start  -- --username sugelafei  >> logs/sugelafei/sugelafei11-log.txt
 
 // shell
-cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh sugelafei2 3
 cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh sugelafei 3
-
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh sugelafei2 3
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh xifei123 3
 
 
 // python

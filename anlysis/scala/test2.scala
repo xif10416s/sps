@@ -25,7 +25,7 @@ case class Item(mana_cap:Int , ruleset:String, summoner_id:Int ,monster_1_id:Int
 case class AgainstMap(mana_cap:Int, ruleset:String,wc:String,lcs:(Int,String))
 case class StatCS(startMana:Int ,endMana:Int ,cs:String,len:Int, rule:String, summonerId:Int,teams:Int,totalCnt:Int)
 case class StatCSResult(startMana:Int ,endMana:Int ,cs:String,len:Int, rule:String, summonerId:Int,teams:Int,totalCnt:Int,lostTeams:Int,lostTotalCnt:Int)
-val KEY_SINGLE_RULES="Broken Arrows|Even Stevens|Keep Your Distance|Little League|Lost Legendaries|Lost Magic|Odd Ones Out|Rise of the Commons|Taking Sides|Up Close and Personal|Up Close & Personal|Earthquake|Back to Basics|Noxious Fumes"
+val KEY_SINGLE_RULES="Broken Arrows|Even Stevens|Keep Your Distance|Little League|Lost Legendaries|Lost Magic|Odd Ones Out|Rise of the Commons|Taking Sides|Up Close and Personal|Up Close & Personal|Noxious Fumes|Silenced Summoners|Earthquake|Back to Basics"
 val defaultRule = "default"
 val skipIds = Array(-1,131,91,169)
 val upCnt = 2;

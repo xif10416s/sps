@@ -83,9 +83,9 @@ async function checkMatchEnemy(page) {
         //-------------
         const pName = await page.$$eval("div.bio__details > div.bio__name >  span.bio__name__display ",
             el =>el.map(x => x.innerText));
-        console.log("Enemy name :" ,pName)
-        const enemyBattles = await battlesGet.getBattleDetail(pName[0]);
 
+        const enemyBattles = await battlesGet.getBattleDetail(pName[0]);
+        console.log("Enemy name :" ,pName , "enemyBattles : ",enemyBattles.length)
         if(enemyBattles && enemyBattles.length >0){
             // const len = enemyBattles.length > 30 ? 30 :  enemyBattles.length;
             // let topBattles = enemyBattles.slice(0,len)
