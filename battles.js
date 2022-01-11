@@ -270,8 +270,7 @@ async function mostWinningEnemy(possibleTeamsList, enemyPossbileTeams,
   }
 }
 
-function matchedEnemyPossbileSummoners(matchDetails) {
-  let enemyPossbileTeams = matchDetails['enemyPossbileTeams']
+function matchedEnemyPossbileSummoners(enemyPossbileTeams,isSlice = false) {
   let enemyPs = [];
   if (enemyPossbileTeams && enemyPossbileTeams.length > 0) {
     const mostSummoner = enemyPossbileTeams.reduce((acc, value) => {
@@ -287,7 +286,7 @@ function matchedEnemyPossbileSummoners(matchDetails) {
     let sorted = entries.sort((a, b) => b[1] - a[1]);
     console.log("-------sorted[0][0]---", sorted)
     enemyPs = sorted.map(ep => ep[0]);
-    if(sorted.length >= 3) {
+    if(isSlice && sorted.length >= 3) {
       enemyPs = enemyPs.slice(0,3)
     }
 

@@ -660,6 +660,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
         "2-3 second step teamSelection collect enemy teams, enemyPossbileTeams",
         enemyPossbileTeams.length)
     matchDetails['enemyPossbileTeams'] = enemyPossbileTeams;
+    matchDetails['enemySplinterTeams'] = manaMatchTeams;
   }
 
   //CHECK FOR QUEST:
@@ -668,24 +669,54 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
     const left = quest.total - quest.completed;
     const questCheck = matchDetails.splinters.includes(quest.splinter) && left
         > 0;
-    const filteredTeamsForQuest = availableTeamsToPlay.filter(
-        team => team[7] === quest.splinter);
-    console.log("2-3-1",left + ' battles left for the ' + quest.splinter + ' quest');
-    logger.log("2-3-1", left + ' battles left for the ' + quest.splinter + ' quest')
-    console.log("2-3-1",'play for the quest ', quest.splinter, '? ', questCheck);
+    if(questCheck) {
+      const filteredTeamsForQuest = availableTeamsToPlay.filter(
+          team => team[7] === quest.splinter);
+      console.log("2-3-1",left + ' battles left for the splinter' + quest.splinter + ' quest');
+      logger.log("2-3-1", left + ' battles left for the splinter' + quest.splinter + ' quest')
+      console.log("2-3-1",'play for the quest splinter', quest.splinter, '? ', questCheck);
 
-    if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 1000
-        && splinters.includes(quest.splinter)) {
-      console.log('Try to play for the quest with Teams size (V1): ',
-          filteredTeamsForQuest.length);
-      logger.log('Try to play for the quest with Teams size (V1): ',
-          filteredTeamsForQuest.length);
-      availableTeamsToPlay = filteredTeamsForQuest;
-    } else {
-      console.log('CHECK FOR QUEST skip: ',
-          filteredTeamsForQuest.length);
-      logger.log('CHECK FOR QUEST skip: ',
-          filteredTeamsForQuest.length);
+      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 1000
+          && splinters.includes(quest.splinter)) {
+        console.log('Try to play for the quest with Teams size (V1): ',
+            filteredTeamsForQuest.length);
+        logger.log('Try to play for the quest with Teams size (V1): ',
+            filteredTeamsForQuest.length);
+        availableTeamsToPlay = filteredTeamsForQuest;
+      } else {
+        console.log('CHECK FOR QUEST skip: ',
+            filteredTeamsForQuest.length);
+        logger.log('CHECK FOR QUEST skip: ',
+            filteredTeamsForQuest.length);
+      }
+    }
+
+    // sprinter neutral
+    if(quest.splinter == "neutral" && left > 0) {
+      let rules=  matchDetails.rules.split("|")
+      let replaceRule = matchDetails.rules;
+      if(rules.length > 1){
+        if(process.env.KEY_SINGLE_RULES.indexOf(rules[0]) == -1 && process.env.WEAK_KEY_RULES.indexOf(rules[0]) == -1
+        && rules[1] != "Taking Sides"){
+            rules[0] = "Taking Sides"
+        }
+
+        if(process.env.KEY_SINGLE_RULES.indexOf(rules[1]) == -1 && process.env.WEAK_KEY_RULES.indexOf(rules[1]) == -1
+            && rules[0] != "Taking Sides"){
+          rules[1] = "Taking Sides"
+        }
+        replaceRule = rules.join("|");
+      } else {
+        if(process.env.KEY_SINGLE_RULES.indexOf(matchDetails.rules) == -1 && process.env.WEAK_KEY_RULES.indexOf(matchDetails.rules) == -1
+            && matchDetails.rules != "Taking Sides"){
+          replaceRule  = "Taking Sides"
+        }
+      }
+      if(replaceRule != matchDetails.rules){
+        console.log("2-3-2",left + ' battles left for the neutral org:' + matchDetails.rules + ' to ', replaceRule);
+        logger.log("2-3-2", left + ' battles left for the neutral org:' + matchDetails.rules + ' to' , replaceRule);
+        matchDetails.rules = replaceRule;
+      }
     }
   }
 
@@ -754,34 +785,6 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
 
     matchDetails['enemyPossbileTeams'] = enemyPossbileTeams;
     console.log('enemyPossbileTeams : ', enemyPossbileTeams.length)
-    const againstInfo = await battles.mostWinningEnemy(possibleTeams,
-        matchDetails['enemyPossbileTeams'], matchDetails.rules);
-
-    if (againstInfo && againstInfo.length > 1) {
-      console.log("againstInfo: ", againstInfo.length)
-      const possibleSummoner = againstInfo[0];
-      const bestAgainst = againstInfo[1];
-      if (bestAgainst && bestAgainst.length > 0) {
-        console.log("bestAgainst: ", bestAgainst.length)
-        bestCombination = await battles.mostWinningSummonerTank(bestAgainst);
-        console.log("bestAgainst best combination:",
-            JSON.stringify(bestCombination))
-        mostEnemyAgainstTeam = await findBestTeam(bestCombination,
-            possibleTeams);
-      } else if (possibleSummoner) {
-        let byEnemySummor = await battles.mostWinningByEnemySummoner(
-            possibleTeams, possibleSummoner, matchDetails)
-        if (byEnemySummor && byEnemySummor.length > 0) {
-          console.log("byEnemySummor: ", JSON.stringify(byEnemySummor))
-          bestCombination = await battles.mostWinningSummonerTank(
-              byEnemySummor);
-          console.log("byEnemySummor best combination:",
-              JSON.stringify(bestCombination))
-          mostEnemyAgainstTeam = await findBestTeam(bestCombination,
-              possibleTeams);
-        }
-      }
-    }
   }
 
   // by card cs
@@ -890,14 +893,12 @@ function getCardNameByID(cardId) {
 
 }
 
-async  function makeBestCombine(possibleTeams, matchDetails) {
-  const matchedEnemyPossbileSummoners = battles.matchedEnemyPossbileSummoners(matchDetails);
-  let matchSplintersSummoners =  getSplintersSummoners(matchDetails.splinters)
-  if(matchedEnemyPossbileSummoners && matchedEnemyPossbileSummoners.length > 2) {
-    matchSplintersSummoners = matchedEnemyPossbileSummoners;
-    console.log("makeBestCombine select enemy : " , matchSplintersSummoners)
-    logger.log("makeBestCombine select enemy : " , matchSplintersSummoners)
+async  function initCSTeams(possibleTeams, matchDetails,matchSplintersSummoners) {
+  if(matchSplintersSummoners && matchSplintersSummoners.length == 0){
+    return [];
   }
+  console.log("makeBestCombine select  : " , matchSplintersSummoners)
+  logger.log("makeBestCombine select  : " , matchSplintersSummoners)
   const myAviableSummoners = getSummoners(matchDetails.myCards,matchDetails.splinters)
   let sql = "select cs , sum(teams)/sum(teams+lostTeams) as tl   from   battle_stat_V2 where ( " ;
   let csLike = "";
@@ -925,7 +926,26 @@ async  function makeBestCombine(possibleTeams, matchDetails) {
   const string = JSON.stringify(data);
   const rs = JSON.parse(string);
   console.log('makeBestCombine', rs.length, sql);
-  const matchCS = matchCsTeam(rs,possibleTeams)
+  return rs;
+}
+
+async  function makeBestCombine(possibleTeams, matchDetails) {
+  let matchSplintersSummoners  = battles.matchedEnemyPossbileSummoners(matchDetails['enemyPossbileTeams'],true);
+  let rs = await initCSTeams(possibleTeams,matchDetails,matchSplintersSummoners)
+  let matchCS = matchCsTeam(rs,possibleTeams)
+  console.log('makeBestCombine do enemy full rule match : ', matchCS[1].length);
+  if(matchCS[1].length  <= 0 && matchDetails['enemyPossbileTeams'].length < matchDetails['enemySplinterTeams'].length) { //TODO
+     matchSplintersSummoners = battles.matchedEnemyPossbileSummoners(matchDetails['enemySplinterTeams'],false);
+     rs = await initCSTeams(possibleTeams,matchDetails,matchSplintersSummoners)
+     matchCS = matchCsTeam(rs,possibleTeams)
+     console.log('makeBestCombine do enemy splinters match : ', matchCS[1].length);
+    if(matchCS[1].length  <= 10 ) {
+      matchSplintersSummoners = getSplintersSummoners(matchDetails.splinters)
+      rs = await initCSTeams(possibleTeams,matchDetails,matchSplintersSummoners)
+      matchCS = matchCsTeam(rs,possibleTeams)
+      console.log('makeBestCombine do all splinters match : : ', matchCS[1].length);
+    }
+  }
   let cs =   matchCS[0]
   let matchTeams = matchCS[1]
   if(matchCS && cs.length > 0 && matchTeams.length > 0){
