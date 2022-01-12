@@ -108,6 +108,7 @@ let account = '';
 
 const fs = require('fs');
 let date = new Date().getTime();
+
 const file = fs.createWriteStream('./logs/'+ process.env.ACCOUNT  +"/" + date + '.txt');
 let logger = new console.Console(file, file);
 
@@ -174,6 +175,7 @@ const getBattlesWithRuleset = (ruleset, mana, summoners) => {
 // ### 融合点
 const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule) => {
   let keyRules = ruleset.split('|');
+  const highMana = 45;
   let rs = [];
   let date = new Date();
   let endDate = new Date(date.setDate(date.getDate() + 2))
@@ -182,6 +184,9 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule) => {
     let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and (ruleset = ? or ruleset = ?) and created_date_day <= ? ';
     let params = [mana, summoners, ruleset, keyRules[1] + "|" + keyRules[0],
       endDateStr];
+    if(mana > highMana) {
+        sql = 'select * from battle_history_raw_v2 where  mana_cap >= '+ highMana +' and  mana_cap <= ?  and summoner_id in (?)  and (ruleset = ? or ruleset = ?) and created_date_day <= ? ';
+    }
     let data = await dbUtils.sqlQuery(sql, params);
     let string = JSON.stringify(data);
     rs = JSON.parse(string);
@@ -203,6 +208,9 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule) => {
     }
   } else {
     let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and ruleset = ? and created_date_day <= ?';
+    if(mana > highMana) {
+        sql = 'select * from battle_history_raw_v2 where mana_cap >=  '+ highMana + ' and mana_cap <= ?  and summoner_id in (?)  and ruleset = ? and created_date_day <= ?';
+    }
     let data = await dbUtils.sqlQuery(sql,
         [mana, summoners, ruleset, endDateStr]);
     let string = JSON.stringify(data);
@@ -220,6 +228,9 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule) => {
     if (mustSingleRule != null) {
       console.log("mustSingleRule.. :", mustSingleRule)
       let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and ruleset like ? and created_date_day <= ? ';
+      if(mana > highMana) {
+        sql = 'select * from battle_history_raw_v2 where  mana_cap >= '+  highMana + '  and mana_cap<= ?  and summoner_id in (?)  and ruleset like ? and created_date_day <= ? ';
+      }
       let data = await dbUtils.sqlQuery(sql,
           [mana, summoners, "%" + mustSingleRule + "%", endDateStr]);
       let string = JSON.stringify(data);
@@ -232,6 +243,9 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule) => {
     }
 
     let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and ( ruleset like ?  or ruleset like ?) and created_date_day <= ?';
+    if(mana > highMana) {
+      sql = 'select * from battle_history_raw_v2 where  mana_cap >= '+ highMana +' and mana_cap <= ?  and summoner_id in (?)  and ( ruleset like ?  or ruleset like ?) and created_date_day <= ?';
+    }
     let data = await dbUtils.sqlQuery(sql,
         [mana, summoners, keyRules[0] + "%", keyRules[1] + "%", endDateStr]);
     let string = JSON.stringify(data);
@@ -578,6 +592,7 @@ const filterOutUnplayableDragonsAnfUnplayableSplinters = (teams = [],
     return  filteredTeams;
   }
 
+  const delta = maxMana <=45 ? 1 : 5;
   let resultTeams =   filteredTeams.filter(ft => {
     let totalMana = 0 ;
     ft.slice(0,6).forEach(item =>{
@@ -585,7 +600,7 @@ const filterOutUnplayableDragonsAnfUnplayableSplinters = (teams = [],
           totalMana +=parseInt(cardsDetail.cardsDetailsIDMap[item]['statSum1']['mana'])
        }
     })
-    return maxMana -  totalMana <= 1 ;
+    return maxMana -  totalMana <= delta ;
   })
 
   if(resultTeams.length <= 1000) {
@@ -664,7 +679,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
   }
 
   //CHECK FOR QUEST:
-  if (priorityToTheQuest && availableTeamsToPlay.length > 2000 && quest
+  if (priorityToTheQuest && availableTeamsToPlay.length > 5000 && quest
       && quest.total) {
     const left = quest.total - quest.completed;
     const questCheck = matchDetails.splinters.includes(quest.splinter) && left
@@ -676,7 +691,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
       logger.log("2-3-1", left + ' battles left for the splinter' + quest.splinter + ' quest')
       console.log("2-3-1",'play for the quest splinter', quest.splinter, '? ', questCheck);
 
-      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 1000
+      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 3000
           && splinters.includes(quest.splinter)) {
         console.log('Try to play for the quest with Teams size (V1): ',
             filteredTeamsForQuest.length);
@@ -716,6 +731,40 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
         console.log("2-3-2",left + ' battles left for the neutral org:' + matchDetails.rules + ' to ', replaceRule);
         logger.log("2-3-2", left + ' battles left for the neutral org:' + matchDetails.rules + ' to' , replaceRule);
         matchDetails.rules = replaceRule;
+      } else {
+        console.log('CHECK FOR QUEST skip: ',
+            matchDetails.rules);
+        logger.log('CHECK FOR QUEST skip: ',
+            matchDetails.rules);
+      }
+    }
+
+    // sprinter snipe
+    if(quest.splinter == "snipe" && left > 0) {
+      const filteredTeamsForQuest = availableTeamsToPlay.filter(
+          team => {
+          let isMatchSnipe = false;
+          team.slice(1,7).forEach(cardId =>{
+            const cardInfo = cardsDetail.cardsDetailsIDMap[cardId]
+            if(cardInfo) {
+              const abilities = cardInfo['abilities']
+              if(abilities[0].length  > 0 && abilities[0].indexOf("snipe") != -1){
+                isMatchSnipe = true
+              }
+            }
+          });
+          return isMatchSnipe;
+      });
+      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 1500
+          && splinters.includes(quest.splinter)) {
+        console.log("2-3-2",left + ' battles left for the snipe ', filteredTeamsForQuest.length);
+        logger.log("2-3-2", left + ' battles left for the snipe ' , filteredTeamsForQuest.length);
+        availableTeamsToPlay = filteredTeamsForQuest;
+      } else {
+        console.log('CHECK FOR QUEST skip: ',
+            filteredTeamsForQuest.length);
+        logger.log('CHECK FOR QUEST skip: ',
+            filteredTeamsForQuest.length);
       }
     }
   }

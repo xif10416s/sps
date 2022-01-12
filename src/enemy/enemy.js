@@ -29,9 +29,9 @@ function filterRuleMatch(input, ruleset) {
     }
     orgInputList.push(item)
   });
-  if(matchList.length == 0){
-    matchList = orgInputList;
-  }
+  // if(matchList.length <= 3){
+  //   matchList = orgInputList;
+  // }
   return matchList;
 }
 
