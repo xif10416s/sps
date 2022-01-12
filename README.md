@@ -234,7 +234,7 @@ cd /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/spark && source bin/ac
 
 
 // static weekly
-/mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --conf spark.local.dir=/mnt/h/temp  --master local[10] --driver-memory 10g  --name test
+/mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --conf spark.local.dir=/mnt/h/temp  --master local[10] --driver-memory 5g  --name test
 /mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --conf spark.local.dir=/mnt/h/temp  --master local[10] --driver-memory 10g  --name test -i /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/scala/test2.scala
 
 -- wsl 

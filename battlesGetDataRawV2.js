@@ -108,8 +108,14 @@ const extractMonsterLost = (team) => {
   };
 };
 
-
+let date = new Date();
+let dateStr = date.toISOString().split("T")[1];
 let isInit = false;
+if(dateStr && dateStr.startsWith("00:30:")){
+  isInit = true;
+}
+console.log("get data isInit :", isInit , dateStr)
+
 let battlesList = [];
 const usersToGrab = intUsers;
 
