@@ -175,7 +175,7 @@ const getBattlesWithRuleset = (ruleset, mana, summoners) => {
 // ### 融合点
 const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule) => {
   let keyRules = ruleset.split('|');
-  const highMana = 45;
+  const highMana = 40;
   let rs = [];
   let date = new Date();
   let endDate = new Date(date.setDate(date.getDate() + 2))
@@ -190,10 +190,9 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule) => {
     let data = await dbUtils.sqlQuery(sql, params);
     let string = JSON.stringify(data);
     rs = JSON.parse(string);
-    console.log("1.1 full match rs :" + rs.length, params)
+    console.log("1.1 full match rs :" + rs.length, params, sql)
+    logger.log("1.1 full match rs :" + rs.length, params, sql)
     if (mustSingleRule != null && mustSingleRule == "ALL") {
-      console.log("1.1 full match rs :" + rs.length, params)
-      logger.log("1.1 full match rs :" + rs.length, params)
       if(rs.length >=100){
         return rs;
       } else {
@@ -231,14 +230,14 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule) => {
       if(mana > highMana) {
         sql = 'select * from battle_history_raw_v2 where  mana_cap >= '+  highMana + '  and mana_cap<= ?  and summoner_id in (?)  and ruleset like ? and created_date_day <= ? ';
       }
-      let data = await dbUtils.sqlQuery(sql,
-          [mana, summoners, "%" + mustSingleRule + "%", endDateStr]);
+      let params = [mana, summoners, "%" + mustSingleRule + "%", endDateStr]
+      let data = await dbUtils.sqlQuery(sql,params);
       let string = JSON.stringify(data);
       let rs2 = rs.concat(JSON.parse(string));
       console.log("2 mustsingeRule match : ", mustSingleRule, "org rule:",
-          ruleset, rs2.length)
+          ruleset, rs2.length ,params, sql)
       logger.log("2 mustsingeRule match : ", mustSingleRule, "org rule:",
-          ruleset, rs2.length)
+          ruleset, rs2.length,params, sql)
       return rs2;
     }
 
@@ -246,12 +245,12 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule) => {
     if(mana > highMana) {
       sql = 'select * from battle_history_raw_v2 where  mana_cap >= '+ highMana +' and mana_cap <= ?  and summoner_id in (?)  and ( ruleset like ?  or ruleset like ?) and created_date_day <= ?';
     }
-    let data = await dbUtils.sqlQuery(sql,
-        [mana, summoners, keyRules[0] + "%", keyRules[1] + "%", endDateStr]);
+    let params = [mana, summoners, keyRules[0] + "%", keyRules[1] + "%", endDateStr]
+    let data = await dbUtils.sqlQuery(sql, params);
     let string = JSON.stringify(data);
     let rs3 = rs.concat(JSON.parse(string));
-    console.log("3 singlerule match : ", ruleset, rs3.length);
-    logger.log("3 singlerule match : ", ruleset, rs3.length)
+    console.log("3 singlerule match : ", ruleset, rs3.length ,params , sql);
+    logger.log("3 singlerule match : ", ruleset, rs3.length, params, sql);
     return rs3;
   } else {
     logger.log("1.0 full match :", rs.length)
@@ -406,6 +405,7 @@ const possibleTeams = async (matchDetails, acc) => {
 };
 
 const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
+  doManaStat(possibleTeams,matchDetails,"mostWinningSummonerTankCombo")
   logger.log("4-1 third step most winnning team start :", possibleTeams.length)
   let bestCombination = await battles.mostWinningSummonerTank(possibleTeams);
   logger.log("4-2 third step most bestcombination  :",
@@ -445,20 +445,25 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
   //
   // }
 
-  console.log("4-4 third step makeBestCombine  start ............",new Date())
-  const bcTeams = await  makeBestCombine(possibleTeams,matchDetails);
-  if(bcTeams && bcTeams.length > 0 ){
-    let bcCombine = await battles.mostWinningSummonerTank(bcTeams);
-    const mostWinningBcTeam = await findBestTeam(bcCombine, bcTeams)
-    console.log("4-4 third step makeBestCombine  used ............",new Date())
-    logger.log("4-4 third step makeBestCombine  used ............",new Date())
-    return mostWinningBcTeam;
+
+  if(process.env.skip_cs && process.env.skip_cs == "false"){
+    console.log("4-4 third step makeBestCombine  start ............",new Date())
+    const bcTeams = await  makeBestCombine(possibleTeams,matchDetails);
+    if(bcTeams && bcTeams.length > 0 ){
+      let bcCombine = await battles.mostWinningSummonerTank(bcTeams);
+      const mostWinningBcTeam = await findBestTeam(bcCombine, bcTeams)
+      console.log("4-4 third step makeBestCombine  used ............",new Date())
+      logger.log("4-4 third step makeBestCombine  used ............",new Date())
+      return mostWinningBcTeam;
+    }
+  } else {
+    console.log("4-4 third step skip  makeBestCombine")
   }
-
-
 
   const mostWinningSummonerTankComboTeam = await findBestTeam(bestCombination,
       possibleTeams)
+  doManaStat(possibleTeams,matchDetails,"findBestTeam")
+
   // if(matchDetails.orgMana <=19){
   const mst = mostWinningSummonerTankComboTeam[1];
   console.log("mostWinningSummonerTankComboTeam : ", JSON.stringify(mst))
@@ -484,8 +489,14 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
 };
 
 async function findBestTeam(bestCombination, possibleTeams) {
-  console.log('BEST SUMMONER and TANK', bestCombination);
-  logger.log('BEST SUMMONER and TANK', bestCombination);
+  const sortArr = []
+  possibleTeams.forEach(tm =>{
+    sortArr.push([calcTotalMana(tm),tm]);
+  })
+  let sorted = sortArr.sort((a, b) => b[0] - a[0]);
+  possibleTeams = sorted.map(s => s[1])
+  console.log('BEST SUMMONER and TANK', bestCombination , possibleTeams.length);
+  logger.log('BEST SUMMONER and TANK', bestCombination, possibleTeams.length);
   if (bestCombination.summonerWins >= 1 && bestCombination.tankWins > 1
       && bestCombination.backlineWins > 1 && bestCombination.secondBacklineWins
       > 1 && bestCombination.thirdBacklineWins > 1
@@ -559,6 +570,43 @@ async function findBestTeam(bestCombination, possibleTeams) {
   }
 }
 
+function calcTotalMana(team) {
+  let totalMana = 0 ;
+  team.slice(0,7).forEach(item =>{
+    if(cardsDetail.cardsDetailsIDMap[item]){
+      totalMana +=parseInt(cardsDetail.cardsDetailsIDMap[item]['statSum1']['mana'])
+    }
+  })
+  return totalMana;
+}
+
+function doManaStat(teams,matchDetails,tag){
+  let maxMana = 0 ;
+  let minMana = 99;
+  let manaMap = {}
+  teams.forEach(ft => {
+    let totalMana = calcTotalMana(ft)
+    if(manaMap[totalMana]){
+      manaMap[totalMana]=manaMap[totalMana]+1
+    } else {
+      manaMap[totalMana] = 1
+    }
+    if(totalMana >= maxMana){
+      maxMana = totalMana;
+    }
+    if(totalMana <= minMana){
+      minMana = totalMana;
+    }
+    if(maxMana > matchDetails.mana) {
+      console.log("filterOutUnplayableDragonsAnfUnplayableSplinters exception : ",maxMana , matchDetails.mana, ft)
+    }
+  })
+
+  console.log(tag ,maxMana , minMana, matchDetails.mana , manaMap)
+  logger.log(tag ,maxMana , minMana , matchDetails.mana , manaMap)
+  return maxMana;
+}
+
 const filterOutUnplayableDragonsAnfUnplayableSplinters = (teams = [],
     matchDetails) => {
   const filteredTeamsForAvailableSplinters = Array.isArray(teams)
@@ -572,48 +620,22 @@ const filterOutUnplayableDragonsAnfUnplayableSplinters = (teams = [],
   console.log("filterOutUnplayableDragonsAnfUnplayableSplinters :",filteredTeams.length)
   logger.log("filterOutUnplayableDragonsAnfUnplayableSplinters :",filteredTeams.length)
   // big mana or rule:Little League etc...
-  let maxMana = 0 ;
-  filteredTeams.forEach(ft => {
-    let totalMana = 0 ;
-    ft.slice(0,6).forEach(item =>{
-      if(cardsDetail.cardsDetailsIDMap[item]){
-        totalMana +=parseInt(cardsDetail.cardsDetailsIDMap[item]['statSum1']['mana'])
-      }
-    })
-    if(totalMana >= maxMana){
-      maxMana = totalMana;
-    }
-  })
+  let maxMana = doManaStat(filteredTeams,matchDetails,"filterOutUnplayableDragonsAnfUnplayableSplinters before filter")
 
-  console.log("filterOutUnplayableDragonsAnfUnplayableSplinters max : ",maxMana , matchDetails.mana)
-  logger.log("filterOutUnplayableDragonsAnfUnplayableSplinters max : ",maxMana , matchDetails.mana)
-
-  if(filteredTeams.length <= 1000){
-    return  filteredTeams;
+  if(maxMana > matchDetails.mana) {
+    maxMana = matchDetails.mana
   }
 
-  const delta = maxMana <=45 ? 1 : 5;
+  const delta = parseInt(maxMana) <=43 ? 2 : 5;
   let resultTeams =   filteredTeams.filter(ft => {
-    let totalMana = 0 ;
-    ft.slice(0,6).forEach(item =>{
-       if(cardsDetail.cardsDetailsIDMap[item]){
-          totalMana +=parseInt(cardsDetail.cardsDetailsIDMap[item]['statSum1']['mana'])
-       }
-    })
-    return maxMana -  totalMana <= delta ;
+    let totalMana =  calcTotalMana(ft)
+    return parseInt(maxMana) -  parseInt(totalMana) <= delta ;
   })
 
+  console.log("filterOutUnplayableDragonsAnfUnplayableSplinters resultTeams : ",resultTeams.length , delta)
+  doManaStat(resultTeams,matchDetails,"filterOutUnplayableDragonsAnfUnplayableSplinters after filter")
   if(resultTeams.length <= 1000) {
-     resultTeams =   filteredTeams.filter(ft => {
-      let totalMana = 0 ;
-      ft.slice(0,6).forEach(item =>{
-        if(cardsDetail.cardsDetailsIDMap[item]){
-          totalMana +=parseInt(cardsDetail.cardsDetailsIDMap[item]['statSum1']['mana'])
-        }
-      })
-      return maxMana -  totalMana <= 3 ;
-    })
-    return resultTeams;
+    return filteredTeamsForAvailableSplinters || teams;
   } else {
     return resultTeams;
   }
@@ -770,25 +792,25 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
   }
 
   //CHECK for Favourite DECK TODO
-  const favDeckfilteredTeams = availableTeamsToPlay.filter(
-      team => team[7] === favouriteDeck);
-  if (favDeckfilteredTeams?.length && favouriteDeck
-      && matchDetails.splinters.includes(favouriteDeck?.toLowerCase())) {
-    console.log('play splinter:', favouriteDeck, 'from ',
-        favDeckfilteredTeams?.length, 'teams from V1');
-    if (favDeckfilteredTeams && favDeckfilteredTeams?.length >= 1
-        && favDeckfilteredTeams[0][0]) {
-      const res = await mostWinningSummonerTankCombo(favDeckfilteredTeams,
-          matchDetails);
-      if (res[0] && res[1]) {
-        console.log('play this as favourite deck for V1:', res);
-        return {summoner: res[0], cards: res[1]};
-      } else {
-        console.log('not enough teams for the favourite deck (V1)');
-      }
-    }
-    console.log('No possible teams for splinter ', favouriteDeck, ' V1');
-  }
+  // const favDeckfilteredTeams = availableTeamsToPlay.filter(
+  //     team => team[7] === favouriteDeck);
+  // if (favDeckfilteredTeams?.length && favouriteDeck
+  //     && matchDetails.splinters.includes(favouriteDeck?.toLowerCase())) {
+  //   console.log('play splinter:', favouriteDeck, 'from ',
+  //       favDeckfilteredTeams?.length, 'teams from V1');
+  //   if (favDeckfilteredTeams && favDeckfilteredTeams?.length >= 1
+  //       && favDeckfilteredTeams[0][0]) {
+  //     const res = await mostWinningSummonerTankCombo(favDeckfilteredTeams,
+  //         matchDetails);
+  //     if (res[0] && res[1]) {
+  //       console.log('play this as favourite deck for V1:',calcTotalMana(res[1]), res[1].join("-") );
+  //       return {summoner: res[0], cards: res[1]};
+  //     } else {
+  //       console.log('not enough teams for the favourite deck (V1)');
+  //     }
+  //   }
+  //   console.log('No possible teams for splinter ', favouriteDeck, ' V1');
+  // }
 
   const res = await mostWinningSummonerTankCombo(availableTeamsToPlay,
       matchDetails);
@@ -796,8 +818,8 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
     console.log('Dont play for the quest, and play this:', res);
     res[1] = extendsHandler.doExtendsHandler(res[1], matchDetails.rules,
         matchDetails.myCards);
-    console.log('Dont play for the quest, and play this doExtendsHandler :',
-        res);
+    console.log('Dont play for the quest, and play this doExtendsHandler realMana:',calcTotalMana(res[1]),' match mana :',matchDetails.mana, res[1].join("-") );
+    logger.log('final team mana:'+ calcTotalMana(res[1]), ' matchMana:',matchDetails.mana, res[1].join("-") );
     return {summoner: res[0], cards: res[1]};
   }
   console.log('No available team to be played...');
@@ -822,8 +844,8 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
     if (manaMatchTeams && manaMatchTeams.length > 0) {
       let manaRuleMatchTeams = enemy.filterRuleMatch(manaMatchTeams,
           matchDetails.rules);
-      console.log("-------", JSON.stringify(manaMatchTeams));
-      console.log("-------", JSON.stringify(manaRuleMatchTeams));
+      // console.log("-------", JSON.stringify(manaMatchTeams));
+      // console.log("-------", JSON.stringify(manaRuleMatchTeams));
       if (manaRuleMatchTeams && manaRuleMatchTeams.length > 0) {
         enemyPossbileTeams = manaRuleMatchTeams;
       } else {
@@ -833,15 +855,19 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
 
 
     matchDetails['enemyPossbileTeams'] = enemyPossbileTeams;
+    matchDetails['enemySplinterTeams'] = matchDetails.enemyRecent;
     console.log('enemyPossbileTeams : ', enemyPossbileTeams.length)
   }
 
   // by card cs
-  console.log("makeBestCombine  start ............")
-  const bcTeams = await  makeBestCombine(possibleTeams,matchDetails);
-  let bcCombine = await battles.mostWinningSummonerTank(bcTeams);
-  const mostWinningBcTeam = await findBestTeam(bcCombine, bcTeams)
-  console.log("makeBestCombine  end ............")
+  let mostWinningBcTeam = []
+  // if(process.env.skip_cs && process.env.skip_cs == "false"){
+    console.log("makeBestCombine  start ............")
+    const bcTeams = await  makeBestCombine(possibleTeams,matchDetails);
+    let bcCombine = await battles.mostWinningSummonerTank(bcTeams);
+    mostWinningBcTeam = await findBestTeam(bcCombine, bcTeams)
+    console.log("makeBestCombine  end ............")
+  // }
 
   let mostAgainstrevertTeam = [];
   const mst = mostWinningSummonerTankComboTeam[1];
@@ -970,7 +996,7 @@ async  function initCSTeams(possibleTeams, matchDetails,matchSplintersSummoners)
   } else {
     sql += " rule = '"+mustRules+"'  and "
   }
-  sql += "  startMana <="+ matchDetails.mana +" and endMana >= "+ matchDetails.mana  +"   GROUP BY cs  HAVING   sum(teams) > 100   and tl >= 0.66  order by   tl desc  ,sum(teams -lostTeams ) desc "
+  sql += "  startMana <="+ matchDetails.mana +" and endMana >= "+ matchDetails.mana  +"   GROUP BY cs  HAVING   sum(teams) > 1   and tl >= 0.78  order by   tl desc  ,sum(teams -lostTeams ) desc "
   const data = await dbUtils.sqlQuery(sql);
   const string = JSON.stringify(data);
   const rs = JSON.parse(string);
@@ -983,12 +1009,12 @@ async  function makeBestCombine(possibleTeams, matchDetails) {
   let rs = await initCSTeams(possibleTeams,matchDetails,matchSplintersSummoners)
   let matchCS = matchCsTeam(rs,possibleTeams)
   console.log('makeBestCombine do enemy full rule match : ', matchCS[1].length);
-  if(matchCS[1].length  <= 0 && matchDetails['enemyPossbileTeams'].length < matchDetails['enemySplinterTeams'].length) { //TODO
+  if(matchCS[1].length  <= 5 && matchDetails['enemyPossbileTeams'].length < matchDetails['enemySplinterTeams'].length) { //TODO
      matchSplintersSummoners = battles.matchedEnemyPossbileSummoners(matchDetails['enemySplinterTeams'],false);
      rs = await initCSTeams(possibleTeams,matchDetails,matchSplintersSummoners)
      matchCS = matchCsTeam(rs,possibleTeams)
      console.log('makeBestCombine do enemy splinters match : ', matchCS[1].length);
-    if(matchCS[1].length  <= 10 ) {
+    if(matchCS[1].length  <= 30 ) {
       matchSplintersSummoners = getSplintersSummoners(matchDetails.splinters)
       rs = await initCSTeams(possibleTeams,matchDetails,matchSplintersSummoners)
       matchCS = matchCsTeam(rs,possibleTeams)

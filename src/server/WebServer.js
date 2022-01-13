@@ -9,6 +9,17 @@ const dbAnalysis = require('../../db/script/analysis');
 const mostUsefullMonster = require('../../db/data/mostUsefull');
 const splinters = ['fire', 'life', 'earth', 'water', 'death', 'dragon'];
 
+function calcTotalMana(team) {
+  let totalMana = 0 ;
+  team.slice(0,7).forEach(item =>{
+    if(cardDetail.cardsDetailsIDMap[item]){
+      const mana = parseInt(cardDetail.cardsDetailsIDMap[item]['statSum1']['mana'])
+      totalMana +=mana
+    }
+  })
+  return totalMana;
+}
+
 // 创建服务器
 http.createServer(async function (request, response) {
   // 解析请求，包括文件名
@@ -194,6 +205,9 @@ http.createServer(async function (request, response) {
         const cardInfo = cardDetail.cardsDetailsIDMap[item];
         result.push({"name": cardInfo['name']})
       })
+
+      const total = calcTotalMana(cs.split("-"))
+      result.push({"name": total})
 
       response.writeHead(200, {'Content-Type': 'application/json'});
       response.write(JSON.stringify({mostUser: result}))

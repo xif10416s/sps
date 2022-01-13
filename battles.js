@@ -249,7 +249,7 @@ async function mostWinningEnemy(possibleTeamsList, enemyPossbileTeams,
       let sorted = entries.sort((a, b) => b[1] - a[1]);
       console.log("-------sorted[0][0]---", sorted[0][0])
       var mostSummonerTeams = enemyPossbileTeams.filter(
-          ep => ep['summoner_id'] == sorted[0][0]);
+          ep =>  ep['summoner_id'] == sorted[0][0]);
       if (mostSummonerTeams && mostSummonerTeams.length > 0) {
         const mostTeam = mostSummonerTeams[0];
         dbUtils.washdata(mostTeam,
@@ -285,10 +285,10 @@ function matchedEnemyPossbileSummoners(enemyPossbileTeams,isSlice = false) {
     let entries = Object.entries(mostSummoner);
     let sorted = entries.sort((a, b) => b[1] - a[1]);
     console.log("-------sorted[0][0]---", sorted)
-    enemyPs = sorted.map(ep => ep[0]);
-    if(isSlice && sorted.length >= 3) {
-      enemyPs = enemyPs.slice(0,3)
-    }
+    enemyPs = sorted.map(ep => ep[0]).filter( x=> x != null && x != "undefined");
+    // if(isSlice && sorted.length >= 3) {
+    //   enemyPs = enemyPs.slice(0,2)
+    // }
 
   }
   console.log("-------enemyPs---", enemyPs)

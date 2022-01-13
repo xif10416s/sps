@@ -37,7 +37,7 @@ const extractMonster = (team) => {
     const monster6 = team.monsters[5];
 
     return {
-        summoner_id: team.summoner.card_detail_id,
+        summoner_id: team.summoner.card_detail_id ? team.summoner.card_detail_id : 0,
         summoner_level: team.summoner.level,
         monster_1_id: monster1 ? monster1.card_detail_id : '',
         monster_1_level: monster1 ? monster1.level : '',

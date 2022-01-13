@@ -240,3 +240,5 @@ cd /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/spark && source bin/ac
 -- wsl 
 net stop LxssManager
 net start LxssManager
+
+https://api2.splinterlands.com/cards/get_details
