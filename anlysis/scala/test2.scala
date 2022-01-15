@@ -260,7 +260,7 @@ def doAnalysis(startTime:String, endTime:String ,fromMana:Int, endMana:Int): Uni
 
 def  doRangeByMana(arr:Array[(Int, Int)]):Unit = {
   arr.foreach(ms =>{
-    doAnalysis("2021-12-25","2022-01-13",ms._1,ms._2)
+    doAnalysis("2021-12-25","2022-01-16",ms._1,ms._2)
   })
 }
 

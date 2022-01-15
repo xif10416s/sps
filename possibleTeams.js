@@ -968,7 +968,30 @@ function getCardNameByID(cardId) {
 
 }
 
-async  function initCSTeams(possibleTeams, matchDetails,matchSplintersSummoners) {
+function getManaRange(matchDetails){
+  let delta = 0 ;
+  if(matchDetails.mana <= 17){
+    delta = 0
+  }
+  if(matchDetails.mana >= 18 && matchDetails.mana <= 21){
+    delta = 1
+  }
+  if(matchDetails.mana >= 22 && matchDetails.mana <= 35){
+    delta = 2
+  }
+  if(matchDetails.mana >= 36 && matchDetails.mana <= 44){
+    delta = 3
+  }
+
+  let fromMana = matchDetails.mana >= 45 ? 45 :  parseInt(matchDetails.mana) - parseInt(delta) ;
+  let endMana = parseInt(matchDetails.mana) + parseInt(delta) ;
+  return [fromMana,endMana]
+}
+async  function initCSTeams(possibleTeams, matchDetails,matchSplintersSummoners ) {
+  const manaRange = getManaRange(matchDetails);
+  let fromMana = manaRange[0];
+  let endMana = manaRange[1];
+
   if(matchSplintersSummoners && matchSplintersSummoners.length == 0){
     return [];
   }
@@ -996,7 +1019,7 @@ async  function initCSTeams(possibleTeams, matchDetails,matchSplintersSummoners)
   } else {
     sql += " rule = '"+mustRules+"'  and "
   }
-  sql += "  startMana <="+ matchDetails.mana +" and endMana >= "+ matchDetails.mana  +"   GROUP BY cs  HAVING   sum(teams) > 1   and tl >= 0.75  order by   tl desc  ,sum(teams -lostTeams ) desc "
+  sql += "  startMana >="+ fromMana +" and endMana <= "+ endMana +"   GROUP BY cs  HAVING    tl >0.75   and sum(totalcnt - lostTotalCnt) >100  order by len asc ,  sum(teams -lostTeams ) desc , tl desc "
   const data = await dbUtils.sqlQuery(sql);
   const string = JSON.stringify(data);
   const rs = JSON.parse(string);
@@ -1020,13 +1043,8 @@ async  function makeBestCombine(possibleTeams, matchDetails, mostSummoner = null
      rs = await initCSTeams(possibleTeams,matchDetails,matchSplintersSummoners)
      matchCS = matchCsTeam(rs,possibleTeams)
      console.log('makeBestCombine do enemy splinters match : ', matchCS[1].length);
-    if(matchCS[1].length  <= 30 ) {
-      matchSplintersSummoners = getSplintersSummoners(matchDetails.splinters)
-      rs = await initCSTeams(possibleTeams,matchDetails,matchSplintersSummoners)
-      matchCS = matchCsTeam(rs,possibleTeams)
-      console.log('makeBestCombine do all splinters match : : ', matchCS[1].length);
-    }
   }
+
   let cs =   matchCS[0]
   let matchTeams = matchCS[1]
   if(matchCS && cs.length > 0 && matchTeams.length > 0){
@@ -1074,6 +1092,9 @@ function matchCsTeam(rs , possibleTeams) {
 }
 
 async function extendsCombineSearch(cs , matchTeams,matchDetails,matchSplintersSummoners){
+  const manaRange = getManaRange(matchDetails);
+  let fromMana = manaRange[0];
+  let endMana = manaRange[1];
   let sql = "select cs , sum(teams)/sum(teams+lostTeams) as tl   from   battle_stat_V2 where  " ;
   let csLike = "cs like '";
   let spCs =  cs.split("-")
@@ -1094,7 +1115,7 @@ async function extendsCombineSearch(cs , matchTeams,matchDetails,matchSplintersS
   } else {
     sql += " rule = '"+mustRules+"'  and "
   }
-  sql += "len > "+ (spCs.length - 1)  +" and startMana <="+ matchDetails.mana +" and endMana >= "+ matchDetails.mana  +"   GROUP BY cs   order by   tl desc  ,sum(teams -lostTeams ) desc "
+  sql += "len > "+ (spCs.length - 1)  +" and startMana >="+ fromMana +" and endMana <= "+endMana  +"   GROUP BY cs   order by   tl desc  ,sum(teams -lostTeams ) desc "
   const data = await dbUtils.sqlQuery(sql);
   const string = JSON.stringify(data);
   const rs = JSON.parse(string);

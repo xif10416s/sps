@@ -56,8 +56,8 @@ async function startMulti() {
     }
 
     if (missingValue) throw new Error('Fix your ACCOUNT and/or PASSWORD value in .env file.')
-    
-    while(true) {
+    let next =true;
+    while(next) {
         console.log(chalk.bold.whiteBright.bgGreen(`Running bot iter-[${count}]`))
         for (let i = 0; i < accounts.length; i++) {
             setupAccount(accounts[i], passwords[i], isMultiAccountMode);
@@ -72,6 +72,10 @@ async function startMulti() {
         await console.log('waiting for the next battle in', sleepingTime / 1000 / 60 , 'minutes at', new Date(Date.now() + sleepingTime).toLocaleString(), '\n');
         await sleep(sleepingTime);
         count++;
+        if(count >= process.env.LIMIT_MATCH_COUNT ) {
+            next = false;
+            console.log('process.env.LIMIT_MATCH_COUNT matched stop: ', process.env.LIMIT_MATCH_COUNT)
+        }
     }
 }
 
