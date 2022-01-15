@@ -448,7 +448,7 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
 
   if(process.env.skip_cs && process.env.skip_cs == "false"){
     console.log("4-4 third step makeBestCombine  start ............",new Date())
-    const bcTeams = await  makeBestCombine(possibleTeams,matchDetails);
+    const bcTeams = await  makeBestCombine(possibleTeams,matchDetails,bestCombination.bestSummoner);
     if(bcTeams && bcTeams.length > 0 ){
       let bcCombine = await battles.mostWinningSummonerTank(bcTeams);
       const mostWinningBcTeam = await findBestTeam(bcCombine, bcTeams)
@@ -598,7 +598,7 @@ function doManaStat(teams,matchDetails,tag){
       minMana = totalMana;
     }
     if(maxMana > matchDetails.mana) {
-      console.log("filterOutUnplayableDragonsAnfUnplayableSplinters exception : ",maxMana , matchDetails.mana, ft)
+      // console.log("filterOutUnplayableDragonsAnfUnplayableSplinters exception : ",maxMana , matchDetails.mana, ft)
     }
   })
 
@@ -863,7 +863,7 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
   let mostWinningBcTeam = []
   // if(process.env.skip_cs && process.env.skip_cs == "false"){
     console.log("makeBestCombine  start ............")
-    const bcTeams = await  makeBestCombine(possibleTeams,matchDetails);
+    const bcTeams = await  makeBestCombine(possibleTeams,matchDetails,bestCombination.bestSummoner);
     let bcCombine = await battles.mostWinningSummonerTank(bcTeams);
     mostWinningBcTeam = await findBestTeam(bcCombine, bcTeams)
     console.log("makeBestCombine  end ............")
@@ -996,7 +996,7 @@ async  function initCSTeams(possibleTeams, matchDetails,matchSplintersSummoners)
   } else {
     sql += " rule = '"+mustRules+"'  and "
   }
-  sql += "  startMana <="+ matchDetails.mana +" and endMana >= "+ matchDetails.mana  +"   GROUP BY cs  HAVING   sum(teams) > 1   and tl >= 0.78  order by   tl desc  ,sum(teams -lostTeams ) desc "
+  sql += "  startMana <="+ matchDetails.mana +" and endMana >= "+ matchDetails.mana  +"   GROUP BY cs  HAVING   sum(teams) > 1   and tl >= 0.75  order by   tl desc  ,sum(teams -lostTeams ) desc "
   const data = await dbUtils.sqlQuery(sql);
   const string = JSON.stringify(data);
   const rs = JSON.parse(string);
@@ -1004,13 +1004,19 @@ async  function initCSTeams(possibleTeams, matchDetails,matchSplintersSummoners)
   return rs;
 }
 
-async  function makeBestCombine(possibleTeams, matchDetails) {
+async  function makeBestCombine(possibleTeams, matchDetails, mostSummoner = null) {
   let matchSplintersSummoners  = battles.matchedEnemyPossbileSummoners(matchDetails['enemyPossbileTeams'],true);
+  if(mostSummoner){
+    matchSplintersSummoners.push(mostSummoner)
+  }
   let rs = await initCSTeams(possibleTeams,matchDetails,matchSplintersSummoners)
   let matchCS = matchCsTeam(rs,possibleTeams)
   console.log('makeBestCombine do enemy full rule match : ', matchCS[1].length);
-  if(matchCS[1].length  <= 5 && matchDetails['enemyPossbileTeams'].length < matchDetails['enemySplinterTeams'].length) { //TODO
+  if(matchCS[1].length  <= 0 && matchDetails['enemyPossbileTeams'].length < matchDetails['enemySplinterTeams'].length) { //TODO
      matchSplintersSummoners = battles.matchedEnemyPossbileSummoners(matchDetails['enemySplinterTeams'],false);
+    if(mostSummoner){
+      matchSplintersSummoners.push(mostSummoner)
+    }
      rs = await initCSTeams(possibleTeams,matchDetails,matchSplintersSummoners)
      matchCS = matchCsTeam(rs,possibleTeams)
      console.log('makeBestCombine do enemy splinters match : ', matchCS[1].length);
