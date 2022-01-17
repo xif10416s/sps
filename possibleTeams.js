@@ -770,7 +770,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
             const cardInfo = cardsDetail.cardsDetailsIDMap[cardId]
             if(cardInfo) {
               const abilities = cardInfo['abilities']
-              if(abilities[0].length  > 0 && abilities[0].indexOf("snipe") != -1){
+              if(abilities && abilities[0].length  > 0 && abilities[0].indexOf("snipe") != -1){
                 isMatchSnipe = true
               }
             }
@@ -783,9 +783,9 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
         logger.log("2-3-2", left + ' battles left for the snipe ' , filteredTeamsForQuest.length);
         availableTeamsToPlay = filteredTeamsForQuest;
       } else {
-        console.log('CHECK FOR QUEST skip: ',
+        console.log('CHECK FOR snipe QUEST skip: ',
             filteredTeamsForQuest.length);
-        logger.log('CHECK FOR QUEST skip: ',
+        logger.log('CHECK FOR snipe QUEST skip: ',
             filteredTeamsForQuest.length);
       }
     }
@@ -1035,7 +1035,7 @@ async  function makeBestCombine(possibleTeams, matchDetails, mostSummoner = null
   let rs = await initCSTeams(possibleTeams,matchDetails,matchSplintersSummoners)
   let matchCS = matchCsTeam(rs,possibleTeams)
   console.log('makeBestCombine do enemy full rule match : ', matchCS[1].length);
-  if(matchCS[1].length  <= 0 && matchDetails['enemyPossbileTeams'].length < matchDetails['enemySplinterTeams'].length) { //TODO
+  if(matchCS[1].length  <= 0 && matchDetails['enemyPossbileTeams'] && matchDetails['enemySplinterTeams'] &&  matchDetails['enemyPossbileTeams'].length < matchDetails['enemySplinterTeams'].length) { //TODO
      matchSplintersSummoners = battles.matchedEnemyPossbileSummoners(matchDetails['enemySplinterTeams'],false);
     if(mostSummoner){
       matchSplintersSummoners.push(mostSummoner)

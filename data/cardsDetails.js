@@ -29,7 +29,7 @@ cardsDetails.map(cd => {
             , 'speed': stat["speed"]
           };
 
-  const abilities = cd['abilities'] //
+  const abilities = stat['abilities'] //
   const cardDetailId = cd['distribution'][0]['card_detail_id']
   const item = {
     'statSum1': statSum1,
@@ -171,3 +171,4 @@ let test = [["Kelya Frendul","1"],["Serpent of Eld","1"],["Elven Defender","1"],
 // console.log(JSON.stringify(Object.keys(enemyTeamPerfer)))
 
 // console.log(JSON.stringify(getSuitBattleSummoner(getEnemyBufferRecentInfo(test,"Summoner"),['Obsidian'])))
+// console.log(cardsDetailsIDMap['149'])

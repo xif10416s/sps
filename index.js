@@ -518,6 +518,10 @@ const blockedResources = [
     'twitter.com',
 ];
 
+function LostTooMatchException(message){
+    this.message = message;
+}
+
 // #1#   入口程序
 async function run() {
     let start = true
@@ -559,6 +563,10 @@ async function run() {
     page.favouriteDeck = process.env.FAVOURITE_DECK || '';
     while (start) {
         console.log('Recover Status: ', page.recoverStatus)
+        if( (winTotal+loseTotal) >=20  && loseTotal/(winTotal+loseTotal) >= 0.7 ){
+            console.log("LostTooMatchException win : " + winTotal , " lost :" + loseTotal )
+            throw new LostTooMatchException("win : " + winTotal , " lost :" + loseTotal)
+        }
         if(!process.env.API) {
             console.log(chalk.bold.redBright.bgBlack('Dont pay scammers!'));
             console.log(chalk.bold.whiteBright.bgBlack('If you need support for the bot, join the telegram group https://t.me/splinterlandsbot and discord https://discord.gg/bR6cZDsFSX'));
@@ -573,7 +581,11 @@ async function run() {
                     await closeBrowser(browser);
                 } else {
                     await page.waitForTimeout(5000);
-                    const randomTime = Math.ceil(Math.random()*5)* 60000 + sleepingTime ;
+                    let randomTime = Math.ceil(Math.random()*5)* 60000 + sleepingTime ;
+                    if((winTotal+loseTotal) >=5 &&  loseTotal/(winTotal+loseTotal) >= 0.7 ){
+                        randomTime = randomTime * 3
+                        console.log("LostTooMatchException win : " + winTotal , " lost :" + loseTotal , "waittime mutil 3 :" , randomTime )
+                    }
                     console.log(account, 'waiting for the next battle in', randomTime / 1000 / 60 , 'minutes at', new Date(Date.now() + randomTime).toLocaleString());
                     ask.logger.log(account, 'waiting for the next battle in', randomTime / 1000 / 60 , 'minutes at', new Date(Date.now() + randomTime).toLocaleString());
                     await sleep(randomTime);
@@ -610,3 +622,4 @@ function setupAccount(uname, pword, multiAcc) {
 
 exports.run = run;
 exports.setupAccount = setupAccount;
+module.exports.LostTooMatchException = LostTooMatchException

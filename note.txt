@@ -12,3 +12,6 @@ https://splinterlands.fandom.com/wiki/Category:Rule_Sets
 
 ## todo
 1.  最新card 详细信息
+
+## pm
+1. Enemy name : []

@@ -23,7 +23,7 @@ var insertTemplateRaw = 'INSERT  ignore  INTO battle_history_raw_v2(battle_queue
     ' battle_queue_id_lost ,summoner_id_lost,summoner_level_lost ,monster_1_id_lost ,monster_1_level_lost ,monster_1_abilities_lost ,monster_2_id_lost ,monster_2_level_lost ,monster_2_abilities_lost ,monster_3_id_lost ,monster_3_level_lost ,monster_3_abilities_lost ,monster_4_id_lost ,monster_4_level_lost ,monster_4_abilities_lost ,monster_5_id_lost ,monster_5_level_lost,monster_5_abilities_lost ,monster_6_id_lost,monster_6_level_lost ,monster_6_abilities_lost,player_rating_initial_lost ,player_rating_final_lost ,loser) '
     + 'VALUES ? ';
 
-const sqlQuery = (sql, values) => {
+const sqlQueryRaw = (sql, values) => {
   return new Promise((resolve, reject) => {
     pool.getConnection((err, connection) => {
       if (err) {
@@ -53,6 +53,16 @@ const sqlQuery = (sql, values) => {
   });
 };
 
+const sqlQuery = async (sql, values) => {
+  var start = performance.now();
+  const rs =  await sqlQueryRaw(sql,values)
+  var end = performance.now();
+  if((end - start)/1000 >= 10 ){
+    console.log("slow sql cost is : ",`${(end - start)/1000} s`)
+    console.log(sql, values )
+  }
+  return rs;
+}
 /**
  *
  * @param history
@@ -254,7 +264,7 @@ module.exports.pool = pool;
 // })()
 
 // (async ()=>{
-//   let sql = 'select * from battle_history_raw where  mana_cap = ?  and summoner_id in (?)  and ( ruleset like ?  or ruleset like ?)';
+//   let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and ( ruleset like ?  or ruleset like ?)';
 //   let summoners = [178,437,156,145,438,224];
 //   let mana = 12;
 //   let keyRules = 'Unprotected|Holy Protection'.split('|');

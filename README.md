@@ -206,12 +206,11 @@ sudo service cron restart
 node battlesGetDataRawV1.js
 
 // -e "MAX_QUEUE_LENGTH=300"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=200"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"
-docker run -e "MAX_QUEUE_LENGTH=300"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=200"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3000:3000 --restart always -d --name browserless browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=100"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=100"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3000:3000 -m 4g --restart always -d --name browserless browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=100"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=100"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3001:3000 -m 4g --memory-swap -1 --restart always -d --name browserless3001 browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=100"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=100"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3002:3000 -m 4g --memory-swap -1 --restart always -d --name browserless3002 browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=100"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=100"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3003:3000 -m 4g --memory-swap -1 --restart always -d --name browserless3003 browserless/chrome
 http://192.168.99.100:3000
-
-docker run -e "MAX_QUEUE_LENGTH=300"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=200"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3001:3000 --restart always -d --name browserless3001 browserless/chrome
-docker run -e "MAX_QUEUE_LENGTH=300"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=200"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3002:3000 --restart always -d --name browserless3002 browserless/chrome
-
 
 //WSL
 npm --max-old-space-size=5192 start >> logs/sugelafei5-log.txt
@@ -221,10 +220,10 @@ npm --max-old-space-size=4192  start  -- --username sugelafei2  >> logs/sugelafe
 npm --max-old-space-size=4192  start  -- --username sugelafei  >> logs/sugelafei/sugelafei11-log.txt
 
 // shell
-cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh sugelafei 3
-cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh sugelafei2 3
-cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh xifei123 3
-
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh sugelafei 1
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh sugelafei2 1
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh xifei123 1
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh hkd123 1
 
 // python
 cd /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/spark && source bin/activate && source ~/.bashrc
@@ -242,3 +241,6 @@ net stop LxssManager
 net start LxssManager
 
 https://api2.splinterlands.com/cards/get_details
+
+
+sudo swapon -p 5 /mnt/sda1/swap/swapfile

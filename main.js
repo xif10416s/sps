@@ -4,7 +4,7 @@ const username = process.argv[process.argv.indexOf('--username')+1]
 console.log("config username :",username)
 config.doConfigInit(username)
 
-const { run, setupAccount } = require('./index');
+const { run, setupAccount , LostTooMatchException } = require('./index');
 const { sleep } = require('./helper');
 const chalk = require('chalk');
 
@@ -65,6 +65,10 @@ async function startMulti() {
                 await run();
             } catch (e) {
                 console.log('Error on main:', e)
+                if(e instanceof  LostTooMatchException) {
+                    console.log("LostTooMatchException : " , e.message)
+                    next = false;
+                }
             }
                     
             console.log(`Finished running ${accounts[i]} account...\n`);
@@ -72,11 +76,12 @@ async function startMulti() {
         await console.log('waiting for the next battle in', sleepingTime / 1000 / 60 , 'minutes at', new Date(Date.now() + sleepingTime).toLocaleString(), '\n');
         await sleep(sleepingTime);
         count++;
-        if(count >= process.env.LIMIT_MATCH_COUNT ) {
+        if(count >= parseInt(process.env.max_cnt) ) {
             next = false;
-            console.log('process.env.LIMIT_MATCH_COUNT matched stop: ', process.env.LIMIT_MATCH_COUNT)
+            console.log('process.env.max_cnt matched stop: ', process.env.max_cnt)
         }
     }
+    console.log("--------------------------stop--------------------------")
 }
 
 async function startSingle() {

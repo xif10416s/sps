@@ -1,7 +1,9 @@
 {
   "name": "SUGELAFEI",
   "password": "5HwZhueBihhGaSPe4PWxScsKCVf4nCEybqdrU6oaZ238xUUePsp",
-  "port": 3001,
+  "port": 3002,
   "favourite_summoner": "",
-  "skip_cs": "false"
+  "skip_cs": "false",
+  "max_cnt": "20" ,
+  "finish_quest": "true"
 }

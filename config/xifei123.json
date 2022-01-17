@@ -1,7 +1,9 @@
 {
   "name": "xifei123",
   "password": "5JayvrytpFTiQjpHQcWntd9eXLmunuSGPid9TqvghmADww7T1LT",
-  "port": 3002,
+  "port": 3000,
   "favourite_summoner": "",
-  "skip_cs": "false"
+  "skip_cs": "false",
+  "max_cnt": "20" ,
+  "finish_quest": "true"
 }
