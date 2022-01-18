@@ -19,7 +19,7 @@ async function login(page, account, password) {
             .then(() => page.waitForTimeout(3000))
             .then(async () => {
                 await page.waitForSelector('#log_in_text', {
-                        visible: true, timeout: 3000
+                        visible: true, timeout: 8000
                     })
                     .then(()=>{
                         console.log('logged in!')

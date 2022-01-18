@@ -240,7 +240,16 @@ cd /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/spark && source bin/ac
 net stop LxssManager
 net start LxssManager
 
+sudo service ssh --full-restart
+sudo service cron restart 
+
+
 https://api2.splinterlands.com/cards/get_details
 
 
 sudo swapon -p 5 /mnt/sda1/swap/swapfile
+
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs &&  tail -200f ---disable-inotify  Summary.txt
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs &&  tail -200f ---disable-inotify  SummaryError.txt
+
+node --max-old-space-size=5192 src/server/WebServer.js

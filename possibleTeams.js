@@ -181,11 +181,11 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule) => {
   let endDate = new Date(date.setDate(date.getDate() + 2))
   let endDateStr = endDate.toISOString().split("T")[0];
   if (keyRules.length > 1) {
-    let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and (ruleset = ? or ruleset = ?) and created_date_day <= ? ';
+    let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and (ruleset = ? or ruleset = ?) and created_date_day <= ? order by created_date_day desc limit 50000';
     let params = [mana, summoners, ruleset, keyRules[1] + "|" + keyRules[0],
       endDateStr];
     if(mana > highMana) {
-        sql = 'select * from battle_history_raw_v2 where  mana_cap >= '+ highMana +' and  mana_cap <= ?  and summoner_id in (?)  and (ruleset = ? or ruleset = ?) and created_date_day <= ? ';
+        sql = 'select * from battle_history_raw_v2 where  mana_cap >= '+ highMana +' and  mana_cap <= ?  and summoner_id in (?)  and (ruleset = ? or ruleset = ?) and created_date_day <= ? order by created_date_day desc limit 50000';
     }
     let data = await dbUtils.sqlQuery(sql, params);
     let string = JSON.stringify(data);
@@ -206,9 +206,9 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule) => {
       }
     }
   } else {
-    let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and ruleset = ? and created_date_day <= ?';
+    let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and ruleset = ? and created_date_day <= ? order by created_date_day desc limit 50000';
     if(mana > highMana) {
-        sql = 'select * from battle_history_raw_v2 where mana_cap >=  '+ highMana + ' and mana_cap <= ?  and summoner_id in (?)  and ruleset = ? and created_date_day <= ?';
+        sql = 'select * from battle_history_raw_v2 where mana_cap >=  '+ highMana + ' and mana_cap <= ?  and summoner_id in (?)  and ruleset = ? and created_date_day <= ? order by created_date_day desc limit 50000';
     }
     let data = await dbUtils.sqlQuery(sql,
         [mana, summoners, ruleset, endDateStr]);
@@ -226,9 +226,9 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule) => {
   if (rs.length <= leastCnt && keyRules.length > 1) {
     if (mustSingleRule != null) {
       console.log("mustSingleRule.. :", mustSingleRule)
-      let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and ruleset like ? and created_date_day <= ? ';
+      let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and ruleset like ? and created_date_day <= ? order by created_date_day desc limit 50000 ';
       if(mana > highMana) {
-        sql = 'select * from battle_history_raw_v2 where  mana_cap >= '+  highMana + '  and mana_cap<= ?  and summoner_id in (?)  and ruleset like ? and created_date_day <= ? ';
+        sql = 'select * from battle_history_raw_v2 where  mana_cap >= '+  highMana + '  and mana_cap<= ?  and summoner_id in (?)  and ruleset like ? and created_date_day <= ? order by created_date_day desc limit 50000';
       }
       let params = [mana, summoners, "%" + mustSingleRule + "%", endDateStr]
       let data = await dbUtils.sqlQuery(sql,params);
@@ -241,9 +241,9 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule) => {
       return rs2;
     }
 
-    let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and ( ruleset like ?  or ruleset like ?) and created_date_day <= ?';
+    let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  and ( ruleset like ?  or ruleset like ?) and created_date_day <= ? order by created_date_day desc limit 50000';
     if(mana > highMana) {
-      sql = 'select * from battle_history_raw_v2 where  mana_cap >= '+ highMana +' and mana_cap <= ?  and summoner_id in (?)  and ( ruleset like ?  or ruleset like ?) and created_date_day <= ?';
+      sql = 'select * from battle_history_raw_v2 where  mana_cap >= '+ highMana +' and mana_cap <= ?  and summoner_id in (?)  and ( ruleset like ?  or ruleset like ?) and created_date_day <= ? order by created_date_day desc limit 50000';
     }
     let params = [mana, summoners, keyRules[0] + "%", keyRules[1] + "%", endDateStr]
     let data = await dbUtils.sqlQuery(sql, params);
@@ -299,7 +299,7 @@ const battlesFilterByManacap = async (mana, ruleset, summoners) => {
     }
 
     if (rs.length == 0 && mustRule == null) {
-      let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)';
+      let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?) order by created_date_day desc limit 50000';
       console.log(sql);
       const data3 = await dbUtils.sqlQuery(sql, [orgMana, summoners]);
       let string3 = JSON.stringify(data3);
@@ -388,19 +388,21 @@ const askFormation = function (matchDetails) {
  */
 const possibleTeams = async (matchDetails, acc) => {
   let possibleTeams = [];
-  while (matchDetails.mana > 10) {
-    // 99 有 ，13-46
-    if (matchDetails.mana <= 98 && matchDetails.mana >= 50) {
-      matchDetails.mana = 50;
-    }
-    console.log('check battles based on mana: ' + matchDetails.mana);
-    account = acc;
-    possibleTeams = await askFormation(matchDetails);
-    if (possibleTeams.length >= 5) {
-      return possibleTeams;
-    }
-    matchDetails.mana--;
-  }
+  // while (matchDetails.mana > 10) {
+  //   // 99 有 ，13-46
+  //   if (matchDetails.mana <= 98 && matchDetails.mana >= 50) {
+  //     matchDetails.mana = 50;
+  //   }
+  //   console.log('check battles based on mana: ' + matchDetails.mana);
+  //   account = acc;
+  //   possibleTeams = await askFormation(matchDetails);
+  //   if (possibleTeams.length >= 5) {
+  //     return possibleTeams;
+  //   }
+  //   matchDetails.mana--;
+  // }
+  console.log('check battles based on mana: ' + matchDetails.mana);
+  possibleTeams = await askFormation(matchDetails);
   return possibleTeams;
 };
 
@@ -927,20 +929,25 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
       mostAgainstrevertTeam && mostAgainstrevertTeam.length > 1
           ? mostAgainstrevertTeam[1] : []
       , matchDetails.rules, matchDetails.myCards);
-  const possbiletEnemyTeam = matchDetails['enemyPossbileTeams'].map(team => {
-    try {
-      return [getCardNameByID(team['summoner_id']),
-        getCardNameByID(team['monster_1_id']),
-        getCardNameByID(team['monster_2_id'])
-        , getCardNameByID(team['monster_3_id']),
-        getCardNameByID(team['monster_4_id']),
-        getCardNameByID(team['monster_5_id']),
-        getCardNameByID(team['monster_6_id']), '', team['mana_cap'], '-',
-        team['ruleset']]
-    } catch (e) {
 
-    }
-  })
+  let possbiletEnemyTeam = []
+  if(matchDetails['enemyPossbileTeams'] && matchDetails['enemyPossbileTeams'].length > 0){
+    possbiletEnemyTeam = matchDetails['enemyPossbileTeams'].map(team => {
+      try {
+        return [getCardNameByID(team['summoner_id']),
+          getCardNameByID(team['monster_1_id']),
+          getCardNameByID(team['monster_2_id'])
+          , getCardNameByID(team['monster_3_id']),
+          getCardNameByID(team['monster_4_id']),
+          getCardNameByID(team['monster_5_id']),
+          getCardNameByID(team['monster_6_id']), '', team['mana_cap'], '-',
+          team['ruleset']]
+      } catch (e) {
+
+      }
+    })
+  }
+
   const mostBcTeam = extendsHandler.doExtendsHandler(
       mostWinningBcTeam
       && mostWinningBcTeam.length > 1

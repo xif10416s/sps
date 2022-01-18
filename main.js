@@ -75,11 +75,6 @@ async function startMulti() {
         }
         await console.log('waiting for the next battle in', sleepingTime / 1000 / 60 , 'minutes at', new Date(Date.now() + sleepingTime).toLocaleString(), '\n');
         await sleep(sleepingTime);
-        count++;
-        if(count >= parseInt(process.env.max_cnt) ) {
-            next = false;
-            console.log('process.env.max_cnt matched stop: ', process.env.max_cnt)
-        }
     }
     console.log("--------------------------stop--------------------------")
 }

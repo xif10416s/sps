@@ -8,6 +8,7 @@ const cardDetail = require('../../data/cardsDetails');
 const dbAnalysis = require('../../db/script/analysis');
 const mostUsefullMonster = require('../../db/data/mostUsefull');
 const splinters = ['fire', 'life', 'earth', 'water', 'death', 'dragon'];
+const dbUtils = require('../../db/script/dbUtils');
 
 function calcTotalMana(team) {
   let totalMana = 0 ;
@@ -30,7 +31,7 @@ http.createServer(async function (request, response) {
     var arg1 = url.parse(request.url, true).query;
     if (pathname.startsWith("/api/search")) {
       let rule = arg1.rule;
-      rule = rule.replace("and","&").replace("and","&").replace("and","&");
+      rule = rule.replace(" and"," &").replace(" and"," &").replace(" and"," &");
       let mana = arg1.mana;
       let enemy = arg1.enemy
       let sp = arg1.sp
@@ -211,6 +212,36 @@ http.createServer(async function (request, response) {
 
       response.writeHead(200, {'Content-Type': 'application/json'});
       response.write(JSON.stringify({mostUser: result}))
+      response.end()
+      return;
+    }
+
+    //------------------------------
+    if (pathname.startsWith("/api/cs2Analysis")) {
+      let from = arg1.from;
+      let end = arg1.end;
+      let rule = arg1.rule;
+      let lenSql = arg1.len && arg1.len != '' ? ' len = '+ arg1.len + ' and ': '' ;
+      let ruleSql = rule &&  rule != "-1" ? " rule like '%" +rule+"%'" :" rule='default' "
+      let sql = " select cs , sum(teams) as ts ,sum(lostTeams) as lts  , sum(totalCnt) as tt , sum(lostTotalCnt) as lts , sum(teams)/sum(teams+lostTeams) as tl from battle_stat_v2 where "
+          +  lenSql + " startMana >= "+ from +"  and  endMana <= "+ end +" and "+ ruleSql + " GROUP BY cs  HAVING   sum(teams) > 100   and tl >= 0.70  order by  len asc,  tl desc  ,sum(teams -lostTeams ) desc limit 30"
+
+      let data = await dbUtils.sqlQuery(sql);
+      let string = JSON.stringify(data);
+      let rs = JSON.parse(string)
+      let result = []
+      rs.forEach(item => {
+        let teams = []
+        item['cs'].split("-").forEach(item => {
+          const cardInfo = cardDetail.cardsDetailsIDMap[item];
+          teams.push(cardInfo['name'])
+        })
+        result.push({teams: teams,tl: item['tl'],wt:item['ts'] , lt:item['lts']})
+      })
+
+
+      response.writeHead(200, {'Content-Type': 'application/json'});
+      response.write(JSON.stringify({mostCS: result}))
       response.end()
       return;
     }

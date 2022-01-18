@@ -83,9 +83,9 @@ const battles = getBattleHistory().then(player => {
 
 module.exports.getBattleHistory = getBattleHistory;
 
-(async ()=>{
-  let l1 =  await getBattleHistory()
-  // console.log(JSON.stringify(l1))
-
-
-})()
+// (async ()=>{
+//   let l1 =  await getBattleHistory()
+//   // console.log(JSON.stringify(l1))
+//
+//
+// })()

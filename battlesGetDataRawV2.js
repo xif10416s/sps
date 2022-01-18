@@ -1,6 +1,7 @@
 const fetch = require('node-fetch');
 const fs = require('fs');
 
+const topBattleUser = require('./data/initUsers/topBattleUser');
 const newTopBattleUsers = require('./data/initUsers/topBattleUserJSON');
 const intUsers = require('./data/initUsers/init');
 let remainFile = `data/remain_raw.json`;
@@ -111,6 +112,10 @@ const extractMonsterLost = (team) => {
 let date = new Date();
 let dateStr = date.toISOString().split("T")[1];
 let isInit = false;
+
+if(dateStr && dateStr.startsWith("00:00:")){
+  topBattleUser.getBattleHistory();
+}
 if(dateStr && dateStr.startsWith("00:30:")){
   isInit = true;
 }
@@ -150,7 +155,7 @@ let extendArray = [];
 let count = 0;
 let delta = 100;
 let batchCount = 5;
-let fromScore = 1200;
+let fromScore = 800;
 
 
 async function collectData(arr) {
