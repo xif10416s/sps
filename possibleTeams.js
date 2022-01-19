@@ -643,6 +643,40 @@ const filterOutUnplayableDragonsAnfUnplayableSplinters = (teams = [],
   }
 };
 
+//"snipe" "sneak"
+function doSpecialQuest(quest , availableTeamsToPlay , tQuest , left , limitCnt){
+  let rs = availableTeamsToPlay;
+  if(quest.splinter == tQuest && left > 0) {
+    const filteredTeamsForQuest = availableTeamsToPlay.filter(
+        team => {
+          let isMatchSnipe = false;
+          team.slice(1,7).forEach(cardId =>{
+            const cardInfo = cardsDetail.cardsDetailsIDMap[cardId]
+            if(cardInfo) {
+              const abilities = cardInfo['abilities']
+              let compareQuest = "snipe" == tQuest ?  "Snipe" : "Sneak"
+              if(abilities && abilities[0].length  > 0 && abilities[0].indexOf(compareQuest) != -1){
+                isMatchSnipe = true
+              }
+            }
+          });
+          return isMatchSnipe;
+        });
+    console.log("2-3-2-1",left + ' battles left for the  ', tQuest , filteredTeamsForQuest.length);
+    if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > limitCnt ) {
+      console.log("2-3-2",left + ' battles left for the  ', tQuest , filteredTeamsForQuest.length);
+      logger.log("2-3-2", left + ' battles left for the  ', tQuest , filteredTeamsForQuest.length);
+      rs = filteredTeamsForQuest;
+    } else {
+      console.log('CHECK FOR snipe QUEST skip: ',
+          filteredTeamsForQuest.length);
+      logger.log('CHECK FOR snipe QUEST skip: ',
+          filteredTeamsForQuest.length);
+    }
+  }
+  return rs;
+}
+
 const teamSelection = async (possibleTeams, matchDetails, quest,
     favouriteDeck) => {
   let priorityToTheQuest = process.env.QUEST_PRIORITY === 'false' ? false
@@ -671,8 +705,9 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
     logger.log(
         "2-3 second step teamSelection collect enemy teams, recent teams:",
         matchDetails.enemyRecent.length)
+    const manaRange = getManaRange(matchDetails)
     let manaMatchTeams = enemy.filterManaMatch(matchDetails.enemyRecent,
-        matchDetails.orgMana, 5, matchDetails.splinters);
+        matchDetails.orgMana, manaRange[0],manaRange[1] , matchDetails.splinters);
     if (manaMatchTeams && manaMatchTeams.length > 0) {
       let manaRuleMatchTeams = enemy.filterRuleMatch(manaMatchTeams,
           matchDetails.rules);
@@ -715,7 +750,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
       logger.log("2-3-1", left + ' battles left for the splinter' + quest.splinter + ' quest')
       console.log("2-3-1",'play for the quest splinter', quest.splinter, '? ', questCheck);
 
-      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 3000
+      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 5000
           && splinters.includes(quest.splinter)) {
         console.log('Try to play for the quest with Teams size (V1): ',
             filteredTeamsForQuest.length);
@@ -764,33 +799,11 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
     }
 
     // sprinter snipe
-    if(quest.splinter == "snipe" && left > 0) {
-      const filteredTeamsForQuest = availableTeamsToPlay.filter(
-          team => {
-          let isMatchSnipe = false;
-          team.slice(1,7).forEach(cardId =>{
-            const cardInfo = cardsDetail.cardsDetailsIDMap[cardId]
-            if(cardInfo) {
-              const abilities = cardInfo['abilities']
-              if(abilities && abilities[0].length  > 0 && abilities[0].indexOf("snipe") != -1){
-                isMatchSnipe = true
-              }
-            }
-          });
-          return isMatchSnipe;
-      });
-      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 1500
-          && splinters.includes(quest.splinter)) {
-        console.log("2-3-2",left + ' battles left for the snipe ', filteredTeamsForQuest.length);
-        logger.log("2-3-2", left + ' battles left for the snipe ' , filteredTeamsForQuest.length);
-        availableTeamsToPlay = filteredTeamsForQuest;
-      } else {
-        console.log('CHECK FOR snipe QUEST skip: ',
-            filteredTeamsForQuest.length);
-        logger.log('CHECK FOR snipe QUEST skip: ',
-            filteredTeamsForQuest.length);
-      }
-    }
+    availableTeamsToPlay = doSpecialQuest(quest,availableTeamsToPlay,"snipe",left , 10000)
+
+    //  "sneak"
+    availableTeamsToPlay = doSpecialQuest(quest,availableTeamsToPlay,"sneak",left , 5000)
+
   }
 
   //CHECK for Favourite DECK TODO
@@ -841,8 +854,9 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
   let enemyPossbileTeams = [];
   let mostEnemyAgainstTeam = [];
   if (matchDetails.enemyRecent && matchDetails.enemyRecent.length > 0) {
+    const manaRange = getManaRange(matchDetails)
     let manaMatchTeams = enemy.filterManaMatch(matchDetails.enemyRecent,
-        matchDetails.orgMana, 1 , matchDetails.splinters);
+        matchDetails.orgMana, manaRange[0],manaRange[1] , matchDetails.splinters);
     if (manaMatchTeams && manaMatchTeams.length > 0) {
       let manaRuleMatchTeams = enemy.filterRuleMatch(manaMatchTeams,
           matchDetails.rules);
@@ -850,8 +864,6 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
       // console.log("-------", JSON.stringify(manaRuleMatchTeams));
       if (manaRuleMatchTeams && manaRuleMatchTeams.length > 0) {
         enemyPossbileTeams = manaRuleMatchTeams;
-      } else {
-        enemyPossbileTeams = manaMatchTeams;
       }
     }
 
@@ -907,7 +919,7 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
           && x['mana_cap'] <= parseInt(matchDetails.orgMana) + 1
     });
     let len = recentBattles.length > 10 ? 10 : recentBattles.length;
-    recentEenmyTeam = recentBattles.slice(0, len).map(b => {
+    recentEenmyTeam = recentBattles.slice(0,len).map(b => {
       return [getCardNameByID(b['summoner_id']),
         getCardNameByID(b['monster_1_id']), getCardNameByID(b['monster_2_id'])
         , getCardNameByID(b['monster_3_id']),
@@ -959,7 +971,7 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
     mostEnemyAgainstTeam: enemyAgainstTeam,
     mostAgainstrevertTeam: againstrevertTeam,
     summoners: summonerTeamMap,
-    recentEenmyTeam: [...possbiletEnemyTeam, ...recentEenmyTeam],
+    recentEenmyTeam: [...possbiletEnemyTeam],
     mostBcTeam:mostBcTeam
   }
 }

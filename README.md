@@ -233,7 +233,7 @@ cd /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/spark && source bin/ac
 
 
 // static weekly
-/mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --conf spark.local.dir=/mnt/h/temp  --master local[10] --driver-memory 5g  --name test
+/mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --conf spark.local.dir=/mnt/h/temp  --master local[10] --driver-memory 10g  --name test
 /mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --conf spark.local.dir=/mnt/h/temp  --master local[10] --driver-memory 10g  --name test -i /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/scala/test2.scala
 
 -- wsl 
@@ -249,7 +249,13 @@ https://api2.splinterlands.com/cards/get_details
 
 sudo swapon -p 5 /mnt/sda1/swap/swapfile
 
-cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs &&  tail -200f ---disable-inotify  Summary.txt
-cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs &&  tail -200f ---disable-inotify  SummaryError.txt
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs &&  tail -f ---disable-inotify  Summary.txt 
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs &&  tail -f ---disable-inotify  SummaryError.txt
+
+tail -f ---disable-inotify  /mnt/d/source/python/spsAuto/splinterlands-bot/logs/hkd123/hkd1231-log.txt
+tail -f ---disable-inotify  /mnt/d/source/python/spsAuto/splinterlands-bot/logs/sugelafei/sugelafei1-log.txt
+tail -f ---disable-inotify  /mnt/d/source/python/spsAuto/splinterlands-bot/logs/sugelafei2/sugelafei21-log.txt
+tail -f ---disable-inotify  /mnt/d/source/python/spsAuto/splinterlands-bot/logs/xifei123/xifei1231-log.txt
+
 
 node --max-old-space-size=5192 src/server/WebServer.js

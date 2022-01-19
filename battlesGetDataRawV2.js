@@ -114,7 +114,8 @@ let dateStr = date.toISOString().split("T")[1];
 let isInit = false;
 
 if(dateStr && dateStr.startsWith("00:00:")){
-  topBattleUser.getBattleHistory();
+  console.log("--------topBattleUser.saveBattlesHistory---------")
+  topBattleUser.saveBattlesHistory;
 }
 if(dateStr && dateStr.startsWith("00:30:")){
   isInit = true;

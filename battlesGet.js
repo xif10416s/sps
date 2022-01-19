@@ -20,7 +20,11 @@ async function getBattleHistory(player = '', data = {}) {
             return response;
         })
         .then((battleHistory) => {
-            return battleHistory.json();
+            if(battleHistory){
+                return battleHistory.json();
+            } else {
+                return []
+            }
         })
         .catch((error) => {
             console.error('There has been a problem with your fetch operation:', error);

@@ -171,4 +171,4 @@ let test = [["Kelya Frendul","1"],["Serpent of Eld","1"],["Elven Defender","1"],
 // console.log(JSON.stringify(Object.keys(enemyTeamPerfer)))
 
 // console.log(JSON.stringify(getSuitBattleSummoner(getEnemyBufferRecentInfo(test,"Summoner"),['Obsidian'])))
-// console.log(cardsDetailsIDMap['149'])
+// console.log(cardsDetailsIDMap['83']['abilities'][0].indexOf('Flying'))

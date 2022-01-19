@@ -550,8 +550,6 @@ async function startBotPlayMatch(page, browser) {
 }
 
 // 30 MINUTES INTERVAL BETWEEN EACH MATCH (if not specified in the .env file)
-const sleepingTimeInMinutes = process.env.MINUTES_BATTLES_INTERVAL || 30;
-const sleepingTime = sleepingTimeInMinutes * 60000;
 const isHeadlessMode = process.env.HEADLESS === 'false' ? false : true;
 const executablePath = process.env.CHROME_EXEC || null;
 const config = require('./config/config');
@@ -668,6 +666,8 @@ async function run() {
                     await closeBrowser(browser);
                 } else {
                     await page.waitForTimeout(5000);
+                    const sleepingTimeInMinutes = process.env.MINUTES_BATTLES_INTERVAL;
+                    const sleepingTime = sleepingTimeInMinutes * 60000;
                     let randomTime = Math.ceil(Math.random()*5)* 60000 + sleepingTime ;
                     if((winTotal+loseTotal) >=5 &&  loseTotal/(winTotal+loseTotal) >= 0.7 ){
                         randomTime = 30 * 60000;

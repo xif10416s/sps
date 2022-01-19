@@ -3,7 +3,7 @@
   "password": "5J3xJd11RdRshTkzkm8Wj5zG9GXMX9bmxCCxNjMRGYkjsR2FUE6",
   "port": 3003,
   "favourite_summoner": "",
-  "skip_cs": "false",
+  "skip_cs": "true",
   "max_cnt": "20" ,
   "finish_quest": "true",
   "MINUTES_BATTLES_INTERVAL": 3,

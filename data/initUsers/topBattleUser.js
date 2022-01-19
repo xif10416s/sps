@@ -72,16 +72,19 @@ async function getBattleHistory() {
   return battleHistory1;
 }
 
-const battles = getBattleHistory().then(player => {
-  fs.writeFile(`data/initUsers/topBattleUserJSON.json`, JSON.stringify(player), function (err) {
-    if (err) {
-      console.log(err);
-    }
-  });
-  // console.log(users.filter(distinct))
-})
+function saveBattlesHistory() {
+  console.log("--------------saveBattlesHistory---------------")
+  getBattleHistory().then(player => {
+    fs.writeFile(`data/initUsers/topBattleUserJSON.json`, JSON.stringify(player), function (err) {
+      if (err) {
+        console.log(err);
+      }
+    });
+    // console.log(users.filter(distinct))
+  })
+}
 
-module.exports.getBattleHistory = getBattleHistory;
+module.exports.saveBattlesHistory = saveBattlesHistory;
 
 // (async ()=>{
 //   let l1 =  await getBattleHistory()

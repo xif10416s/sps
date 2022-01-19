@@ -6,13 +6,13 @@ const pt = require('../../possibleTeams')
  * isWin: created_date : match_type : mana_cap :ruleset ：s,m1
  */
 
-function filterManaMatch(input, mana , manaDelta = 1, splinters) {
+function filterManaMatch(input, mana , fromMana ,endMana , splinters) {
   // mana = mana >= 48 ? 48 : mana;
   const splintersSummoners =pt.getSplintersSummoners(splinters)
   console.log("splintersSummoners:",JSON.stringify(splintersSummoners))
   let matchTeams = input.filter(x => {
-    // let totalMana = parseInt(x['mana_cap']) //totalMana >= (parseInt(mana) - manaDelta) && totalMana <= (parseInt(mana) + manaDelta) &&
-    return splintersSummoners.indexOf(x['summoner_id']) != -1 ;
+    let totalMana = parseInt(x['mana_cap']) //
+    return  totalMana >= fromMana && totalMana <= endMana && splintersSummoners.indexOf(x['summoner_id']) != -1 ;
   });
   console.log('filterManaMatch target:', mana, 'matchTeams size : ' + matchTeams.length);
   return matchTeams;
@@ -29,9 +29,9 @@ function filterRuleMatch(input, ruleset) {
     }
     orgInputList.push(item)
   });
-  // if(matchList.length <= 3){
-  //   matchList = orgInputList;
-  // }
+  if(matchList.length == 0 ){
+    matchList = orgInputList;
+  }
   return matchList;
 }
 
