@@ -1,5 +1,5 @@
 const cardsDetails = require("./cardsDetails.json");
-const defaultRules = require("./strategy/defaultRule.json");
+
 
 const cardsDetailsNameMap = {}
 const cardsDetailsIDMap = {}
@@ -135,16 +135,7 @@ function getEnemyTeamPerfer(input, mana) {
 }
 
 
-function getSuitBattleSummoner(enemyRecentInfo,perferSummoners){
-  var most = enemyRecentInfo[0];
-  var secondMost = enemyRecentInfo[1];
-  let perferSummonersInfo = getEnemyBufferRecentInfo(perferSummoners.map(summoner => [summoner,"1"]),"Summoner")
-  return Object.keys(defaultRules).flatMap( type =>{
-    if(checkType(type,most[0],secondMost[0],perferSummonersInfo)){
-      return defaultRules[type];
-    }
-  }).filter(x=> x!= null)
-}
+
 
 function checkType(target,most, secondMost, perferSummonersInfo) {
   console.log(target,most,secondMost,perferSummonersInfo)
@@ -160,7 +151,7 @@ module.exports.cardsDetailsNameMap = cardsDetailsNameMap;
 module.exports.cardsDetailsIDMap = cardsDetailsIDMap;
 module.exports.getEnemyBufferRecentInfo = getEnemyBufferRecentInfo;
 module.exports.getEnemyTeamPerfer = getEnemyTeamPerfer;
-module.exports.getSuitBattleSummoner = getSuitBattleSummoner;
+
 
 
 let test = [["Kelya Frendul","1"],["Serpent of Eld","1"],["Elven Defender","1"],["Flying Squid","1"],["Mantoid","1"],["Deeplurker","1"],["Goblin Chariot","1"],["Kelya Frendul","1"],["Serpent of Eld","1"],["Merdaali Guardian","1"],["Deeplurker","1"],["Ice Pixie","1"],["Albatross","1"],["",""],["Thaddius Brood","1"],["Cursed Windeku","1"],["Carrion Shade","1"],["Death Elemental","1"],["",""],["",""],["",""],["Obsidian","1"],["Unicorn Mustang","1"],["Mycelic Slipspawn","1"],["Goblin Psychic","1"],["Khmer Princess","1"],["",""],["",""],["Kelya Frendul","1"],["Hardy Stonefish","1"],["Albatross","1"],["Ice Pixie","1"],["Deeplurker","1"],["",""],["",""]]
