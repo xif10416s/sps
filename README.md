@@ -206,9 +206,9 @@ sudo service cron restart
 node battlesGetDataRawV1.js
 
 // -e "MAX_QUEUE_LENGTH=300"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=200"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"
-docker run -e "MAX_QUEUE_LENGTH=100"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=100"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3000:3000 -m 4g --restart always -d --name browserless browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=100"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=100"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3000:3000 -m 4g --memory-swap -1 --restart always -d --name browserless browserless/chrome
 docker run -e "MAX_QUEUE_LENGTH=100"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=100"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3001:3000 -m 4g --memory-swap -1 --restart always -d --name browserless3001 browserless/chrome
-docker run -e "MAX_QUEUE_LENGTH=100"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=100"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3002:3000 -m 4g --memory-swap -1 --restart always -d --name browserless3002 browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=100"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=100"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3002:3000 -m 5g --memory-swap -1 --restart always -d --name browserless3002 browserless/chrome
 docker run -e "MAX_QUEUE_LENGTH=100"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=100"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3003:3000 -m 4g --memory-swap -1 --restart always -d --name browserless3003 browserless/chrome
 http://192.168.99.100:3000
 
@@ -220,10 +220,14 @@ npm --max-old-space-size=4192  start  -- --username sugelafei2  >> logs/sugelafe
 npm --max-old-space-size=4192  start  -- --username sugelafei  >> logs/sugelafei/sugelafei11-log.txt
 
 // shell
-cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh sugelafei 1
-cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh sugelafei2 1
-cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh xifei123 1
-cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh hkd123 1
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh sugelafei 1 
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh sugelafei2 1 
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh xifei123 1  
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh hkd123 1   
+
+ps -ef |grep sugelafei2 |awk '{print $2}'|xargs kill -9
+
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/stop.sh hkd123 sugelafei2
 
 // python
 cd /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/spark && source bin/activate && source ~/.bashrc
@@ -233,7 +237,7 @@ cd /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/spark && source bin/ac
 
 
 // static weekly
-/mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --conf spark.local.dir=/mnt/h/temp  --master local[10] --driver-memory 10g  --name test
+/mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --conf spark.local.dir=/mnt/f/temp  --master local[6] --driver-memory 24g  --name test
 /mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --conf spark.local.dir=/mnt/h/temp  --master local[10] --driver-memory 10g  --name test -i /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/scala/test2.scala
 
 -- wsl 
@@ -246,10 +250,10 @@ sudo service cron restart
 
 https://api2.splinterlands.com/cards/get_details
 
-
+## docker start
 sudo swapon -p 5 /mnt/sda1/swap/swapfile
 
-cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs &&  tail -f ---disable-inotify  Summary.txt 
+ cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs && watch -n 5  tail -n30  ---disable-inotify  Summary.txt
 cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs &&  tail -f ---disable-inotify  SummaryError.txt
 
 tail -f ---disable-inotify  /mnt/d/source/python/spsAuto/splinterlands-bot/logs/hkd123/hkd1231-log.txt

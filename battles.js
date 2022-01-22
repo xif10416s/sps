@@ -289,7 +289,6 @@ function matchedEnemyPossbileSummoners(enemyPossbileTeams,isSlice = false) {
     if(isSlice && sorted.length >= 2) {
       enemyPs = enemyPs.slice(0,2)
     }
-
   }
   console.log("-------enemyPs---", enemyPs)
   return enemyPs;

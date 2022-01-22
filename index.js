@@ -216,7 +216,7 @@ async function clickMembersCard(page, teamToPlay) {
     for (i = 1; i <= 6; i++) {
         console.log('play: ', teamToPlay.cards[i].toString());
         if (teamToPlay.cards[i]) {
-            await page.waitForXPath(`//div[@card_detail_id="${teamToPlay.cards[i].toString()}"]`, { timeout: 15000 })
+            await page.waitForXPath(`//div[@card_detail_id="${teamToPlay.cards[i].toString()}"]`, { timeout: 20000 })
                 .then(card => { card.click();console.log(chalk.bold.greenBright(teamToPlay.cards[i], 'clicked')) })
                 .catch(()=> {
                     clicked = false;
@@ -226,7 +226,7 @@ async function clickMembersCard(page, teamToPlay) {
         } else {
             console.log('nocard ', i);
         }
-        await page.waitForTimeout(3000);
+        await page.waitForTimeout(5000);
     }
 
     return clicked
@@ -236,8 +236,8 @@ async function clickCreateTeamButton(page) {
     let clicked = true;
 
     await reload(page);
-    await page.waitForTimeout(10000);
-    await page.waitForSelector('.btn--create-team', { timeout: 15000 })
+    await page.waitForTimeout(20000);
+    await page.waitForSelector('.btn--create-team', { timeout: 20000 })
         .then(e=> { e.click(); console.log('btn--create-team clicked'); })
         .catch(()=>{
             clicked = false;
@@ -268,7 +268,7 @@ async function clickCards(page, teamToPlay, matchDetails) {
             retriesNum++;
             continue
         }
-        await page.waitForTimeout(5000 * 2);
+        await page.waitForTimeout(5000 * 3);
 
         if (!await clickMembersCard(page, teamToPlay)) {
             retriesNum++;
@@ -417,7 +417,8 @@ async function startBotPlayMatch(page, browser) {
         if (!await launchBattle(page)) throw new Error('The Battle cannot start');
 
         // #666#  开始配置 GET MANA, RULES, SPLINTERS, AND POSSIBLE TEAM
-        await page.waitForTimeout(10000*4);
+        console.time("battle")
+        await page.waitForTimeout(15000);
         let [mana, rules, splinters,enemyRecent] = await Promise.all([
             splinterlandsPage.checkMatchMana(page).then((mana) => mana).catch(() => 'no mana'),
             splinterlandsPage.checkMatchRules(page).then((rulesArray) => rulesArray).catch(() => 'no rules'),
@@ -449,9 +450,11 @@ async function startBotPlayMatch(page, browser) {
             myCards: myCards,
             enemyRecent: enemyRecent,
         }
-        await page.waitForTimeout(2000*5);
+        await page.waitForTimeout(2000*2);
 
+        console.timeLog("battle","2 battle init matchDetails finished")
         let possibleTeams = await ask.possibleTeams(matchDetails, account).catch(e=>console.log('Error from possible team API call: ',e));
+        console.timeLog("battle","3 battle possibleTeams finished")
 
         if (possibleTeams && possibleTeams.length) {
             console.log('1 Possible Teams based on your cards: ', possibleTeams.length);
@@ -461,6 +464,7 @@ async function startBotPlayMatch(page, browser) {
 
         //TEAM SELECTION
         const teamToPlay = await ask.teamSelection(possibleTeams, matchDetails, quest, page.favouriteDeck);
+        console.timeEnd("battle")
         let startFightFail = false;
         if (teamToPlay) {
             await page.$eval('.btn--create-team', elem => elem.click())
@@ -481,7 +485,7 @@ async function startBotPlayMatch(page, browser) {
             throw new Error('Team Selection error: no possible team to play');
         }
 
-        await page.waitForTimeout(5000*2);
+        await page.waitForTimeout(5000);
 
         // Click cards based on teamToPlay value.
         if (!await clickCards(page, teamToPlay, matchDetails)) return
@@ -503,6 +507,8 @@ async function startBotPlayMatch(page, browser) {
             });
         if (startFightFail) return
 
+        let isWin = false;
+
         await page.waitForTimeout(5000);
         await page.waitForSelector('#btnRumble', { timeout: 90000 }).then(()=>console.log('btnRumble visible')).catch(()=>console.log('btnRumble not visible'));
         await page.waitForTimeout(5000);
@@ -514,6 +520,7 @@ async function startBotPlayMatch(page, browser) {
                 const winner = await getElementText(page, 'section.player.winner .bio__name__display', 15000);
                 console.log("result win : ",winner.trim() ,':' , account.toLowerCase()  )
                 if (winner.trim() == account.toLowerCase()) {
+                    isWin = true;
                     const decWon = await getElementText(page, '.player.winner span.dec-reward span', 1000);
                     console.log(chalk.green('You won! Reward: ' + decWon + ' DEC'));
                     ask.logger.log('You won! Reward: ', decWon , ' DEC');
@@ -524,6 +531,7 @@ async function startBotPlayMatch(page, browser) {
                     console.log(chalk.red('You lost'));
                     ask.logger.log('You lost');
                     loseTotal += 1;
+                    isWin = false;
                 }
             } catch {
                 console.log('Could not find winner - draw?');
@@ -537,9 +545,9 @@ async function startBotPlayMatch(page, browser) {
 
             ask.logger.log(account,'Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal));
             ask.logger.log(account,chalk.green('Total Earned: ' + totalDec + ' DEC'));
-            const summaryInfo = {time: new Date().toLocaleTimeString() ,  user: process.env.ACCOUNT , dailyClaim: dailyClaim , ECR: ecr , win: winTotal , lost: loseTotal , draw : undefinedTotal
+            const summaryInfo = {time: new Date().toLocaleTimeString() ,  user: process.env.ACCOUNT, lastWin:  isWin , dailyClaim: dailyClaim , ECR: ecr , win: winTotal , lost: loseTotal , draw : undefinedTotal
                 , winRate: (winTotal /(winTotal+loseTotal+undefinedTotal)).toFixed(2) , dec: totalDec.toFixed(2)
-                , quest: quest.splinter , questTotal:quest.total, questCompleted:quest.completed ,rating:rating ,power :power};
+                , quest: quest.splinter , questTotal:quest.total, questCompleted:quest.completed ,rating:rating ,power :power };
             summaryLogger.table([summaryInfo])
 
     } catch (e) {

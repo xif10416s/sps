@@ -43,6 +43,7 @@ http.createServer(async function (request, response) {
       let player = arg1.player
       console.log(rule, mana, enemy, sp, player)
       const enemyRecentTeams = await battlesGet.getBattleDetail(enemy)
+      console.log("enemyRecentTeams :" ,enemyRecentTeams.length)
       let myCards = []
       try {
         myCards = require("../../data/playcards/" + player + "_cards")
@@ -59,8 +60,10 @@ http.createServer(async function (request, response) {
         enemyRecent: enemyRecentTeams,
       }
 
+      console.time("battle")
       let possibleTeams = await ptm.possibleTeams(matchDetails, player).catch(
           e => console.log('Error from possible team API call: ', e));
+      console.timeLog("battle","1 possibleTeams finished")
       if (possibleTeams && possibleTeams.length) {
         console.log('1 Possible Teams based on your cards: ',
             possibleTeams.length);
@@ -85,6 +88,18 @@ http.createServer(async function (request, response) {
 
         if (result.mostBcTeam) {
           result.mostBcTeam = result.mostBcTeam.map(cardId => {
+            let card = cardDetail.cardsDetailsIDMap[cardId];
+            if (card) {
+              return card["name"]
+            } else {
+              // console.log("----------:",card)
+              return cardId;
+            }
+          })
+        }
+
+        if (result.mostByCsTeam) {
+          result.mostByCsTeam = result.mostByCsTeam.map(cardId => {
             let card = cardDetail.cardsDetailsIDMap[cardId];
             if (card) {
               return card["name"]

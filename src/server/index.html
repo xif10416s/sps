@@ -328,9 +328,17 @@
         });
         $("#enemy").val('')
         var html = "";
+        if (data.mostByCsTeam && data.mostByCsTeam.length > 0) {
+          html += "<tr>";
+          html += "<td>组合优先常用卡组（测试） </td>"
+          html += "<td>" + createItemDiv(data.mostByCsTeam[0]) + "</td>"
+          html += "<td>" + createTeamDiv(data.mostByCsTeam) + "</td>"
+          html += "</tr>";
+        }
+
         if (data.mostBcTeam && data.mostBcTeam.length > 0) {
           html += "<tr>";
-          html += "<td>組合优先（测试） </td>"
+          html += "<td>組合优先最多SMmoner（测试） </td>"
           html += "<td>" + createItemDiv(data.mostBcTeam[0]) + "</td>"
           html += "<td>" + createTeamDiv(data.mostBcTeam) + "</td>"
           html += "</tr>";

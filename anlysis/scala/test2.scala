@@ -27,7 +27,7 @@ case class StatCS(startMana:Int ,endMana:Int ,cs:String,len:Int, rule:String, su
 case class StatCSResult(startMana:Int ,endMana:Int ,cs:String,len:Int, rule:String, summonerId:Int,teams:Int,totalCnt:Int,lostTeams:Int,lostTotalCnt:Int)
 val KEY_SINGLE_RULES="Broken Arrows|Even Stevens|Keep Your Distance|Little League|Lost Legendaries|Lost Magic|Odd Ones Out|Rise of the Commons|Taking Sides|Up Close and Personal|Up Close & Personal|Noxious Fumes|Silenced Summoners|Earthquake|Back to Basics"
 val defaultRule = "default"
-val skipIds = Array(-1,131,91,169)
+val skipIds = Array(-1,131,91,169,366,380,394,408,422,77,91,95,119,136,169,227,230,238,277,290,296,297,298,313,353,367,381,395,409,426)
 val upCnt = 1;
 val upTotalCnt = 3;
 val URL = "jdbc:mysql://localhost:3306/sps_battles?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC"
@@ -260,7 +260,7 @@ def doAnalysis(startTime:String, endTime:String ,fromMana:Int, endMana:Int): Uni
 
 def  doRangeByMana(arr:Array[(Int, Int)]):Unit = {
   arr.foreach(ms =>{
-    doAnalysis("2021-12-25","2022-01-20",ms._1,ms._2)
+    doAnalysis("2021-12-25","2022-01-21",ms._1,ms._2)
   })
 }
 

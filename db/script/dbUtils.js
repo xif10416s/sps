@@ -59,7 +59,12 @@ const sqlQuery = async (sql, values) => {
   var end = performance.now();
   if((end - start)/1000 >= 10 ){
     console.log("slow sql cost is : ",`${(end - start)/1000} s`)
-    console.log(sql, values )
+    if(sql.indexOf("INSERT") == -1) {
+       console.log(sql, values )
+    } else {
+      console.log(sql)
+    }
+
   }
   return rs;
 }

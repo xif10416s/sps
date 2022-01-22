@@ -1,8 +1,8 @@
 const extendStrategy = require("./extendStragy").sort((a,b) =>  a['order'] - b['order'])
 const cardsDetails = require("../cardsDetails")
 
-function doExtendsHandler(team, ruleset, myCards) {
-  console.log("---doExtendsHandler---start----",JSON.stringify(team),JSON.stringify(myCards))
+function doExtendsHandler(team, ruleset, myCards , splinter) {
+  console.log("---doExtendsHandler---start----",JSON.stringify(team))
   if (team == null || team.length == 0 || extendStrategy == null || extendStrategy.length == 0) {
     return team;
   }
@@ -12,6 +12,13 @@ function doExtendsHandler(team, ruleset, myCards) {
       const cardInfo = cardsDetails.cardsDetailsNameMap[name];
       // check owner
       if (cardInfo && myCards.indexOf(cardInfo['cardDetailId']) != -1 && team.indexOf(cardInfo['cardDetailId']) == -1) {
+        // check splitner
+        const splinterStg = stg["splinter"];
+        if(splinterStg && splinter.indexOf(splinterStg) == -1 ){
+          console.log("splinterStg skip ....",splinterStg)
+          return;
+        }
+
         // check rule set
         const skipRules = stg["skipRules"];
         if (skipRules && skipRules.length > 0) {

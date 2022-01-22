@@ -11,7 +11,10 @@ https://splinterlands.fandom.com/wiki/Category:Rule_Sets
 
 
 ## todo
-1.  最新card 详细信息
+1. extends splinter zero
+2. enemy analysis
+3. enemy cards
 
 ## pm
 1. Enemy name : []
+

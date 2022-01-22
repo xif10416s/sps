@@ -21,7 +21,8 @@ import java.util.Calendar
 import scala.collection.mutable.ArrayBuffer
 import org.apache.spark.sql.Dataset
 
-val manaArr = Array((12, 12), (13, 13), (14, 14), (15, 15), (16, 16), (17, 17), (18, 18), (19, 19), (20, 20), (21, 21), (22, 22), (23, 23), (24, 24), (25, 25), (26, 26), (27, 27), (28, 28), (29, 29), (30, 30), (31, 32), (33, 34), (35, 36), (37, 38), (39, 40), (41, 44), (45, 50), (51, 99))
+//val manaArr = Array((12, 12), (13, 13), (14, 14), (15, 15), (16, 16), (17, 17), (18, 18), (19, 19), (20, 20), (21, 21), (22, 22), (23, 23), (24, 24), (25, 25), (26, 26), (27, 27), (28, 28), (29, 29), (30, 30), (31, 32), (33, 34), (35, 36), (37, 38), (39, 40), (41, 44), (45, 50), (51, 99))
+val manaArr = Array( (28, 28),(29, 29),(30, 30), (31, 32), (33, 34), (35, 36), (37, 38), (39, 40), (41, 44), (45, 50), (51, 99))
 
 case class Item(mana_cap: Int, ruleset: String, summoner_id: Int, monster_1_id: Int, monster_2_id: Int, monster_3_id: Int, monster_4_id: Int, monster_5_id: Int, monster_6_id: Int, summoner_id_lost: Int, monster_1_id_lost: Int, monster_2_id_lost: Int, monster_3_id_lost: Int, monster_4_id_lost: Int, monster_5_id_lost: Int, monster_6_id_lost: Int)
 
@@ -31,9 +32,7 @@ case class StatCSResult(startMana: Int, endMana: Int, wlen: Int, llen: Int, rule
 
 val KEY_SINGLE_RULES = "Broken Arrows|Even Stevens|Keep Your Distance|Little League|Lost Legendaries|Lost Magic|Odd Ones Out|Rise of the Commons|Taking Sides|Up Close and Personal|Up Close & Personal|Noxious Fumes|Silenced Summoners|Earthquake|Back to Basics"
 val defaultRule = "default"
-val skipIds = Array(-1, 131, 91, 169)
-val upCnt = 2;
-val upTotalCnt = 10;
+val skipIds = Array(-1,131,91,169,366,380,394,408,422,77,91,95,119,136,169,227,230,238,277,290,296,297,298,313,353,367,381,395,409,426)
 val URL = "jdbc:mysql://localhost:3306/sps_battles?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC"
 val USER = "root"
 val PASS = "123456"
@@ -79,6 +78,13 @@ def splitAM(t: Item): Array[AgainstMap] = {
 
   val wtcs = ArrayBuffer[String]()
   splitCS(t.summoner_id, scala.util.Sorting.stableSort(wt), wtcs)
+  var maxWtLen = 0;
+  wtcs.foreach( x =>{
+    val len = x.split("-").length
+    if(len > maxWtLen){
+      maxWtLen = len
+    }
+  })
 
   val lt = ArrayBuffer[Int]()
   Array(t.monster_1_id_lost, t.monster_2_id_lost, t.monster_3_id_lost, t.monster_4_id_lost, t.monster_5_id_lost, t.monster_6_id_lost).foreach(id => {
@@ -90,9 +96,11 @@ def splitAM(t: Item): Array[AgainstMap] = {
   val ltcs = ArrayBuffer[String]()
   splitCS(t.summoner_id_lost, scala.util.Sorting.stableSort(lt), ltcs)
   val rsArr = ArrayBuffer[AgainstMap]()
-  wtcs.foreach(cs => {
+  wtcs.filter( x => {
+    x.split("-").length  == maxWtLen
+  } ).foreach(cs => {
     val spRule = t.ruleset.split("\\|")
-    var matchRule = t.ruleset;
+    var matchRule = t.ruleset
     if (spRule.length == 1) {
       if (KEY_SINGLE_RULES.contains(t.ruleset)) {
         matchRule = t.ruleset
@@ -123,7 +131,17 @@ def splitAM(t: Item): Array[AgainstMap] = {
       }
     }
     val wlen = cs.split("-").length - 1;
-    ltcs.foreach(lcs => {
+
+    var maxLtLen = 0;
+    ltcs.foreach( x =>{
+      val len = x.split("-").length
+      if(len > maxLtLen){
+        maxLtLen = len
+      }
+    })
+    ltcs.filter( x => {
+      x.split("-").length >= maxLtLen -1
+    } ).foreach(lcs => {
       val llen = lcs.split("-").length - 1;
       rsArr += AgainstMap(t.mana_cap, wlen, llen, matchRule, cs, lcs)
     })
@@ -136,7 +154,7 @@ def splitAM(t: Item): Array[AgainstMap] = {
 
 
 def doAggMap(ds: Dataset[AgainstMap], fromMana: Int, endMana: Int): Dataset[StatCSResult] = {
-  val countDS = splitDS.withColumn("startMana", lit(fromMana)).withColumn("endMana", lit(endMana)).groupBy("startMana","endMana","rule", "wcs","wlen", "lcs","llen").count
+  val countDS = ds.withColumn("startMana", lit(fromMana)).withColumn("endMana", lit(endMana)).groupBy("startMana","endMana","rule", "wcs","wlen", "lcs","llen").count
   return countDS.as[StatCSResult]
 }
 
@@ -167,14 +185,14 @@ def doAnalysis(startTime: String, endTime: String, fromMana: Int, endMana: Int):
       .load()
     jdbcDF = jdbcDF.union(jdbcDFTemp)
   }
-  val ds = jdbcDF.as[Item]
+  val ds = jdbcDF.as[Item].coalesce(6)
   ds.cache()
 
   val splitDS = ds.flatMap(x => {
     splitAM(x)
   })
-  val aggDS = doAggMap(splitDS, fromMana, endMana)
-  aggDS.filter($"count" > 3).write.format("jdbc").option("url", URL).option("dbtable", "battle_stat_cs_ls").mode("append").option("user", USER).option("password", PASS).save()
+  val aggDS = doAggMap(splitDS, fromMana, endMana).filter($"count" > 2 || $"startMana" <=18 )
+  aggDS.repartition(20).write.format("jdbc").option("url", URL).option("dbtable", "battle_stat_cs_ls_v3").mode("append").option("user", USER).option("password", PASS).save()
 
   ds.unpersist
 }
@@ -182,7 +200,8 @@ def doAnalysis(startTime: String, endTime: String, fromMana: Int, endMana: Int):
 
 def doRangeByMana(arr: Array[(Int, Int)]): Unit = {
   arr.foreach(ms => {
-    doAnalysis("2021-12-25", "2022-01-20", ms._1, ms._2)
+    println("start :" + ms._1)
+    doAnalysis("2022-01-01", "2022-01-22", ms._1, ms._2)
   })
 }
 doRangeByMana(manaArr)

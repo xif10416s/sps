@@ -6,6 +6,6 @@
   "skip_cs": "false",
   "max_cnt": "20" ,
   "finish_quest": "true",
-  "MINUTES_BATTLES_INTERVAL": 3,
+  "MINUTES_BATTLES_INTERVAL": 5,
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }
