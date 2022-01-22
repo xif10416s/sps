@@ -1256,5 +1256,6 @@ module.exports.getSummoners = getSummoners;
 module.exports.getSplintersSummoners=getSplintersSummoners;
 module.exports.teamSelectionForWeb = teamSelectionForWeb
 module.exports.logger = logger;
+module.exports.summoners = summoners;
 
 // selectBattleDate(23,"Standard",

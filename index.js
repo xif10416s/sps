@@ -268,7 +268,7 @@ async function clickCards(page, teamToPlay, matchDetails) {
             retriesNum++;
             continue
         }
-        await page.waitForTimeout(5000 * 3);
+        await page.waitForTimeout(5000 * 1);
 
         if (!await clickMembersCard(page, teamToPlay)) {
             retriesNum++;
@@ -485,7 +485,7 @@ async function startBotPlayMatch(page, browser) {
             throw new Error('Team Selection error: no possible team to play');
         }
 
-        await page.waitForTimeout(5000);
+        await page.waitForTimeout(10000);
 
         // Click cards based on teamToPlay value.
         if (!await clickCards(page, teamToPlay, matchDetails)) return

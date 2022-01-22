@@ -1,11 +1,23 @@
 const extendStrategy = require("./extendStragy").sort((a,b) =>  a['order'] - b['order'])
 const cardsDetails = require("../cardsDetails")
+const psbm = require("../../possibleTeams")
 
 function doExtendsHandler(team, ruleset, myCards , splinter) {
   console.log("---doExtendsHandler---start----",JSON.stringify(team))
   if (team == null || team.length == 0 || extendStrategy == null || extendStrategy.length == 0) {
     return team;
   }
+
+  const summonerId = team[0];
+  const summonerSplinterInfo = psbm.summoners.filter(t => t[summonerId] != null)
+  if(summonerSplinterInfo == null) {
+    return team;
+  }
+
+
+  const summonerSplitner = summonerSplinterInfo[0][summonerId]
+  console.log("-------summonerSplitner----",summonerSplitner)
+
   try{
     extendStrategy.forEach(stg => {
       const name = stg["name"];
@@ -14,8 +26,8 @@ function doExtendsHandler(team, ruleset, myCards , splinter) {
       if (cardInfo && myCards.indexOf(cardInfo['cardDetailId']) != -1 && team.indexOf(cardInfo['cardDetailId']) == -1) {
         // check splitner
         const splinterStg = stg["splinter"];
-        if(splinterStg && splinter.indexOf(splinterStg) == -1 ){
-          console.log("splinterStg skip ....",splinterStg)
+        if(splinterStg && (splinter.indexOf(splinterStg) == -1 || splinterStg != summonerSplitner)){
+          console.log("splinterStg skip ....",splinterStg , summonerSplitner)
           return;
         }
 
@@ -54,6 +66,8 @@ function doExtendsHandler(team, ruleset, myCards , splinter) {
             break;
           default:
         }
+      } else {
+        console.log("doExtendsHandler exists : " ,name)
       }
     })
   } catch (e) {
