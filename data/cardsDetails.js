@@ -9,6 +9,7 @@ cardsDetails.map(cd => {
   const name = cd['name'];
   const stat = cd['stats']
   const type = cd['type'] // Monster ,Summoner
+  const color = cd['color']
   const statSum1 =
       type == 'Monster' ?
           {
@@ -36,7 +37,8 @@ cardsDetails.map(cd => {
     'type': type,
     'abilities': abilities,
     'cardDetailId': cardDetailId,
-    'name': name
+    'name': name,
+    'color':color
   };
   cardsDetailsNameMap[name] = item;
   cardsDetailsIDMap[cardDetailId] = item;

@@ -896,7 +896,7 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
         filterTeams)
     if (mostWinningSummonerTankComboTeam
         && mostWinningSummonerTankComboTeam.length > 0) {
-      summonerTeamMap[mySummoner] = mostWinningSummonerTankComboTeam[1];
+      summonerTeamMap[mySummoner] = extendsHandler.doExtendsHandler(mostWinningSummonerTankComboTeam[1], matchDetails.rules, matchDetails.myCards, matchDetails.splinters);
     }
 
   }

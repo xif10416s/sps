@@ -18,6 +18,15 @@ function doExtendsHandler(team, ruleset, myCards , splinter) {
   const summonerSplitner = summonerSplinterInfo[0][summonerId]
   console.log("-------summonerSplitner----",summonerSplitner)
 
+  const teamColors = []
+  team.forEach(cardId => {
+    const cardInfo = cardsDetails.cardsDetailsIDMap[cardId];
+    if(cardInfo){
+      teamColors.push(cardInfo['color'])
+    }
+  })
+  console.log('-----colors-------',teamColors)
+
   try{
     extendStrategy.forEach(stg => {
       const name = stg["name"];
@@ -26,8 +35,9 @@ function doExtendsHandler(team, ruleset, myCards , splinter) {
       if (cardInfo && myCards.indexOf(cardInfo['cardDetailId']) != -1 && team.indexOf(cardInfo['cardDetailId']) == -1) {
         // check splitner
         const splinterStg = stg["splinter"];
-        if(splinterStg && (splinter.indexOf(splinterStg) == -1 || splinterStg != summonerSplitner)){
-          console.log("splinterStg skip ....",splinterStg , summonerSplitner)
+        const colorStg = stg["color"];
+        if(splinterStg  && (splinter.indexOf(splinterStg) == -1 ||  colorStg && teamColors.indexOf(colorStg) == -1 )){
+          console.log("splinterStg skip ....",splinterStg , colorStg , teamColors )
           return;
         }
 

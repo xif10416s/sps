@@ -14,6 +14,7 @@
     "positionStrategy": 1 ,
     "replaceMana" : 0,
     "splinter": "death",
+    "color":"Black",
     "order" : 10
   },
   {"name" : "Fungus Fiend",
@@ -23,6 +24,7 @@
     "positionStrategy": 1 ,
     "replaceMana" : 0,
     "splinter": "earth",
+    "color":"Green",
     "order" : 10
   },
   {"name" : "Torrent Fiend",
@@ -32,6 +34,7 @@
     "positionStrategy": 1 ,
     "replaceMana" : 0,
     "splinter": "water",
+    "color":"Blue",
     "order" : 10
   },
   {"name" : "Scorch Fiend",
@@ -41,6 +44,7 @@
     "positionStrategy": 1 ,
     "replaceMana" : 0,
     "splinter": "fire",
+    "color":"Red",
     "order" : 10
   },
   {"name" : "Soul Fiend",
@@ -50,6 +54,7 @@
     "positionStrategy": 1 ,
     "replaceMana" : 0,
     "splinter": "life",
+    "color":"White",
     "order" : 10
   },
   {"name" : "Creeping Ooze",
