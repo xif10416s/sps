@@ -15,6 +15,8 @@
 //.option("password", "xsmysql")
 //.load()
 
+import scala.util.parsing.json.JSON._
+import scala.io.Source
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Calendar
@@ -33,6 +35,13 @@ val upTotalCnt = 3;
 val URL = "jdbc:mysql://localhost:3306/sps_battles?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC"
 val USER ="root"
 val PASS ="123456"
+
+val tree = parseFull(Source.fromFile("/mnt/d/source/python/spsAuto/splinterlands-bot/data/strategy/preferCs.json").mkString)
+val preferCs = tree match {
+  case Some(ls: List[String]) => ls
+}
+val preferIds = preferCs.mkString("").split("%").map(x => x.toInt)
+println(preferIds)
 
 def splitCS(lead:Int , t:Array[Int],a:ArrayBuffer[String]):Unit = {
   if(t.length >= 2){
@@ -196,11 +205,18 @@ def doAggMap(ds:Dataset[AgainstMap],fromMana:Int , endMana:Int):Dataset[StatCS] 
 
   aggDs.flatMap( cs =>{
     val key = cs._1.split("_")
+    val teamCsIds = key(1).split("-")
+    var existsPreferIds = false;
+    teamCsIds.foreach( cId => {
+      if(preferIds.indexOf(cId.toInt) != -1){
+        existsPreferIds = true;
+      }
+    })
+    val len = teamCsIds.length - 1;
     val statCS = ArrayBuffer[StatCS]()
     for((vkey,va) <- cs._2 ) {
       val totalCnt  = va.values.reduce(_+_)
-      if(va.size >= upCnt && totalCnt >= upTotalCnt) {
-        val len = key(1).split("-").length - 1;
+      if(va.size >= upCnt && totalCnt >= upTotalCnt || existsPreferIds) {
         statCS+=StatCS(fromMana,endMana,key(1),len,key(0),vkey,va.size,totalCnt)
       }
     }
@@ -235,7 +251,7 @@ def doAnalysis(startTime:String, endTime:String ,fromMana:Int, endMana:Int): Uni
       .load()
     jdbcDF = jdbcDF.union(jdbcDFTemp)
   }
-  val ds = jdbcDF.as[Item]
+  val ds = jdbcDF.as[Item].coalesce(2)
   ds.cache()
 
   val splitDS = ds.flatMap(x =>{
@@ -249,18 +265,25 @@ def doAnalysis(startTime:String, endTime:String ,fromMana:Int, endMana:Int): Uni
   val aggDSLost = doAggMap(splitDSLost,fromMana,endMana)
 
   //startMana:Int ,endMana:Int ,cs:String,len:Int, rule:String, summonerId:Int
-  aggDS.join(aggDSLost,aggDS("rule") === aggDSLost("rule")
-    && aggDS("startMana") === aggDSLost("startMana")  && aggDS("endMana") === aggDSLost("endMana")
-    && aggDS("cs") === aggDSLost("cs") && aggDS("summonerId") === aggDSLost("summonerId"),"left").select(aggDS("startMana"),aggDS("endMana"),aggDS("cs"),aggDS("len"),aggDS("rule"),aggDS("summonerId")
+  try{
+    aggDS.join(aggDSLost,aggDS("rule") === aggDSLost("rule")
+      && aggDS("startMana") === aggDSLost("startMana")  && aggDS("endMana") === aggDSLost("endMana")
+      && aggDS("cs") === aggDSLost("cs") && aggDS("summonerId") === aggDSLost("summonerId"),"left").select(aggDS("startMana"),aggDS("endMana"),aggDS("cs"),aggDS("len"),aggDS("rule"),aggDS("summonerId")
       ,aggDS("teams"),aggDS("totalCnt"),aggDSLost("teams").as("lostTeams"),aggDSLost("totalCnt").as("lostTotalCnt")).as[StatCSResult].toDF().na.fill(0.0).write.format("jdbc").option("url", URL).option("dbtable", "battle_stat_v3").mode("append").option("user", USER).option("password", PASS).save()
 
+  } catch {
+    case _: Throwable => {
+
+    }
+  }
   ds.unpersist
 }
 
 
 def  doRangeByMana(arr:Array[(Int, Int)]):Unit = {
   arr.foreach(ms =>{
-    doAnalysis("2021-12-25","2022-01-21",ms._1,ms._2)
+    println(ms._1)
+    doAnalysis("2022-01-24","2022-01-24",ms._1,ms._2)
   })
 }
 
