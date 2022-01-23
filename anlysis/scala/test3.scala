@@ -14,15 +14,17 @@
 //.option("user", "root")
 //.option("password", "xsmysql")
 //.load()
-
+import scala.util.parsing.json.JSON._
+import scala.io.Source
+import java.sql.{Driver, DriverManager}
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Calendar
 import scala.collection.mutable.ArrayBuffer
 import org.apache.spark.sql.Dataset
 
-//val manaArr = Array((12, 12), (13, 13), (14, 14), (15, 15), (16, 16), (17, 17), (18, 18), (19, 19), (20, 20), (21, 21), (22, 22), (23, 23), (24, 24), (25, 25), (26, 26), (27, 27), (28, 28), (29, 29), (30, 30), (31, 32), (33, 34), (35, 36), (37, 38), (39, 40), (41, 44), (45, 50), (51, 99))
-val manaArr = Array( (28, 28),(29, 29),(30, 30), (31, 32), (33, 34), (35, 36), (37, 38), (39, 40), (41, 44), (45, 50), (51, 99))
+val manaArr = Array((12, 12), (13, 13), (14, 14), (15, 15), (16, 16), (17, 17), (18, 18), (19, 19), (20, 20), (21, 21), (22, 22), (23, 23), (24, 24), (25, 25), (26, 26), (27, 27), (28, 28), (29, 29), (30, 30), (31, 32), (33, 34), (35, 36), (37, 38), (39, 40), (41, 44), (45, 50), (51, 99))
+//val manaArr = Array( (33, 34), (35, 36), (37, 38), (39, 40), (41, 44), (45, 50), (51, 99))
 
 case class Item(mana_cap: Int, ruleset: String, summoner_id: Int, monster_1_id: Int, monster_2_id: Int, monster_3_id: Int, monster_4_id: Int, monster_5_id: Int, monster_6_id: Int, summoner_id_lost: Int, monster_1_id_lost: Int, monster_2_id_lost: Int, monster_3_id_lost: Int, monster_4_id_lost: Int, monster_5_id_lost: Int, monster_6_id_lost: Int)
 
@@ -36,6 +38,19 @@ val skipIds = Array(-1,131,91,169,366,380,394,408,422,77,91,95,119,136,169,227,2
 val URL = "jdbc:mysql://localhost:3306/sps_battles?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC"
 val USER = "root"
 val PASS = "123456"
+
+val tree = parseFull(Source.fromFile("/mnt/d/source/python/spsAuto/splinterlands-bot/data/strategy/preferCs.json").mkString)
+var preferCs = tree match {
+  case Some(ls: List[String]) => ls
+}
+preferCs = preferCs.map( x => {
+  val sp = x.split("%")
+  sp.slice(1,sp.length).mkString("%")
+})
+
+val preferIds = preferCs.mkString("%").split("%").map(x => x.toInt)
+println(preferIds)
+
 
 def splitCS(lead: Int, t: Array[Int], a: ArrayBuffer[String]): Unit = {
   if (t.length >= 2) {
@@ -97,7 +112,15 @@ def splitAM(t: Item): Array[AgainstMap] = {
   splitCS(t.summoner_id_lost, scala.util.Sorting.stableSort(lt), ltcs)
   val rsArr = ArrayBuffer[AgainstMap]()
   wtcs.filter( x => {
-    x.split("-").length  == maxWtLen
+    val csTeam =  x.split("-")
+    csTeam.length  == maxWtLen
+//    var existPerferId = false  // ---------
+//    csTeam.foreach(cardId => {
+//      if(preferIds.indexOf(cardId.toInt) != -1 ){
+//        existPerferId = true
+//      }
+//    })
+//    (csTeam.length  == maxWtLen ) && existPerferId //----
   } ).foreach(cs => {
     val spRule = t.ruleset.split("\\|")
     var matchRule = t.ruleset
@@ -140,7 +163,7 @@ def splitAM(t: Item): Array[AgainstMap] = {
       }
     })
     ltcs.filter( x => {
-      x.split("-").length >= maxLtLen -1
+      x.split("-").length == maxLtLen
     } ).foreach(lcs => {
       val llen = lcs.split("-").length - 1;
       rsArr += AgainstMap(t.mana_cap, wlen, llen, matchRule, cs, lcs)
@@ -185,15 +208,45 @@ def doAnalysis(startTime: String, endTime: String, fromMana: Int, endMana: Int):
       .load()
     jdbcDF = jdbcDF.union(jdbcDFTemp)
   }
-  val ds = jdbcDF.as[Item].coalesce(6)
+  val ds = jdbcDF.as[Item].coalesce(4)
   ds.cache()
 
   val splitDS = ds.flatMap(x => {
     splitAM(x)
   })
-  val aggDS = doAggMap(splitDS, fromMana, endMana).filter($"count" > 2 || $"startMana" <=18 )
-  aggDS.repartition(20).write.format("jdbc").option("url", URL).option("dbtable", "battle_stat_cs_ls_v3").mode("append").option("user", USER).option("password", PASS).save()
-
+  val aggDS = doAggMap(splitDS, fromMana, endMana)//.filter($"count" > 2 &&  || $"startMana" <=18 )
+  println(aggDS.count())
+  aggDS.coalesce(1).rdd.foreachPartition( pt =>{
+    val connection = DriverManager.getConnection(URL,USER,PASS)
+    var cnt = 0L;
+    try{
+      val sql = "INSERT  ignore  INTO battle_stat_cs_ls_v3(`startMana` , `endMana` , `wcs` , `lcs`,`wlen`,`llen`,`rule`,`count`) values (?,?,?,?,?,?,?,? ) "
+      val ps = connection.prepareStatement(sql)
+      pt.foreach(x =>{
+        ps.setInt(1,x.startMana)
+        ps.setInt(2,x.endMana)
+        ps.setString(3,x.wcs)
+        ps.setString(4,x.lcs)
+        ps.setInt(5,x.wlen)
+        ps.setInt(6,x.llen)
+        ps.setString(7,x.rule)
+        ps.setLong(8,x.count)
+        //开始执行
+        ps.execute()
+        cnt=cnt+1
+        if(cnt % 10000 == 0 ){
+          println(cnt)
+          Thread.sleep(10000)
+        }
+      })
+    }catch {
+      case e:Exception => e.printStackTrace()
+    }finally {
+      if(connection != null){
+        connection.close()
+      }
+    }
+  })
   ds.unpersist
 }
 
@@ -201,7 +254,7 @@ def doAnalysis(startTime: String, endTime: String, fromMana: Int, endMana: Int):
 def doRangeByMana(arr: Array[(Int, Int)]): Unit = {
   arr.foreach(ms => {
     println("start :" + ms._1)
-    doAnalysis("2022-01-01", "2022-01-22", ms._1, ms._2)
+    doAnalysis("2022-01-18", "2022-01-24", ms._1, ms._2)
   })
 }
 doRangeByMana(manaArr)

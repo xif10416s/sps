@@ -18,6 +18,7 @@
 import scala.util.parsing.json.JSON._
 import scala.io.Source
 import java.text.SimpleDateFormat
+import java.sql.{Driver, DriverManager}
 import java.util.Date
 import java.util.Calendar
 import scala.collection.mutable.ArrayBuffer
@@ -265,17 +266,44 @@ def doAnalysis(startTime:String, endTime:String ,fromMana:Int, endMana:Int): Uni
   val aggDSLost = doAggMap(splitDSLost,fromMana,endMana)
 
   //startMana:Int ,endMana:Int ,cs:String,len:Int, rule:String, summonerId:Int
-  try{
-    aggDS.join(aggDSLost,aggDS("rule") === aggDSLost("rule")
-      && aggDS("startMana") === aggDSLost("startMana")  && aggDS("endMana") === aggDSLost("endMana")
-      && aggDS("cs") === aggDSLost("cs") && aggDS("summonerId") === aggDSLost("summonerId"),"left").select(aggDS("startMana"),aggDS("endMana"),aggDS("cs"),aggDS("len"),aggDS("rule"),aggDS("summonerId")
-      ,aggDS("teams"),aggDS("totalCnt"),aggDSLost("teams").as("lostTeams"),aggDSLost("totalCnt").as("lostTotalCnt")).as[StatCSResult].toDF().na.fill(0.0).write.format("jdbc").option("url", URL).option("dbtable", "battle_stat_v3").mode("append").option("user", USER).option("password", PASS).save()
-
-  } catch {
-    case _: Throwable => {
-
+  aggDS.join(aggDSLost,aggDS("rule") === aggDSLost("rule")
+    && aggDS("startMana") === aggDSLost("startMana")  && aggDS("endMana") === aggDSLost("endMana")
+    && aggDS("cs") === aggDSLost("cs") && aggDS("summonerId") === aggDSLost("summonerId"),"left").select(aggDS("startMana"),aggDS("endMana"),aggDS("cs"),aggDS("len"),aggDS("rule"),aggDS("summonerId")
+    ,aggDS("teams"),aggDS("totalCnt"),aggDSLost("teams").as("lostTeams"),aggDSLost("totalCnt").as("lostTotalCnt"))
+    .as[StatCSResult].toDF().na.fill(0.0)
+    .coalesce(1).rdd.foreachPartition( pt =>{
+    //startMana:Int ,endMana:Int ,cs:String,len:Int, rule:String, summonerId:Int,teams:Int,totalCnt:Int,lostTeams:Int,lostTotalCnt:Int
+    val connection = DriverManager.getConnection(URL,USER,PASS)
+    var cnt = 0L
+    try{
+      val sql = "INSERT  ignore  INTO battle_stat_v3(`startMana` , `endMana` , `cs` , `len`,`rule`,`summonerId`,`teams`,`totalCnt`,`lostTeams`,`lostTotalCnt`) values (?,?,?,?,?,?,?,?,?,? ) "
+      val ps = connection.prepareStatement(sql)
+      pt.foreach(x =>{
+        ps.setInt(1,x.startMana)
+        ps.setInt(2,x.endMana)
+        ps.setString(3,x.cs)
+        ps.setInt(4,x.len)
+        ps.setString(5,x.rule)
+        ps.setInt(6,x.summonerId)
+        ps.setInt(7,x.teams)
+        ps.setInt(8,x.totalCnt)
+        ps.setLong(9,x.lostTeams)
+        ps.setInt(10,x.lostTotalCnt)
+        //开始执行
+        ps.execute()
+        if(cnt % 10000 == 0 ){
+          println(cnt)
+          Thread.sleep(10000)
+        }
+      })
+    }catch {
+      case e:Exception => e.printStackTrace()
+    }finally {
+      if(connection != null){
+        connection.close()
+      }
     }
-  }
+  })
   ds.unpersist
 }
 

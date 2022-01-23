@@ -168,6 +168,6 @@ let test = [["Kelya Frendul","1"],["Serpent of Eld","1"],["Elven Defender","1"],
 
 // 131,366,380,394,408,422
 // 77,91,95,119,136,169,227,230,238,277,290,296,297,298,313,353,367,381,395,409,426
-// console.log(Object.keys(cardsDetailsIDMap).filter(x => {
-//   return parseInt(cardsDetailsIDMap[x]['statSum1']['mana']) == 1
-// }).join(","))
+console.log(Object.keys(cardsDetailsIDMap).filter(x => {
+  return parseInt(cardsDetailsIDMap[x]['statSum1']['mana']) == 2
+}).join(","))

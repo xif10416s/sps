@@ -14,9 +14,12 @@ CREATE TABLE `battle_stat_cs_ls_v3`  (
   INDEX `index_rule`(`rule`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic ;
 
+ALTER TABLE `battle_stat_cs_ls_v3` ADD UNIQUE (`startMana`,`rule`,`wcs`,`lcs`);
+
 alter table battle_stat_cs_ls_v3 partition by range columns(startMana)(
 	partition p12 values less than(13)
 );
+
 
 alter table battle_stat_cs_ls_v3 add partition (partition p13 values less than(14));
 alter table battle_stat_cs_ls_v3 add partition (partition p14 values less than(15));

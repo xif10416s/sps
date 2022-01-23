@@ -4,6 +4,7 @@ const helper = require('./helper');
 const battles = require('./battles');
 const fetch = require('node-fetch');
 const extendsHandler = require("./data/strategy/extendsHandler")
+const preferCs = require('./data/strategy/preferCs')
 
 const cardsDetail = require('./data/cardsDetails');
 
@@ -301,7 +302,7 @@ const battlesFilterByManacap = async (mana, ruleset, summoners) => {
     }
 
     if (rs.length == 0 && mustRule == null) {
-      let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?) order by created_date_day desc limit 50000';
+      let sql = 'select * from battle_history_raw_v2 where  mana_cap = ?  and summoner_id in (?)  limit 50000';
       console.log(sql);
       const data3 = await dbUtils.sqlQuery(sql, [orgMana, summoners]);
       let string3 = JSON.stringify(data3);
@@ -474,8 +475,8 @@ async function findBestTeam(bestCombination, possibleTeams) {
   })
   let sorted = sortArr.sort((a, b) => b[0] - a[0]);
   possibleTeams = sorted.map(s => s[1])
-  console.log('BEST SUMMONER and TANK', bestCombination , possibleTeams.length);
-  logger.log('BEST SUMMONER and TANK', bestCombination, possibleTeams.length);
+  // console.log('BEST SUMMONER and TANK', bestCombination , possibleTeams.length);
+  // logger.log('BEST SUMMONER and TANK', bestCombination, possibleTeams.length);
   if (bestCombination.summonerWins >= 1 && bestCombination.tankWins > 1
       && bestCombination.backlineWins > 1 && bestCombination.secondBacklineWins
       > 1 && bestCombination.thirdBacklineWins > 1
@@ -1021,7 +1022,7 @@ async  function initCSTeams(possibleTeams, matchDetails,matchSplintersSummoners 
   console.log("makeBestCombine select  : " , matchSplintersSummoners)
   logger.log("makeBestCombine select  : " , matchSplintersSummoners)
   const myAviableSummoners = getSummoners(matchDetails.myCards,matchDetails.splinters)
-  let sql = "select cs , sum(teams)/sum(teams+lostTeams) as tl   from   battle_stat_V2 where ( " ;
+  let sql = "select cs , sum(teams)/sum(teams+lostTeams) as tl   from   battle_stat_v3 where ( " ;
   let csLike = "";
   for (var i = 0; i < myAviableSummoners.length; i++) {
     if(i != 0) {
@@ -1050,22 +1051,83 @@ async  function initCSTeams(possibleTeams, matchDetails,matchSplintersSummoners 
   return rs;
 }
 
+async  function initPerferCSTeams(possibleTeams, matchDetails,matchSplintersSummoners ) {
+  const manaRange = getManaRange(matchDetails);
+  let fromMana = manaRange[0];
+  let endMana = manaRange[1];
+
+  if(matchSplintersSummoners && matchSplintersSummoners.length == 0){
+    return [];
+  }
+  console.log("initPerferCSTeams select  : " , matchSplintersSummoners)
+  logger.log("initPerferCSTeams select  : " , matchSplintersSummoners)
+  const myAviableSummoners = getSummoners(matchDetails.myCards,matchDetails.splinters)
+  let sql = "select cs , sum(teams)/sum(teams+lostTeams) as tl   from   battle_stat_v3 where ( " ;
+  let csLike = "";
+  for (var i = 0; i < myAviableSummoners.length; i++) {
+    if(i != 0) {
+      csLike+=" or "
+    }
+    csLike+="cs like '"+ myAviableSummoners[i] + "%'";
+  }
+  csLike+=" ) and  ("
+  sql+=csLike;
+  const preferLike = preferCs.map(cs => {
+    return  "cs like '" + cs + "' "
+  }).join(" or ")
+  sql += preferLike
+  sql+=") and summonerId in ( " + matchSplintersSummoners.join(",") + ") and "
+  let mustRules = battles.getMustRules(matchDetails.rules);
+  if(mustRules  == "ALL") {
+    let keyRules = mustRules.split('|');
+    let reserveRule = keyRules[1] + "|" + keyRules[0]
+    sql += "( rule = '" +mustRules +"' or rule = '" + reserveRule +"' )  and "
+  } else if(mustRules == "" || mustRules == "ANY") {
+    sql += " rule = 'default'  and "
+  } else {
+    sql += " rule = '"+mustRules+"'  and "
+  }
+  sql += "  startMana >="+ fromMana +" and endMana <= "+ endMana +"   GROUP BY cs  order by len asc ,  sum(teams -lostTeams ) desc , tl desc "
+  const data = await dbUtils.sqlQuery(sql);
+  const string = JSON.stringify(data);
+  const rs = JSON.parse(string);
+  console.log('initPerferCSTeams', rs.length, sql);
+  return rs;
+}
+
 async  function makeBestCombine(possibleTeams, matchDetails, mostSummoner = null) {
   let matchSplintersSummoners  = battles.matchedEnemyPossbileSummoners(matchDetails['enemyPossbileTeams'],true);
   if(mostSummoner){
     matchSplintersSummoners.push(mostSummoner)
   }
-  let rs = await initCSTeams(possibleTeams,matchDetails,matchSplintersSummoners)
+
+  let rs = await initPerferCSTeams(possibleTeams,matchDetails,matchSplintersSummoners)
   let matchCS = matchCsTeam(rs,possibleTeams)
-  console.log('makeBestCombine do enemy full rule match : ', matchCS[1].length);
+  console.log('1 makeBestCombine initPerferCSTeams do enemy full rule match : ', matchCS[1].length);
+
+  if(matchCS && matchCS[1].length == 0){
+    rs = await initCSTeams(possibleTeams,matchDetails,matchSplintersSummoners)
+    rs = sortByPreferCsOrder(rs)
+    matchCS = matchCsTeam(rs,possibleTeams)
+    console.log('2 makeBestCombine initCSTeams do enemy full rule match : ', matchCS[1].length);
+  }
+
+
   if(matchCS[1].length  <= 0 && matchDetails['enemyPossbileTeams'] && matchDetails['enemySplinterTeams'] &&  matchDetails['enemyPossbileTeams'].length < matchDetails['enemySplinterTeams'].length) { //TODO
      matchSplintersSummoners = battles.matchedEnemyPossbileSummoners(matchDetails['enemySplinterTeams'],false);
     if(mostSummoner){
       matchSplintersSummoners.push(mostSummoner)
     }
-     rs = await initCSTeams(possibleTeams,matchDetails,matchSplintersSummoners)
-     matchCS = matchCsTeam(rs,possibleTeams)
-     console.log('makeBestCombine do enemy splinters match : ', matchCS[1].length);
+
+    rs = await initPerferCSTeams(possibleTeams,matchDetails,matchSplintersSummoners)
+    matchCS = matchCsTeam(rs,possibleTeams)
+    console.log('3 makeBestCombine initPerferCSTeams do enemy full rule match : ', matchCS[1].length);
+
+    if(matchCS && matchCS[1].length == 0){
+      rs = await initCSTeams(possibleTeams,matchDetails,matchSplintersSummoners)
+      matchCS = matchCsTeam(rs,possibleTeams)
+      console.log('4 makeBestCombine do enemy splinters match : ', matchCS[1].length);
+    }
   }
 
   let cs =   matchCS[0]
@@ -1115,17 +1177,45 @@ function splitCS(lead, t,a) {
   }
 }
 
+async function selectCsLs(sql, params) {
+  const data = await dbUtils.sqlQuery(sql,params);
+  const string = JSON.stringify(data);
+  const rs = JSON.parse(string);
+  console.log('makeBestCombineV2', rs.length, sql , params);
+  return rs;
+}
+
+function sortByPreferCsOrder(rs) {
+  const sortRs = []
+  const collectList = []
+  preferCs.forEach(cs => {
+    const cardIds = cs.split("%")
+    rs.forEach( item => {
+      const itemIds = item['cs'].split("-")
+      const interceptIds = cardIds.filter(function(v){ return itemIds.indexOf(v) > -1 })
+      if(interceptIds.length == cardIds.length - 1){
+        if(collectList.indexOf(item['cs']) == -1){
+          sortRs.push(item)
+          collectList.push(item['cs'])
+        }
+      }
+    })
+  })
+  return sortRs;
+}
+
 async  function makeBestCombineByCs(possibleTeams, matchDetails, mostSummoner = null) {
   let teamCs = []
   const ept = matchDetails['enemyPossbileTeams']
-  if(ept && ept.length  > 0){
-    ept.forEach(t => {
+  if(ept == null || ept.length == 0  ){
+    return null;
+  }
+  ept.forEach(t => {
       const leader = t['summoner_id'];
       const teams = [t['monster_1_id'],t['monster_2_id'],t['monster_3_id'],t['monster_4_id'],t['monster_5_id'],t['monster_6_id']].filter(x => x!="" && parseInt(x) !=-1)
       teams.sort((a,b) => a - b )
       splitCS(leader,teams,teamCs)
-    })
-  }
+  })
   let maxLen = 0;
   let c = teamCs.reduce((pre ,value ) =>{
     if(value.split("-").length > maxLen) {
@@ -1141,8 +1231,29 @@ async  function makeBestCombineByCs(possibleTeams, matchDetails, mostSummoner = 
   let sorted  = Object.entries(c).filter(x => x[0].split("-").length >= maxLen -1 ).sort((a, b) => {
     return b[1] -a[1]
   }).map(x => x[0])
-  const len = sorted.length >= 10 ? 10 : sorted.length
-  const topCs = sorted.slice(0,len).sort((a,b) => b.length - a.length )
+
+  const sIdMap = {}
+  const selectSortedCS = []
+  let topSummoners  = battles.matchedEnemyPossbileSummoners(matchDetails['enemyPossbileTeams'],true);
+  if(topSummoners && topSummoners.length >0){
+    topSummoners.forEach( sId =>{
+      sorted.forEach(cs =>{
+        if( sIdMap[sId] == null){
+          sIdMap[sId] = 0
+        }
+        if(cs.startsWith(sId.toString()) ){
+          if(sIdMap[sId] <=2){
+            selectSortedCS.push(cs)
+            sIdMap[sId]+=1
+          }
+        }
+      })
+    })
+  }
+
+  const len = selectSortedCS.length >= 10 ? 10 : selectSortedCS.length
+  const topCs = selectSortedCS.slice(0,len).sort((a,b) => b.length - a.length )
+  console.log(topSummoners, topCs)
   if(topCs && topCs.length == 0){
     return null
   }
@@ -1153,9 +1264,6 @@ async  function makeBestCombineByCs(possibleTeams, matchDetails, mostSummoner = 
   const manaRange = getManaRange(matchDetails);
   let fromMana = manaRange[0];
   let endMana = manaRange[1];
-
-  const sql = " select  wcs as cs ,count(*) as cnt  from battle_stat_cs_ls_v3 where startMana >= ? and endMana <= ? and rule = ? and lcs in(?)  and wcs not in (?)  group by wcs order by   cnt desc , count asc    limit 5000" ;
-
   let mustRules = battles.getMustRules(matchDetails.rules);
   let matchRule =  matchDetails.rules;
   if(mustRules  == "ALL") {
@@ -1167,11 +1275,22 @@ async  function makeBestCombineByCs(possibleTeams, matchDetails, mostSummoner = 
     matchRule = mustRules
   }
   const params = [fromMana,endMana,matchRule,topCs,topCs];
-  const data = await dbUtils.sqlQuery(sql,params);
-  const string = JSON.stringify(data);
-  const rs = JSON.parse(string);
-  console.log('makeBestCombineV2', rs.length, sql , params);
+
+  console.log("--prefercs--",preferCs)
+  const preferSql = preferCs.map(cs => {
+    return  "wcs like '" + cs + "' "
+  }).join(" or ")
+
+  let sqlPrefer = " select  wcs as cs ,count(*) as cnt  from battle_stat_cs_ls_v3 where startMana >= ? and endMana <= ? and rule = ? and lcs in(?)  and wcs not in (?) and (" + preferSql  +") group by wcs order by   cnt desc , count asc  " ;
+  let rs = await selectCsLs(sqlPrefer,params)
+  rs = sortByPreferCsOrder(rs)
+
   let matchCS = matchCsTeam(rs,possibleTeams)
+  if(matchCS == null ||  matchCS[1].length == 0){
+    let sql = " select  wcs as cs ,count(*) as cnt  from battle_stat_cs_ls_v3 where startMana >= ? and endMana <= ? and rule = ? and lcs in(?)  and wcs not in (?)  group by wcs order by   cnt desc , count asc    limit 5000" ;
+    rs = await selectCsLs(sql,params)
+    matchCS = matchCsTeam(rs,possibleTeams)
+  }
   let cs =   matchCS[0]
   let matchTeams = matchCS[1]
   if(matchCS && cs.length > 0 && matchTeams.length > 0){
@@ -1192,11 +1311,12 @@ async  function makeBestCombineByCs(possibleTeams, matchDetails, mostSummoner = 
 }
 
 function matchCsTeam(rs , possibleTeams) {
+  let sortRs = sortByPreferCsOrder(rs)
   let matchTeams = [];
   let matchCs = "";
-  if(rs && rs.length > 0){
-    for (var i = 0; i < rs.length; i++) {
-      const cs = rs[i]['cs']
+  if(sortRs && sortRs.length > 0){
+    for (var i = 0; i < sortRs.length; i++) {
+      const cs = sortRs[i]['cs']
       const teamCS =  cs.split("-")
       matchTeams = possibleTeams.filter( pt =>{ // must
         let isMatch = true;
@@ -1222,7 +1342,7 @@ async function extendsCombineSearch(cs , matchTeams,matchDetails,matchSplintersS
   const manaRange = getManaRange(matchDetails);
   let fromMana = manaRange[0];
   let endMana = manaRange[1];
-  let sql = "select cs , sum(teams)/sum(teams+lostTeams) as tl   from   battle_stat_V2 where  " ;
+  let sql = "select cs , sum(teams)/sum(teams+lostTeams) as tl   from   battle_stat_v3 where  " ;
   let csLike = "cs like '";
   let spCs =  cs.split("-")
   spCs.slice(2,spCs.length).forEach(itemCs =>{

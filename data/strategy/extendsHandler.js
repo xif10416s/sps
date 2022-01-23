@@ -37,7 +37,7 @@ function doExtendsHandler(team, ruleset, myCards , splinter) {
         const splinterStg = stg["splinter"];
         const colorStg = stg["color"];
         if(splinterStg  && (splinter.indexOf(splinterStg) == -1 ||  colorStg && teamColors.indexOf(colorStg) == -1 )){
-          console.log("splinterStg skip ....",splinterStg , colorStg , teamColors )
+          // console.log("splinterStg skip ....",splinterStg , colorStg , teamColors )
           return;
         }
 

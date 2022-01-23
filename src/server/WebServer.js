@@ -219,7 +219,12 @@ http.createServer(async function (request, response) {
       let result = []
       cs.split("-").forEach(item => {
         const cardInfo = cardDetail.cardsDetailsIDMap[item];
-        result.push({"name": cardInfo['name']})
+        if(cardInfo) {
+          result.push({"name": cardInfo['name']})
+        } else {
+          console.log("-------------",item)
+        }
+
       })
 
       const total = calcTotalMana(cs.split("-"))
@@ -238,7 +243,7 @@ http.createServer(async function (request, response) {
       let rule = arg1.rule;
       let lenSql = arg1.len && arg1.len != '' ? ' len = '+ arg1.len + ' and ': '' ;
       let ruleSql = rule &&  rule != "-1" ? " rule like '%" +rule+"%'" :" rule='default' "
-      let sql = " select cs , sum(teams) as ts ,sum(lostTeams) as lts  , sum(totalCnt) as tt , sum(lostTotalCnt) as lts , sum(teams)/sum(teams+lostTeams) as tl from battle_stat_v2 where "
+      let sql = " select cs , sum(teams) as ts ,sum(lostTeams) as lts  , sum(totalCnt) as tt , sum(lostTotalCnt) as lts , sum(teams)/sum(teams+lostTeams) as tl from battle_stat_v3 where "
           +  lenSql + " startMana >= "+ from +"  and  endMana <= "+ end +" and "+ ruleSql + " GROUP BY cs  HAVING   sum(teams) > 100   and tl >= 0.70  order by  len asc,  tl desc  ,sum(teams -lostTeams ) desc limit 30"
 
       let data = await dbUtils.sqlQuery(sql);

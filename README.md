@@ -206,10 +206,10 @@ sudo service cron restart
 node battlesGetDataRawV1.js
 
 // -e "MAX_QUEUE_LENGTH=300"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=200"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"
-docker run -e "MAX_QUEUE_LENGTH=100"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=100"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3000:3000 -m 4g --memory-swap -1 --restart always -d --name browserless browserless/chrome
-docker run -e "MAX_QUEUE_LENGTH=100"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=100"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3001:3000 -m 4g --memory-swap -1 --restart always -d --name browserless3001 browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=100"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=100"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3000:3000 -m 5g --memory-swap -1 --restart always -d --name browserless browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=100"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=100"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3001:3000 -m 5g --memory-swap -1 --restart always -d --name browserless3001 browserless/chrome
 docker run -e "MAX_QUEUE_LENGTH=100"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=100"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3002:3000 -m 5g --memory-swap -1 --restart always -d --name browserless3002 browserless/chrome
-docker run -e "MAX_QUEUE_LENGTH=100"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=100"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3003:3000 -m 4g --memory-swap -1 --restart always -d --name browserless3003 browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=100"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=100"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"  -p 3003:3000 -m 5g --memory-swap -1 --restart always -d --name browserless3003 browserless/chrome
 http://192.168.99.100:3000
 
 //WSL
