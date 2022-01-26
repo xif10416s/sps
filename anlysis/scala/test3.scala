@@ -32,7 +32,7 @@ case class AgainstMap(mana_cap: Int, wlen: Int, llen: Int, rule: String, wcs: St
 
 case class StatCSResult(startMana: Int, endMana: Int, wlen: Int, llen: Int, rule: String, wcs: String, lcs: String, count: Long)
 
-val KEY_SINGLE_RULES = "Broken Arrows|Even Stevens|Keep Your Distance|Little League|Lost Legendaries|Lost Magic|Odd Ones Out|Rise of the Commons|Taking Sides|Up Close and Personal|Up Close & Personal|Noxious Fumes|Silenced Summoners|Earthquake|Back to Basics"
+val KEY_SINGLE_RULES = "Broken Arrows|Even Stevens|Keep Your Distance|Little League|Lost Legendaries|Lost Magic|Odd Ones Out|Rise of the Commons|Taking Sides|Up Close and Personal|Up Close & Personal|Back to Basics|Noxious Fumes|Healed Out|Earthquake|Reverse Speed|Super Sneak|Target Practice|Melee Mayhem|Explosive Weaponry|Fog of War|Equaliser|Heavy Hitters|Stampede"
 val defaultRule = "default"
 val skipIds = Array(-1,131,91,169,366,380,394,408,422,77,91,95,119,136,169,227,230,238,277,290,296,297,298,313,353,367,381,395,409,426)
 val URL = "jdbc:mysql://localhost:3306/sps_battles?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC"
@@ -234,9 +234,9 @@ def doAnalysis(startTime: String, endTime: String, fromMana: Int, endMana: Int):
         //开始执行
         ps.execute()
         cnt=cnt+1
-        if(cnt % 10000 == 0 ){
+        if(cnt % 20000 == 0 ){
           println(cnt)
-          Thread.sleep(10000)
+          Thread.sleep(5000)
         }
       })
     }catch {
@@ -254,7 +254,7 @@ def doAnalysis(startTime: String, endTime: String, fromMana: Int, endMana: Int):
 def doRangeByMana(arr: Array[(Int, Int)]): Unit = {
   arr.foreach(ms => {
     println("start :" + ms._1)
-    doAnalysis("2022-01-18", "2022-01-24", ms._1, ms._2)
+    doAnalysis("2022-01-24", "2022-01-27", ms._1, ms._2)
   })
 }
 doRangeByMana(manaArr)

@@ -22,7 +22,7 @@ const mostWinningSummonerTank = (possibleTeamsList) => {
       mostWinningSummoner).reduce(
       (a, b) => mostWinningSummoner[a] > mostWinningSummoner[b] ? a : b);
   console.log('BESTSUMMONER: ', bestSummoner)
-  ask.logger.log('BESTSUMMONER: ', bestSummoner)
+  // ask.logger.log('BESTSUMMONER: ', bestSummoner)
   if (bestSummoner) {
     possibleTeamsList.filter(team => team[0] == bestSummoner).forEach(team => {
       const tank = team[1];
@@ -245,7 +245,7 @@ async function mostWinningEnemy(possibleTeamsList, enemyPossbileTeams,
         acc[value['summoner_id']] = acc[value['summoner_id']] + 1;
         return acc;
       }, {});
-      let entries = Object.entries(mostSummoner);
+      let entries = Object.entries(mostSummoner).filter(x => x[0] != "undefined");
       let sorted = entries.sort((a, b) => b[1] - a[1]);
       console.log("-------sorted[0][0]---", sorted[0][0])
       var mostSummonerTeams = enemyPossbileTeams.filter(

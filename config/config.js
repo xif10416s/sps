@@ -1,6 +1,7 @@
 function doConfigInit(username ){
   delete require.cache[require.resolve("./"+username+".json")]
   const userConfig = require("./"+username+".json")
+  process.env.PREFER_CS = userConfig['PREFER_CS'] ?  userConfig['PREFER_CS'] : "true"
   process.env.ACCOUNT = userConfig['name']
   process.env.PASSWORD = userConfig['password']
   process.env.wsport = userConfig['port']

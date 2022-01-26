@@ -46,10 +46,13 @@ http.createServer(async function (request, response) {
       console.log("enemyRecentTeams :" ,enemyRecentTeams.length)
       let myCards = []
       try {
+        delete require.cache[require.resolve("../../data/playcards/" + player + "_cards")]
         myCards = require("../../data/playcards/" + player + "_cards")
       } catch (e) {
         return {msg: "error"}
       }
+
+      console.log(myCards.indexOf(339),myCards.length)
 
       const matchDetails = {
         orgMana: mana,
@@ -58,6 +61,7 @@ http.createServer(async function (request, response) {
         splinters: sp,
         myCards: myCards,
         enemyRecent: enemyRecentTeams,
+        logContent: {}
       }
 
       console.time("battle")

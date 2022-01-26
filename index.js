@@ -61,7 +61,7 @@ async function checkEcr(page) {
         const ecr = await getElementTextByXpath(page, "//div[@class='dec-options'][1]/div[@class='value'][2]/div", 3000);
         if(ecr) {
             console.log(chalk.bold.whiteBright.bgMagenta('Your current Energy Capture Rate is ' + ecr.split('.')[0] + "%"));
-            ask.logger.log(chalk.bold.whiteBright.bgMagenta('Your current Energy Capture Rate is ' + ecr.split('.')[0] + "%"));
+            // ask.logger.log(chalk.bold.whiteBright.bgMagenta('Your current Energy Capture Rate is ' + ecr.split('.')[0] + "%"));
             return parseFloat(ecr)
         }
     } catch (e) {
@@ -396,7 +396,7 @@ async function startBotPlayMatch(page, browser) {
 
         //if quest done claim reward. default to true. to deactivate daily quest rewards claim, set CLAIM_DAILY_QUEST_REWARD false in the env file
         console.log('claim daily quest setting:', process.env.CLAIM_DAILY_QUEST_REWARD, 'Quest details: ', quest);
-        ask.logger.log('claim daily quest setting:', process.env.CLAIM_DAILY_QUEST_REWARD, 'Quest details: ', quest);
+        // ask.logger.log('claim daily quest setting:', process.env.CLAIM_DAILY_QUEST_REWARD, 'Quest details: ', quest);
         if(quest && quest?.total > quest?.completed) {
             dailyClaim = false;
         }
@@ -449,12 +449,14 @@ async function startBotPlayMatch(page, browser) {
             splinters: splinters,
             myCards: myCards,
             enemyRecent: enemyRecent,
+            logContent:{account:account,isWin:'',mana:mana ,rules:rules,splinters:splinters.join("|")}
         }
         await page.waitForTimeout(2000*2);
 
         console.timeLog("battle","2 battle init matchDetails finished")
         let possibleTeams = await ask.possibleTeams(matchDetails, account).catch(e=>console.log('Error from possible team API call: ',e));
         console.timeLog("battle","3 battle possibleTeams finished")
+        matchDetails['logContent']['possibleTeams'] = possibleTeams.length
 
         if (possibleTeams && possibleTeams.length) {
             console.log('1 Possible Teams based on your cards: ', possibleTeams.length);
@@ -523,13 +525,13 @@ async function startBotPlayMatch(page, browser) {
                     isWin = true;
                     const decWon = await getElementText(page, '.player.winner span.dec-reward span', 1000);
                     console.log(chalk.green('You won! Reward: ' + decWon + ' DEC'));
-                    ask.logger.log('You won! Reward: ', decWon , ' DEC');
+                    // ask.logger.log('You won! Reward: ', decWon , ' DEC');
                     totalDec += !isNaN(parseFloat(decWon)) ? parseFloat(decWon) : 0 ;
                     winTotal += 1;
                 }
                 else {
                     console.log(chalk.red('You lost'));
-                    ask.logger.log('You lost');
+                    // ask.logger.log('You lost');
                     loseTotal += 1;
                     isWin = false;
                 }
@@ -543,13 +545,14 @@ async function startBotPlayMatch(page, browser) {
             console.log('Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal));
             console.log(chalk.green('Total Earned: ' + totalDec + ' DEC'));
 
-            ask.logger.log(account,'Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal));
-            ask.logger.log(account,chalk.green('Total Earned: ' + totalDec + ' DEC'));
+            // ask.logger.log(account,'Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal));
+            // ask.logger.log(account,chalk.green('Total Earned: ' + totalDec + ' DEC'));
             const summaryInfo = {time: new Date().toLocaleTimeString() ,  user: process.env.ACCOUNT, lastWin:  isWin , dailyClaim: dailyClaim , ECR: ecr , win: winTotal , lost: loseTotal , draw : undefinedTotal
                 , winRate: (winTotal /(winTotal+loseTotal+undefinedTotal)).toFixed(2) , dec: totalDec.toFixed(2)
-                , quest: quest.splinter , questTotal:quest.total, questCompleted:quest.completed ,rating:rating ,power :power };
+                , quest: quest?.splinter , questTotal:quest?.total, questCompleted:quest?.completed ,rating:rating ,power :power };
             summaryLogger.table([summaryInfo])
-
+            matchDetails['logContent']['isWin'] = isWin
+            ask.logger.table([matchDetails['logContent']])
     } catch (e) {
             const summaryInfo = {time: new Date().toLocaleTimeString() ,  user: process.env.ACCOUNT , win: winTotal , lost: loseTotal , draw : undefinedTotal, dec: totalDec , reason: e};
             summaryLogger.error(summaryInfo)
@@ -563,6 +566,7 @@ const executablePath = process.env.CHROME_EXEC || null;
 const config = require('./config/config');
 
 let puppeteer_options = {
+    browserWSEndpoint: 'ws://192.168.99.100:'+ process.env.wsport,
     headless: isHeadlessMode, // default is true
     args: ['--no-sandbox',
     '--disable-setuid-sandbox',
@@ -610,7 +614,7 @@ async function run() {
 
     console.log('START ', account, new Date().toLocaleString())
     // const browser = await puppeteer.launch(puppeteer_options);
-    const browser = await puppeteer.connect({ browserWSEndpoint: 'ws://192.168.99.100:'+ process.env.wsport });
+    const browser = await puppeteer.connect(puppeteer_options);
     //const page = await browser.newPage();
     let [page] = await browser.pages();
 
@@ -682,7 +686,7 @@ async function run() {
                         console.log("LostTooMatchException win : " + winTotal , " lost :" + loseTotal , "waittime mutil 3 :" , randomTime )
                     }
                     console.log(account, 'waiting for the next battle in', randomTime / 1000 / 60 , 'minutes at', new Date(Date.now() + randomTime).toLocaleString());
-                    ask.logger.log(account, 'waiting for the next battle in', randomTime / 1000 / 60 , 'minutes at', new Date(Date.now() + randomTime).toLocaleString());
+                    // ask.logger.log(account, 'waiting for the next battle in', randomTime / 1000 / 60 , 'minutes at', new Date(Date.now() + randomTime).toLocaleString());
                     await sleep(randomTime);
                 }
             })

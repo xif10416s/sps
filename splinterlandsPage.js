@@ -4,22 +4,26 @@ async function login(page, account, password) {
         await page.waitForSelector('#log_in_button > button').then(() => page.waitForTimeout(3000 * 3)).then(() => page.click('#log_in_button > button'))
         console.log(account + " " + password)
         await page.waitForSelector('#email')
-            .then(() => page.waitForTimeout(3000 * 3))
+            .then(() => page.waitForTimeout(3000))
             .then(() => page.focus('#email'))
             .then(() => page.type('#email', account))
+             .then(() => page.waitForTimeout(1000))
             .then(() => page.focus('#password'))
             .then(() => page.type('#password', password))
-
+            .then(() => page.waitForTimeout(10000))
             // .then(() => page.waitForSelector('#login_dialog_v2 > div > div > div.modal-body > div > div > form > div > div.col-sm-offset-1 > button', { visible: true }).then(() => page.click('#login_dialog_v2 > div > div > div.modal-body > div > div > form > div > div.col-sm-offset-1 > button')))
             .then(() => page.click('#loginBtn'))
             .then(() => page.waitForTimeout(5000))
+            .then(() => console.log("loginBtn clicked........."))
             .then(() => page.reload())
+            .then(() => console.log("loginBtn reload........."))
             .then(() => page.waitForTimeout(5000))
             .then(() => page.reload())
             .then(() => page.waitForTimeout(3000))
             .then(async () => {
+                console.log("waitForSelector--------log_in_text ")
                 await page.waitForSelector('#log_in_text', {
-                        visible: true, timeout: 8000
+                        visible: true, timeout: 10000
                     })
                     .then(()=>{
                         console.log('logged in!')
