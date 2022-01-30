@@ -8,7 +8,7 @@
      "order" : 999
   },
   {"name" : "Corpse Fiend",
-    "skipRules": ["Odd Ones Out","Keep Your Distance","Lost Legendaries"],
+    "skipRules": ["Odd Ones Out","Keep Your Distance","Lost Legendaries","Rise of the Commons"],
     "monsterMaxSize": 5,
     "position": [1],
     "positionStrategy": 1 ,
@@ -18,7 +18,7 @@
     "order" : 10
   },
   {"name" : "Fungus Fiend",
-    "skipRules": ["Odd Ones Out","Keep Your Distance","Lost Legendaries"],
+    "skipRules": ["Odd Ones Out","Keep Your Distance","Lost Legendaries","Rise of the Commons"],
     "monsterMaxSize": 5,
     "position": [1],
     "positionStrategy": 1 ,
@@ -28,7 +28,7 @@
     "order" : 10
   },
   {"name" : "Torrent Fiend",
-    "skipRules": ["Odd Ones Out","Keep Your Distance","Lost Legendaries"],
+    "skipRules": ["Odd Ones Out","Keep Your Distance","Lost Legendaries","Rise of the Commons"],
     "monsterMaxSize": 5,
     "position": [1],
     "positionStrategy": 1 ,
@@ -38,7 +38,7 @@
     "order" : 10
   },
   {"name" : "Scorch Fiend",
-    "skipRules": ["Odd Ones Out","Keep Your Distance","Lost Legendaries"],
+    "skipRules": ["Odd Ones Out","Keep Your Distance","Lost Legendaries","Rise of the Commons"],
     "monsterMaxSize": 5,
     "position": [1],
     "positionStrategy": 1 ,
@@ -48,7 +48,7 @@
     "order" : 10
   },
   {"name" : "Soul Fiend",
-    "skipRules": ["Odd Ones Out","Keep Your Distance","Lost Legendaries"],
+    "skipRules": ["Odd Ones Out","Keep Your Distance","Lost Legendaries","Rise of the Commons"],
     "monsterMaxSize": 5,
     "position": [1],
     "positionStrategy": 1 ,

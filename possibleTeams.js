@@ -114,9 +114,9 @@ let availabilityCheck = (base, toCheck) => toCheck.slice(0, 7).every(
 let account = '';
 
 const fs = require('fs');
-let date = new Date().getTime();
+let dateStr = new Date().toISOString().split("T")[0];
 
-const file = fs.createWriteStream('./logs/'+ process.env.ACCOUNT  +"/" + date + '.txt');
+const file = fs.createWriteStream('./logs/'+ process.env.ACCOUNT  +"/" + dateStr + '.txt');
 let logger = new console.Console(file, file);
 
 // ### 融合点
@@ -363,7 +363,7 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
   if(process.env.skip_cs && process.env.skip_cs == "false"){
     console.log("4-4-1 third step makeBestCombineByCs  start ............",new Date())
     const byCsTeams = await  makeBestCombineByCs(possibleTeams,matchDetails,bestCombination.bestSummoner);
-    if(byCsTeams != null &&  byCsTeams[1] && byCsTeams[1].length > 0 ) {
+    if(byCsTeams != null &&  byCsTeams[1] && byCsTeams[1].length >= 3 ) {
       let byCsCombine = await battles.mostWinningSummonerTank(byCsTeams[1]);
       const makeBestCombineByCsTeam = await findBestTeam(byCsCombine, byCsTeams[1])
       console.log("4-4-1 third step makeBestCombineByCsTeam  used ............",new Date())
@@ -373,7 +373,7 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
 
     console.log("4-4-2 third step makeBestCombine  start ............",new Date())
     const bcTeams = await  makeBestCombine(possibleTeams,matchDetails,bestCombination.bestSummoner);
-    if(bcTeams && bcTeams.length > 0 ){
+    if(bcTeams && bcTeams.length >= 3 ){
       let bcCombine = await battles.mostWinningSummonerTank(bcTeams);
       const mostWinningBcTeam = await findBestTeam(bcCombine, bcTeams)
       console.log("4-4-2 third step makeBestCombine  used ............",new Date())
@@ -388,7 +388,7 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
       possibleTeams)
   doManaStat(possibleTeams,matchDetails,"findBestTeam")
 
-  // if(matchDetails.orgMana <=19){
+
   const mst = mostWinningSummonerTankComboTeam[1];
   console.log("mostWinningSummonerTankComboTeam : ", JSON.stringify(mst))
   // const againstMostWin = await battles.findAgainstTeam(mst[0], mst.slice(1, 7),
@@ -405,6 +405,21 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
   // } else {
   //   console.log("no revert team")
   // }
+
+  // if(process.env.PREFER_CS == "true") {
+  //   const preferCsRs = preferCs.map(x => {
+  //       return {cs : x.replaceAll("%","-")}
+  //   })
+  //   const byCsTeams =  matchCsTeam(preferCsRs,possibleTeams)
+  //   if(byCsTeams != null &&  byCsTeams[1] && byCsTeams[1].length > 0 ) {
+  //     let byCsCombine = await battles.mostWinningSummonerTank(byCsTeams[1]);
+  //     const makeBestCombineByCsTeam = await findBestTeam(byCsCombine, byCsTeams[1])
+  //     console.log("4-4-55 third step PREFER_CS mts  used ............",new Date())
+  //     matchDetails['logContent']['strategy'] = "mts_pfs"
+  //     // logger.log("4-4-1 third step makeBestCombineByCsTeam  used ............",new Date())
+  //     return makeBestCombineByCsTeam;
+  //   }
+  //
   // }
 
   console.log("4-6 third step  base most winTeam team  :", JSON.stringify(mostWinningSummonerTankComboTeam))
@@ -761,6 +776,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
         matchDetails.myCards, matchDetails.splinters);
     console.log('Dont play for the quest, and play this doExtendsHandler realMana:',calcTotalMana(res[1]),' match mana :',matchDetails.mana, res[1].join("-") );
     console.log('final team mana:'+ calcTotalMana(res[1]), ' matchMana:',matchDetails.mana, res[1].join("-") );
+    matchDetails['logContent']['tm'] = res[1].join("-")
     return {summoner: res[0], cards: res[1]};
   }
   console.log('No available team to be played...');
@@ -835,6 +851,20 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
   // }
 
 
+  let makeBestCombineByCsPFSTeam = []
+  const preferCsRs = preferCs.map(x => {
+    return {cs : x.slice(0,x.length -1).replaceAll("%","-")}
+  })
+
+  const byCsTeamsPFS =  matchCsTeam(preferCsRs,possibleTeams)
+  console.log("pfeferCSRs : ", preferCsRs, byCsTeamsPFS.length)
+  if(byCsTeamsPFS != null &&  byCsTeamsPFS[1] && byCsTeamsPFS[1].length > 0 ) {
+    let byCsCombine = await battles.mostWinningSummonerTank(byCsTeamsPFS[1]);
+    makeBestCombineByCsPFSTeam = await findBestTeam(byCsCombine, byCsTeamsPFS[1])
+    console.log("4-4-55 third step PREFER_CS mts  used ............",new Date())
+    matchDetails['logContent']['strategy'] = "mts_pfs"
+    // logger.log("4-4-1 third step makeBestCombineByCsTeam  used ............",new Date())
+  }
 
   let summonerTeamMap = {};
   for (var i = 0; i < matchDetails.mySummoners.length; i++) {
@@ -876,8 +906,8 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
           ? mostEnemyAgainstTeam[1] : []
       , matchDetails.rules, matchDetails.myCards, matchDetails.splinters);
   const againstrevertTeam = extendsHandler.doExtendsHandler(
-      mostAgainstrevertTeam && mostAgainstrevertTeam.length > 1
-          ? mostAgainstrevertTeam[1] : []
+      makeBestCombineByCsPFSTeam && makeBestCombineByCsPFSTeam.length > 1
+          ? makeBestCombineByCsPFSTeam[1] : []
       , matchDetails.rules, matchDetails.myCards, matchDetails.splinters);
 
   let possbiletEnemyTeam = []
@@ -1053,7 +1083,7 @@ async  function makeBestCombine(possibleTeams, matchDetails, mostSummoner = null
   let matchCS = matchCsTeam(rs,possibleTeams)
   console.log('1 makeBestCombine initPerferCSTeams do enemy full rule match : ', matchCS[1].length);
   let isMatchPrefer = true;
-  if(matchCS && matchCS[1].length == 0){
+  if(matchCS && matchCS[1].length <= 10){
     rs = await initCSTeams(possibleTeams,matchDetails,matchSplintersSummoners)
     matchCS = matchCsTeam(rs,possibleTeams)
     console.log('2 makeBestCombine initCSTeams do enemy full rule match : ', matchCS[1].length);
@@ -1165,7 +1195,8 @@ function sortByPreferCsOrder(rs) {
   return sortRs;
 }
 
-async  function makeBestCombineByCs(possibleTeams, matchDetails, mostSummoner = null) {
+const skipIds = [-1,131,91,169,366,380,394,408,422,77,91,95,119,136,169,227,230,238,277,290,296,297,298,313,353,367,381,395,409,426]
+async  function makeBestCombineByCs(possibleTeams, matchDetails, limitCnt = 3) {
   let teamCs = []
   const ept = matchDetails['enemyPossbileTeams']
   if(ept == null || ept.length == 0  ){
@@ -1173,7 +1204,7 @@ async  function makeBestCombineByCs(possibleTeams, matchDetails, mostSummoner = 
   }
   ept.forEach(t => {
       const leader = t['summoner_id'];
-      const teams = [t['monster_1_id'],t['monster_2_id'],t['monster_3_id'],t['monster_4_id'],t['monster_5_id'],t['monster_6_id']].filter(x => x!="" && parseInt(x) !=-1)
+      const teams = [t['monster_1_id'],t['monster_2_id'],t['monster_3_id'],t['monster_4_id'],t['monster_5_id'],t['monster_6_id']].filter(x => x!="" && skipIds.indexOf(parseInt(x)) == -1)
       teams.sort((a,b) => a - b )
       splitCS(leader,teams,teamCs)
   })
@@ -1247,11 +1278,11 @@ async  function makeBestCombineByCs(possibleTeams, matchDetails, mostSummoner = 
   }).join(" or ")
 
   let isMatchPrefer = true;
-  let sqlPrefer = " select  wcs as cs ,count(*) as cnt  from battle_stat_cs_ls_v3 where startMana >= ? and startMana <= ? and rule = ? and  ("+ topCsLikeSql +")  and (" + preferSql  +") group by wcs order by   cnt desc , count asc  " ;
+  let sqlPrefer = " select  wcs as cs ,count(*) as cnt  from battle_stat_cs_ls_v3 where startMana >= ? and startMana <= ? and rule = ? and  ("+ topCsLikeSql +")  and (" + preferSql  +") and count >= "+  limitCnt +" group by wcs order by   cnt desc , count asc  " ;
   let rs = await selectCsLs(sqlPrefer,params)
   let matchCS = matchCsTeam(rs,possibleTeams)
-  if(matchCS == null ||  matchCS[1].length == 0){
-    let sql = " select  wcs as cs ,count(*) as cnt  from battle_stat_cs_ls_v3 where startMana >= ? and startMana <= ? and rule = ? and ("+ topCsLikeSql  +")   group by wcs order by   cnt desc , count asc    limit 5000" ;
+  if(matchCS == null ||  matchCS[1].length <= 10){
+    let sql = " select  wcs as cs ,count(*) as cnt  from battle_stat_cs_ls_v3 where startMana >= ? and startMana <= ? and rule = ? and ("+ topCsLikeSql  +") and count >="+ limitCnt   +"  group by wcs order by   cnt desc , count asc    limit 5000" ;
     rs = await selectCsLs(sql,params)
     matchCS = matchCsTeam(rs,possibleTeams)
     isMatchPrefer = false;

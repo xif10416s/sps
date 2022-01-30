@@ -24,7 +24,6 @@ import java.util.Calendar
 import scala.collection.mutable.ArrayBuffer
 import org.apache.spark.sql.Dataset
 val manaArr = Array((12,12),(13,13),(14,14),(15,15),(16,16),(17,17),(18,18),(19,19),(20,20),(21,21),(22,22),(23,23),(24,24),(25,25),(26,26),(27,27),(28,28),(29,29),(30,30),(31,32),(33,34),(35,36),(37,38),(39,40),(41,44),(45,50),(51,99))
-val manaArr = Array((45,50),(51,99))
 case class Item(mana_cap:Int , ruleset:String, summoner_id:Int ,monster_1_id:Int,monster_2_id:Int,monster_3_id:Int,monster_4_id:Int,monster_5_id:Int,monster_6_id:Int, summoner_id_lost:Int ,monster_1_id_lost:Int,monster_2_id_lost:Int,monster_3_id_lost:Int,monster_4_id_lost:Int,monster_5_id_lost:Int,monster_6_id_lost:Int)
 case class AgainstMap(mana_cap:Int, ruleset:String,wc:String,lcs:(Int,String))
 case class StatCS(startMana:Int ,endMana:Int ,cs:String,len:Int, rule:String, summonerId:Int,teams:Int,totalCnt:Int)
@@ -32,8 +31,8 @@ case class StatCSResult(startMana:Int ,endMana:Int ,cs:String,len:Int, rule:Stri
 val KEY_SINGLE_RULES="Broken Arrows|Even Stevens|Keep Your Distance|Little League|Lost Legendaries|Lost Magic|Odd Ones Out|Rise of the Commons|Taking Sides|Up Close and Personal|Up Close & Personal|Back to Basics|Noxious Fumes|Healed Out|Earthquake|Reverse Speed|Super Sneak|Target Practice|Melee Mayhem|Explosive Weaponry|Fog of War|Equaliser|Heavy Hitters|Stampede"
 val defaultRule = "default"
 val skipIds = Array(-1,131,91,169,366,380,394,408,422,77,91,95,119,136,169,227,230,238,277,290,296,297,298,313,353,367,381,395,409,426)
-val upCnt = 1;
-val upTotalCnt = 2;
+val upCnt = 2;
+val upTotalCnt = 3;
 val URL = "jdbc:mysql://localhost:3306/sps_battles?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC"
 val USER ="root"
 val PASS ="123456"
@@ -253,7 +252,7 @@ def doAnalysis(startTime:String, endTime:String ,fromMana:Int, endMana:Int): Uni
       .load()
     jdbcDF = jdbcDF.union(jdbcDFTemp)
   }
-  val ds = jdbcDF.as[Item].coalesce(2)
+  val ds = jdbcDF.as[Item].coalesce(1)
   ds.cache()
 
   val splitDS = ds.flatMap(x =>{
@@ -280,7 +279,7 @@ def doAnalysis(startTime:String, endTime:String ,fromMana:Int, endMana:Int): Uni
     val connection = DriverManager.getConnection(URL,USER,PASS)
     var cnt = 0L
     try{
-      val sql = "INSERT  ignore  INTO battle_stat_v3(`startMana` , `endMana` , `cs` , `len`,`rule`,`summonerId`,`teams`,`totalCnt`,`lostTeams`,`lostTotalCnt`) values (?,?,?,?,?,?,?,?,?,? ) "
+      val sql = "INSERT  ignore  INTO battle_stat_v4(`startMana` , `endMana` , `cs` , `len`,`rule`,`summonerId`,`teams`,`totalCnt`,`lostTeams`,`lostTotalCnt`) values (?,?,?,?,?,?,?,?,?,? )  "
       val ps = connection.prepareStatement(sql)
       pt.foreach(x =>{
         ps.setInt(1,x.startMana)
@@ -317,7 +316,7 @@ def doAnalysis(startTime:String, endTime:String ,fromMana:Int, endMana:Int): Uni
 def  doRangeByMana(arr:Array[(Int, Int)]):Unit = {
   arr.foreach(ms =>{
     println(ms._1)
-    doAnalysis("2022-01-24","2022-01-27",ms._1,ms._2)
+    doAnalysis("2021-12-29","2022-01-29",ms._1,ms._2)
   })
 }
 

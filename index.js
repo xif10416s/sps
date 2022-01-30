@@ -8,6 +8,7 @@ const { clickOnElement, getElementText, getElementTextByXpath, teamActualSplinte
 const quests = require('./quests');
 const ask = require('./possibleTeams');
 const chalk = require('chalk');
+const fs = require('fs');
 
 let isMultiAccountMode = false;
 let account = '';
@@ -18,6 +19,28 @@ let loseTotal = 0;
 let undefinedTotal = 0;
 const ecrRecoveryRatePerHour = 1.04;
 let dailyClaim = false;
+
+const createCsvWriter = require('csv-writer').createObjectCsvWriter;
+let  statFile = './logs/stat.csv';
+const statHeader = [
+    {id: 'account', title: 'account'},
+    {id: 'isWin', title: 'isWin'},
+    {id: 'mana', title: 'mana'},
+    {id: 'rules', title: 'rules'},
+    {id: 'splinters', title: 'splinters'},
+    {id: 'possibleTeams', title: 'possibleTeams'},
+    {id: 'QuestMatch', title: 'QuestMatch'},
+    {id: 'strategy', title: 'strategy'},
+    {id: 'rating',title:'rating'},
+    {id: 'tm', title: 'tm'},
+]
+let  csvWriter  = createCsvWriter({
+    path: statFile,
+    header:statHeader,
+    append : true
+});
+
+
 
 // LOAD MY CARDS
 // async function getCards() {
@@ -38,7 +61,7 @@ function getDateFmt(date){
     return date.getFullYear() + seperator + nowMonth + seperator + strDate;
 }
 
-const fs = require('fs');
+
 const summaryFile = fs.createWriteStream('./logs/Summary.txt', {'flags': 'a'});
 const summaryErrorFile = fs.createWriteStream('./logs/SummaryError.txt', {'flags': 'a'});
 let summaryLogger = new console.Console(summaryFile, summaryErrorFile);
@@ -221,6 +244,7 @@ async function clickMembersCard(page, teamToPlay) {
                 .catch(()=> {
                     clicked = false;
                     console.log(chalk.bold.redBright(teamToPlay.cards[i], 'not clicked'));
+                    summaryLogger.error("may be rule escape:",teamToPlay.cards,teamToPlay.cards[i])
                 });
             if (!clicked) break
         } else {
@@ -509,7 +533,7 @@ async function startBotPlayMatch(page, browser) {
             });
         if (startFightFail) return
 
-        let isWin = false;
+        let isWin = "false";
 
         await page.waitForTimeout(5000);
         await page.waitForSelector('#btnRumble', { timeout: 90000 }).then(()=>console.log('btnRumble visible')).catch(()=>console.log('btnRumble not visible'));
@@ -522,7 +546,7 @@ async function startBotPlayMatch(page, browser) {
                 const winner = await getElementText(page, 'section.player.winner .bio__name__display', 15000);
                 console.log("result win : ",winner.trim() ,':' , account.toLowerCase()  )
                 if (winner.trim() == account.toLowerCase()) {
-                    isWin = true;
+                    isWin = "true";
                     const decWon = await getElementText(page, '.player.winner span.dec-reward span', 1000);
                     console.log(chalk.green('You won! Reward: ' + decWon + ' DEC'));
                     // ask.logger.log('You won! Reward: ', decWon , ' DEC');
@@ -537,6 +561,7 @@ async function startBotPlayMatch(page, browser) {
                 }
             } catch {
                 console.log('Could not find winner - draw?');
+                isWin = "draw"
                 undefinedTotal += 1;
             }
             await clickOnElement(page, '.btn--done', 22000, 12000);
@@ -552,7 +577,9 @@ async function startBotPlayMatch(page, browser) {
                 , quest: quest?.splinter , questTotal:quest?.total, questCompleted:quest?.completed ,rating:rating ,power :power };
             summaryLogger.table([summaryInfo])
             matchDetails['logContent']['isWin'] = isWin
+            matchDetails['logContent']['rating'] = rating
             ask.logger.table([matchDetails['logContent']])
+            await csvWriter.writeRecords([matchDetails['logContent']]).then(()=> console.log('The CSV file was written successfully'));
     } catch (e) {
             const summaryInfo = {time: new Date().toLocaleTimeString() ,  user: process.env.ACCOUNT , win: winTotal , lost: loseTotal , draw : undefinedTotal, dec: totalDec , reason: e};
             summaryLogger.error(summaryInfo)

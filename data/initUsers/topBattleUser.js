@@ -63,18 +63,20 @@ async function getBattleHistory() {
   battleHistory1 = battleHistory1.concat(await getTopBattleHistory(2))
   battleHistory1 = battleHistory1.concat(await getTopBattleHistory(3))
   battleHistory1 = battleHistory1.concat(await getTopBattleHistory(4))
+  battleHistory1 = battleHistory1.concat(await getTopBattleHistory(5))
 
   battleHistory1 = battleHistory1.concat(await getLeaderboardBattleHistory(0))
   battleHistory1 = battleHistory1.concat(await getLeaderboardBattleHistory(1))
   battleHistory1 = battleHistory1.concat(await getLeaderboardBattleHistory(2))
   battleHistory1 = battleHistory1.concat(await getLeaderboardBattleHistory(3))
+  battleHistory1 = battleHistory1.concat(await getLeaderboardBattleHistory(4))
   console.log("getBattleHistory .........", battleHistory1.length)
   return battleHistory1;
 }
 
-function saveBattlesHistory() {
+async function saveBattlesHistory() {
   console.log("--------------saveBattlesHistory---------------")
-  getBattleHistory().then(player => {
+  await getBattleHistory().then(player => {
     fs.writeFile(`data/initUsers/topBattleUserJSON.json`, JSON.stringify(player), function (err) {
       if (err) {
         console.log(err);
