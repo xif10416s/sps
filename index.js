@@ -31,6 +31,8 @@ const statHeader = [
     {id: 'possibleTeams', title: 'possibleTeams'},
     {id: 'QuestMatch', title: 'QuestMatch'},
     {id: 'strategy', title: 'strategy'},
+    {id: 'isMatchPrefer', title: 'isMatchPrefer'},
+    {id: 'stgLen', title: 'stgLen'},
     {id: 'rating',title:'rating'},
     {id: 'tm', title: 'tm'},
 ]
@@ -144,8 +146,8 @@ async function findSeekingEnemyModal(page, visibleTimeout=15000) {
 }
 
 async function findCreateTeamButton(page, findOpponentDialogStatus=0, btnCreateTeamTimeout=5000) {
-    console.log(`waiting for create team button`);
-    let startFlag =  await page.waitForSelector('.btn--create-team', { timeout: btnCreateTeamTimeout })
+    console.log(`waiting for create team button: `,findOpponentDialogStatus);
+    let startFlag =  await page.waitForXPath('//*[@id="dialog_container"]/div/div/div/div[2]/div[3]/div[2]/button', { timeout: btnCreateTeamTimeout, visible: true })
         .then(()=> { console.log('start the match'); return true; })
         .catch(async ()=> {
             if (findOpponentDialogStatus === 2) console.error('Is this account timed out from battle?');
@@ -153,7 +155,7 @@ async function findCreateTeamButton(page, findOpponentDialogStatus=0, btnCreateT
             return false;
         });
     if(!startFlag) {
-       return await page.waitForSelector('.btn--create-team', { timeout: btnCreateTeamTimeout * 2 })
+       return await page.waitForXPath('//*[@id="dialog_container"]/div/div/div/div[2]/div[3]/div[2]/button', { timeout: btnCreateTeamTimeout * 2 , visible: true})
         .then(()=> { console.log('start the match'); return true; })
         .catch(async ()=> {
             if (findOpponentDialogStatus === 2) console.error('Is this account timed out from battle?');
@@ -185,6 +187,7 @@ async function launchBattle(page) {
             findOpponentDialogStatus = await findSeekingEnemyModal(page);
         }
 
+        console.log("findOpponentDialogStatus : " , findOpponentDialogStatus)
         if (findOpponentDialogStatus === 1 || findOpponentDialogStatus === 2) {
             if (findOpponentDialogStatus === 2) {
                 console.log('opponent found?');
@@ -311,7 +314,7 @@ async function startBotPlayMatch(page, browser) {
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36');
         await page.setViewport({
             width: 1800,
-            height: 1500,
+            height: 1600,
             deviceScaleFactor: 1,
         });
 
@@ -589,6 +592,7 @@ async function startBotPlayMatch(page, browser) {
 
 // 30 MINUTES INTERVAL BETWEEN EACH MATCH (if not specified in the .env file)
 const isHeadlessMode = process.env.HEADLESS === 'false' ? false : true;
+console.log("isHeadlessMode:",isHeadlessMode)
 const executablePath = process.env.CHROME_EXEC || null;
 const config = require('./config/config');
 
@@ -597,6 +601,7 @@ let puppeteer_options = {
     headless: isHeadlessMode, // default is true
     args: ['--no-sandbox',
     '--disable-setuid-sandbox',
+        '--proxy-server=127.0.0.1:1080',
     //'--disable-dev-shm-usage',
     //'--disable-accelerated-2d-canvas',
     // '--disable-canvas-aa',

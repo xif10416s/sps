@@ -4,8 +4,9 @@
   "port": 3001,
   "favourite_summoner": "",
   "skip_cs": "false",
-  "max_cnt": "20" ,
+  "max_cnt": "30" ,
   "finish_quest": "true",
+  "PREFER_CS": "true",
   "MINUTES_BATTLES_INTERVAL": 5,
   "CLAIM_DAILY_QUEST_REWARD": "false"
 }

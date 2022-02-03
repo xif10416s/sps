@@ -27,7 +27,7 @@ async function getBattleHistory(player = '', data = {}) {
             }
         })
         .catch((error) => {
-            console.error('There has been a problem with your fetch operation:', error);
+            console.error('There has beeopening browser...n a problem with your fetch operation:', error);
         });
     return battleHistory.battles;
 }
@@ -76,23 +76,28 @@ const extractGeneralInfo = (x) => {
 
 
 async function getBattleDetail(player = '') {
-    return  await getBattleHistory(player).then(battles => battles.map(
-        x => {
-            // console.log(x)
-            const details = JSON.parse(x.details);
-            if (details.type != 'Surrender') {
-                const monstersDetails = extractMonster(player.toLocaleLowerCase() == x.player_1.toLocaleLowerCase() ?  details.team1 : details.team2);
-                const info = extractGeneralInfo(x);
-                return {
-                    ...monstersDetails,
-                    ...info,
-                    isWin: x.winner == player ? true : false
+    try{
+        return  await getBattleHistory(player).then(battles => battles.map(
+            x => {
+                // console.log(x)
+                const details = JSON.parse(x.details);
+                if (details.type != 'Surrender') {
+                    const monstersDetails = extractMonster(player.toLocaleLowerCase() == x.player_1.toLocaleLowerCase() ?  details.team1 : details.team2);
+                    const info = extractGeneralInfo(x);
+                    return {
+                        ...monstersDetails,
+                        ...info,
+                        isWin: x.winner == player ? true : false
+                    }
+                } else {
+                    return []
                 }
-            } else {
-                return []
-            }
-        })
-    )
+            })
+        )
+    } catch (e) {
+        return []
+    }
+
 }
 
 users = [];

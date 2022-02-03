@@ -7,19 +7,21 @@ async function login(page, account, password) {
             .then(() => page.waitForTimeout(3000))
             .then(() => page.focus('#email'))
             .then(() => page.type('#email', account))
-             .then(() => page.waitForTimeout(1000))
+             .then(() => page.waitForTimeout(3000))
             .then(() => page.focus('#password'))
             .then(() => page.type('#password', password))
-            .then(() => page.waitForTimeout(10000))
+            .then(() => page.waitForTimeout(30000))
             // .then(() => page.waitForSelector('#login_dialog_v2 > div > div > div.modal-body > div > div > form > div > div.col-sm-offset-1 > button', { visible: true }).then(() => page.click('#login_dialog_v2 > div > div > div.modal-body > div > div > form > div > div.col-sm-offset-1 > button')))
             .then(() => page.click('#loginBtn'))
-            .then(() => page.waitForTimeout(5000))
+            .then(() => page.waitForTimeout(15000))
+            // .then(() => page.click('#loginBtn'))
             .then(() => console.log("loginBtn clicked........."))
-            .then(() => page.reload())
+            // .then(() => page.reload())
             .then(() => console.log("loginBtn reload........."))
-            .then(() => page.waitForTimeout(5000))
-            .then(() => page.reload())
-            .then(() => page.waitForTimeout(3000))
+            .then(() => page.waitForTimeout(30000))
+            .then(() => page.click('#loginBtn'))
+            // .then(() => page.reload())
+            .then(() => page.waitForTimeout(10000))
             .then(async () => {
                 console.log("waitForSelector--------log_in_text ")
                 await page.waitForSelector('#log_in_text', {
@@ -33,8 +35,9 @@ async function login(page, account, password) {
                         throw new Error('Didnt login');
                     })
                 })
-            .then(() => page.waitForTimeout(2000))
+            .then(() => page.waitForTimeout(20000))
             .then(() => page.reload())
+
     } catch (e) {
         throw new Error('Check that you used correctly username and posting key. (dont use email and password)');
     }
