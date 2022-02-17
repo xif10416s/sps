@@ -70,6 +70,7 @@ async function getBattleHistory() {
   battleHistory1 = battleHistory1.concat(await getLeaderboardBattleHistory(2))
   battleHistory1 = battleHistory1.concat(await getLeaderboardBattleHistory(3))
   battleHistory1 = battleHistory1.concat(await getLeaderboardBattleHistory(4))
+  battleHistory1 = battleHistory1.concat(await getLeaderboardBattleHistory(5))
   console.log("getBattleHistory .........", battleHistory1.length)
   return battleHistory1;
 }

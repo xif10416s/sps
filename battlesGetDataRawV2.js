@@ -157,7 +157,7 @@ let extendArray = [];
 let count = 0;
 let delta = 100;
 let batchCount = 5;
-let fromScore = 600;
+let fromScore = 1000;
 
 
 async function collectData(arr) {
@@ -262,7 +262,11 @@ async function checkAndSave(battles) {
 async function saveDatas(battlesList , mergeArray){
   if(battlesList.length >0 ){
     console.log('batchInsert---start---', battlesList.length,new Date());
-    await dbUtil.batchInsertRaw(battlesList,fromScore,500,'2021-11-01');
+    try {
+      await dbUtil.batchInsertRaw(battlesList,fromScore,500,'2021-11-01');
+    } catch (e) {
+      console.log('batchInsert---error---');
+    }
     battlesList = [];
     console.log('batchInsert---end---', battlesList.length,new Date());
 

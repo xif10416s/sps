@@ -7,8 +7,8 @@ function doConfigInit(username ){
   process.env.wsport = userConfig['port']
   process.env.skip_cs = userConfig['skip_cs']
   process.env.max_cnt = userConfig['max_cnt']
+  process.env.ECR_RECOVER_TO = userConfig['ECR_RECOVER_TO'] ? userConfig['ECR_RECOVER_TO'] : process.env.ECR_RECOVER_TO
   process.env.CLAIM_DAILY_QUEST_REWARD = userConfig['CLAIM_DAILY_QUEST_REWARD'] ? userConfig['CLAIM_DAILY_QUEST_REWARD'] : process.env.CLAIM_DAILY_QUEST_REWARD
-  process.env.finish_quest = userConfig['finish_quest']
   process.env.MINUTES_BATTLES_INTERVAL = userConfig['MINUTES_BATTLES_INTERVAL'] ? userConfig['MINUTES_BATTLES_INTERVAL'] : process.env.MINUTES_BATTLES_INTERVAL
   console.log(process.env.ACCOUNT , process.env.PASSWORD ,process.env.MINUTES_BATTLES_INTERVAL,process.env.skip_cs  , process.env.max_cnt , process.env.wsport )
 }

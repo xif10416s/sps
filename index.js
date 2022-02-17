@@ -94,6 +94,18 @@ async function checkEcr(page) {
     }
 }
 
+async function checkNextQuest(page) {
+    try {
+        const nextQuest = await getElementTextByXpath(page, '//*[@id="complete_text"]', 3000);
+        if(nextQuest) {
+            console.log(chalk.bold.whiteBright.bgMagenta('Your next Quest time is : ' + nextQuest ));
+            return nextQuest
+        }
+    } catch (e) {
+        console.log(chalk.bold.redBright.bgBlack('next Quest time not defined'));
+    }
+}
+
 async function checkRating(page) {
 
     try {
@@ -291,6 +303,7 @@ async function clickCards(page, teamToPlay, matchDetails) {
             continue
         }
 
+        // TODO
         if (card.color(teamToPlay.cards[0]) === 'Gold' && !await clickFilterElement(page, teamToPlay, matchDetails)) {
             retriesNum++;
             continue
@@ -310,15 +323,21 @@ async function clickCards(page, teamToPlay, matchDetails) {
 async function startBotPlayMatch(page, browser) {
 
     console.log( new Date().toLocaleString(), 'opening browser...')
-    try {
-        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36');
-        await page.setViewport({
-            width: 1800,
-            height: 1600,
-            deviceScaleFactor: 1,
-        });
 
-        await page.goto('https://splinterlands.io/');
+    try {
+            await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36');
+            await page.setViewport({
+                width: 1800,
+                height: 1600,
+                deviceScaleFactor: 1,
+            });
+
+            await page.goto('https://splinterlands.io/');
+    } catch (e) {
+            summaryLogger.error("page session error")
+            throw new PageRestartException("session closed error")
+    }
+    try {
         await page.waitForTimeout(8000*3);
 
         let item = await page.waitForSelector('#log_in_button > button', {
@@ -343,33 +362,54 @@ async function startBotPlayMatch(page, browser) {
         const rating = await checkRating(page);
         const power = await checkPower(page);
         const ecr = await checkEcr(page);
+        const nextQuestTime = await  checkNextQuest(page)
         // if (ecr === undefined) throw new Error('Fail to get ECR.')
-
-        if (ecr && process.env.ECR_STOP_LIMIT && process.env.ECR_RECOVER_TO && ecr < parseFloat(process.env.ECR_STOP_LIMIT)) {
-            if (ecr < parseFloat(process.env.ECR_STOP_LIMIT)) {
-                console.log(chalk.bold.red(`ECR lower than limit ${process.env.ECR_STOP_LIMIT}%. reduce the limit in the env file config or wait until ECR will be at ${process.env.ECR_RECOVER_TO || '100'}%`));
-            } else if (ecr < parseFloat(process.env.ECR_RECOVER_TO)) {
-                console.log(chalk.bold.red(`ECR Not yet Recovered to ${process.env.ECR_RECOVER_TO}`));
-            }
-
-            // calculating time needed for recovery
-            ecrNeededToRecover = parseFloat(process.env.ECR_RECOVER_TO) - parseFloat(ecr);
-            recoveryTimeInHours = Math.ceil(ecrNeededToRecover / ecrRecoveryRatePerHour);
-
-            console.log(chalk.bold.white(`Time needed to recover ECR, approximately ${recoveryTimeInHours * 60} minutes.`));
-            await closeBrowser(browser);
-            console.log(chalk.bold.white(`Initiating sleep mode. The bot will awaken at ${new Date(Date.now() + recoveryTimeInHours * 3600 * 1000).toLocaleString()}`));
-            await sleep(recoveryTimeInHours * 3600 * 1000);
-
-            throw new Error(`Restart needed.`);
-        }
-
         console.log('getting user quest info from splinterlands API...')
         const quest = await getQuest();
         if(!quest) {
             console.log('Error for quest details. Splinterlands API didnt work or you used incorrect username, remove @ and dont use email')
         } else {
             console.log("quest:",quest)
+        }
+
+        //if quest done claim reward. default to true. to deactivate daily quest rewards claim, set CLAIM_DAILY_QUEST_REWARD false in the env file
+        console.log('claim daily quest setting:', process.env.CLAIM_DAILY_QUEST_REWARD, 'Quest details: ', quest);
+        // ask.logger.log('claim daily quest setting:', process.env.CLAIM_DAILY_QUEST_REWARD, 'Quest details: ', quest);
+        if(quest && quest?.total > quest?.completed) {
+            dailyClaim = false;
+        }
+        const isClaimDailyQuestMode = process.env.CLAIM_DAILY_QUEST_REWARD === 'false' ? false : true;
+        if (isClaimDailyQuestMode === true && dailyClaim == false  && quest?.total == quest?.completed) {
+            try {
+                await page.waitForSelector('#quest_claim_btn', { timeout: 5000*2 })
+                .then(button =>  button.click() ).then(() => dailyClaim = true);
+            } catch (e) {
+                dailyClaim = false;
+                console.info('no quest reward to be claimed waiting for the battle...')
+            }
+        }
+        await page.waitForTimeout(5000*5);
+        // const isQuestFinishedAndLowECR = ecr && process.env.ECR_STOP_LIMIT  && ecr <= parseFloat(process.env.ECR_STOP_LIMIT)
+        //     && quest?.total == quest?.completed;
+
+        const isWaitForBeginWithHighECR = ecr && process.env.ECR_RECOVER_TO &&  ecr <= parseFloat(process.env.ECR_RECOVER_TO)
+            && quest?.total == quest?.completed;
+        if ( isWaitForBeginWithHighECR) {
+            // if (ecr < parseFloat(process.env.ECR_STOP_LIMIT)) {
+            //     console.log(chalk.bold.red(`ECR lower than limit ${process.env.ECR_STOP_LIMIT}%. reduce the limit in the env file config or wait until ECR will be at ${process.env.ECR_RECOVER_TO || '100'}%`));
+            // } else if (ecr < parseFloat(process.env.ECR_RECOVER_TO)) {
+            //     console.log(chalk.bold.red(`ECR Not yet Recovered to ${process.env.ECR_RECOVER_TO}`));
+            // }
+            //
+            // // calculating time needed for recovery
+            // ecrNeededToRecover = parseFloat(process.env.ECR_RECOVER_TO) - parseFloat(ecr);
+            // recoveryTimeInHours = Math.ceil(ecrNeededToRecover / ecrRecoveryRatePerHour);
+            const random =  Math.ceil(Math.random()*10)* 60000
+            console.log(chalk.bold.white(`Time needed to recover ECR, approximately ${1 * 60 + random/60000 } minutes.ecr:`),ecr ,isWaitForBeginWithHighECR);
+            // await closeBrowser(browser);
+            console.log(chalk.bold.white(`Initiating sleep mode. The bot will awaken at ${new Date(Date.now() + 1 * 3600 * 1000 + random).toLocaleString()}`));
+            await sleep(1 * 3600 * 1000+random);
+            throw new Error(`Restart needed.`);
         }
 
         if(process.env.SKIP_QUEST && quest?.splinter && process.env.SKIP_QUEST.split(',').includes(quest?.splinter) && quest?.total !== quest?.completed) {
@@ -421,23 +461,6 @@ async function startBotPlayMatch(page, browser) {
             }
         }
 
-        //if quest done claim reward. default to true. to deactivate daily quest rewards claim, set CLAIM_DAILY_QUEST_REWARD false in the env file
-        console.log('claim daily quest setting:', process.env.CLAIM_DAILY_QUEST_REWARD, 'Quest details: ', quest);
-        // ask.logger.log('claim daily quest setting:', process.env.CLAIM_DAILY_QUEST_REWARD, 'Quest details: ', quest);
-        if(quest && quest?.total > quest?.completed) {
-            dailyClaim = false;
-        }
-        const isClaimDailyQuestMode = process.env.CLAIM_DAILY_QUEST_REWARD === 'false' ? false : true;
-        if (isClaimDailyQuestMode === true && dailyClaim == false  && quest?.total == quest?.completed) {
-            try {
-                await page.waitForSelector('#quest_claim_btn', { timeout: 5000*2 })
-                    .then(button =>  button.click() ).then(() => dailyClaim = true);
-            } catch (e) {
-                dailyClaim = false;
-                console.info('no quest reward to be claimed waiting for the battle...')
-            }
-        }
-        await page.waitForTimeout(5000*5);
 
         console.info(' The Battle for the battle.....')
         // LAUNCH the battle
@@ -570,7 +593,7 @@ async function startBotPlayMatch(page, browser) {
             await clickOnElement(page, '.btn--done', 22000, 12000);
             await clickOnElement(page, '#menu_item_battle', 22000, 12000);
 
-            console.log('Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal));
+            console.log('Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal), " nextQuestTime:",nextQuestTime);
             console.log(chalk.green('Total Earned: ' + totalDec + ' DEC'));
 
             // ask.logger.log(account,'Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal));
@@ -640,6 +663,10 @@ function LostTooMatchException(message){
     this.message = message;
 }
 
+function PageRestartException(message){
+    this.message = message;
+}
+
 // #1#   入口程序
 async function run() {
     let start = true
@@ -679,6 +706,7 @@ async function run() {
     page.goto('https://splinterlands.io/');
     page.recoverStatus = 0;
     page.favouriteDeck = process.env.FAVOURITE_DECK || '';
+    let needRestart = false;
     while (start) {
         console.log('Recover Status: ', page.recoverStatus)
         config.doConfigInit(process.env.ACCOUNT)
@@ -727,10 +755,15 @@ async function run() {
                 start = false;
                 const summaryInfo = {time: new Date().toLocaleTimeString() ,  user: process.env.ACCOUNT , win: winTotal , lost: loseTotal , draw : undefinedTotal, dec: totalDec , reason: e};
                 summaryLogger.error(summaryInfo)
+                if(e instanceof  PageRestartException) {
+                    needRestart = true;
+                    summaryLogger.error("1 PageRestartException .........")
+                }
             })
     }
-    if (!isMultiAccountMode) {
-        await restart(browser);
+    if(needRestart) {
+        summaryLogger.error("2 page restarting .........")
+        await run();
     }
 }
 

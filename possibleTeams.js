@@ -363,7 +363,7 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
   if(process.env.skip_cs && process.env.skip_cs == "false"){
     console.log("4-4-1 third step makeBestCombineByCs  start ............",new Date())
     const byCsTeams = await  makeBestCombineByCs(possibleTeams,matchDetails,bestCombination.bestSummoner);
-    if(byCsTeams != null &&  byCsTeams[1] && byCsTeams[1].length >= 40 ) {
+    if(byCsTeams != null &&  byCsTeams[1] && byCsTeams[1].length >= 3 ) {
       let byCsCombine = await battles.mostWinningSummonerTank(byCsTeams[1]);
       const makeBestCombineByCsTeam = await findBestTeam(byCsCombine, byCsTeams[1])
       console.log("4-4-1 third step makeBestCombineByCsTeam  used ............",new Date())
@@ -373,7 +373,7 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
 
     console.log("4-4-2 third step makeBestCombine  start ............",new Date())
     const bcTeams = await  makeBestCombine(possibleTeams,matchDetails,bestCombination.bestSummoner);
-    if(bcTeams && bcTeams.length >= 40 ){
+    if(bcTeams && bcTeams.length >= 3 ){
       let bcCombine = await battles.mostWinningSummonerTank(bcTeams);
       const mostWinningBcTeam = await findBestTeam(bcCombine, bcTeams)
       console.log("4-4-2 third step makeBestCombine  used ............",new Date())
@@ -679,7 +679,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
 
   //CHECK FOR QUEST:
   matchDetails['logContent']['QuestMatch'] = "skip"
-  if (priorityToTheQuest && availableTeamsToPlay.length > 30000 && quest
+  if (priorityToTheQuest && availableTeamsToPlay.length > 10000 && quest
       && quest.total) {
     const left = quest.total - quest.completed;
     const questCheck = matchDetails.splinters.includes(quest.splinter) && left
@@ -690,8 +690,31 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
       console.log("2-3-1",left + ' battles left for the splinter' + quest.splinter + ' quest');
       // logger.log("2-3-1", left + ' battles left for the splinter' + quest.splinter + ' quest')
       console.log("2-3-1",'play for the quest splinter', quest.splinter, '? ', questCheck);
+      // for death splinter
+      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 1000  && quest.splinter == 'death' && matchDetails.orgMana <= 18 ){
+        console.log('Try to play for the quest with Teams size (V1):death',
+            filteredTeamsForQuest.length);
+        availableTeamsToPlay = filteredTeamsForQuest;
+        matchDetails['logContent']['QuestMatch'] = quest.splinter +":" + availableTeamsToPlay.length
+      }
 
-      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 10000
+      // for water splinter
+      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 1000  && quest.splinter == 'water'  && matchDetails.orgMana >= 27 && matchDetails.orgMana <= 30 ){
+        console.log('Try to play for the quest with Teams size (V1):water',
+            filteredTeamsForQuest.length);
+        availableTeamsToPlay = filteredTeamsForQuest;
+        matchDetails['logContent']['QuestMatch'] = quest.splinter +":" + availableTeamsToPlay.length
+      }
+
+      // for earth splinter
+      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 1000  && quest.splinter == 'earth'  && matchDetails.orgMana >= 44 ){
+        console.log('Try to play for the quest with Teams size (V1):earth',
+            filteredTeamsForQuest.length);
+        availableTeamsToPlay = filteredTeamsForQuest;
+        matchDetails['logContent']['QuestMatch'] = quest.splinter +":" + availableTeamsToPlay.length
+      }
+
+      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 5000
           && splinters.includes(quest.splinter)) {
         console.log('Try to play for the quest with Teams size (V1): ',
             filteredTeamsForQuest.length);
@@ -742,10 +765,10 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
     }
 
     // sprinter snipe
-    availableTeamsToPlay = doSpecialQuest(matchDetails,quest,availableTeamsToPlay,"snipe",left , 10000)
+    availableTeamsToPlay = doSpecialQuest(matchDetails,quest,availableTeamsToPlay,"snipe",left , 2000)
 
     //  "sneak"
-    availableTeamsToPlay = doSpecialQuest(matchDetails,quest,availableTeamsToPlay,"sneak",left , 5000)
+    availableTeamsToPlay = doSpecialQuest(matchDetails,quest,availableTeamsToPlay,"sneak",left , 2000)
 
   }
 
@@ -1023,7 +1046,7 @@ async  function initCSTeams(possibleTeams, matchDetails,matchSplintersSummoners 
   } else {
     sql += " rule = '"+mustRules+"'  and "
   }
-  sql += "  startMana >="+ fromMana +" and startMana <= "+ endMana +"   GROUP BY cs  HAVING    tl >0.75   and sum(totalcnt - lostTotalCnt) >100  order by len asc ,  sum(teams -lostTeams ) desc , tl desc "
+  sql += "  startMana >="+ fromMana +" and startMana <= "+ endMana +"   GROUP BY cs  HAVING    tl >0.70   and sum(totalcnt - lostTotalCnt) >10  order by len asc ,  sum(teams -lostTeams ) desc , tl desc "
   const data = await dbUtils.sqlQuery(sql);
   const string = JSON.stringify(data);
   const rs = JSON.parse(string);
