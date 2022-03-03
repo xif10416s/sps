@@ -1,5 +1,5 @@
 
-const cardsDetails = require("./data/cardsDetails.json");
+const cardsDetails = require("./data/cardsDetails_b_0225.json");
 const card = require("./cards")
 
 // const teamIdsArray = [167, 192, 160, 161, 163, 196, '', 'fire'];

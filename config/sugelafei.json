@@ -7,6 +7,6 @@
   "max_cnt": "9999" ,
   "PREFER_CS": "true",
   "MINUTES_BATTLES_INTERVAL": 5,
-  "ECR_RECOVER_TO": 98,
-  "CLAIM_DAILY_QUEST_REWARD": "true"
+  "ECR_RECOVER_TO": 60,
+  "CLAIM_DAILY_QUEST_REWARD": "false"
 }

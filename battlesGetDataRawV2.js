@@ -157,7 +157,7 @@ let extendArray = [];
 let count = 0;
 let delta = 100;
 let batchCount = 5;
-let fromScore = 1000;
+let fromScore = 1500;
 
 
 async function collectData(arr) {

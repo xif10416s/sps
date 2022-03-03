@@ -1,4 +1,4 @@
-const cardsDetails = require("./data/cardsDetails.json"); //saved json from api endpoint https://game-api.splinterlands.com/cards/get_details?
+const cardsDetails = require("./data/cardsDetails_b_0225.json"); //saved json from api endpoint https://game-api.splinterlands.com/cards/get_details?
 
 const makeCardId = (id) => id;
 

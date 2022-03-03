@@ -362,8 +362,8 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
 
   if(process.env.skip_cs && process.env.skip_cs == "false"){
     console.log("4-4-1 third step makeBestCombineByCs  start ............",new Date())
-    const byCsTeams = await  makeBestCombineByCs(possibleTeams,matchDetails,bestCombination.bestSummoner);
-    if(byCsTeams != null &&  byCsTeams[1] && byCsTeams[1].length >= 3 ) {
+    const byCsTeams = await  makeBestCombineByCs(possibleTeams,matchDetails,5);
+    if(byCsTeams != null &&  byCsTeams[1] &&  matchDetails.rating && (matchDetails.rating <=1000 && byCsTeams[1].length >= 100 ||  matchDetails.rating > 1000 && byCsTeams[1].length >= 5 )  ) {
       let byCsCombine = await battles.mostWinningSummonerTank(byCsTeams[1]);
       const makeBestCombineByCsTeam = await findBestTeam(byCsCombine, byCsTeams[1])
       console.log("4-4-1 third step makeBestCombineByCsTeam  used ............",new Date())
@@ -373,7 +373,7 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
 
     console.log("4-4-2 third step makeBestCombine  start ............",new Date())
     const bcTeams = await  makeBestCombine(possibleTeams,matchDetails,bestCombination.bestSummoner);
-    if(bcTeams && bcTeams.length >= 3 ){
+    if(bcTeams &&  matchDetails.rating && (matchDetails.rating <=1000 && bcTeams.length >= 100 ||  matchDetails.rating > 1000 && bcTeams.length >= 5 )  ){
       let bcCombine = await battles.mostWinningSummonerTank(bcTeams);
       const mostWinningBcTeam = await findBestTeam(bcCombine, bcTeams)
       console.log("4-4-2 third step makeBestCombine  used ............",new Date())
@@ -793,6 +793,16 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
   //   console.log('No possible teams for splinter ', favouriteDeck, ' V1');
   // }
 
+  // do prefer summoners
+  if(matchDetails.rating && (matchDetails.rating <=1000)) {
+    const filteredTeamsForLowRatting = availableTeamsToPlay.filter(
+        team => team[0] === 259);
+    if(filteredTeamsForLowRatting.length >= 2) {
+      availableTeamsToPlay = filteredTeamsForLowRatting;
+      console.log('do prefer summoners for low rating', availableTeamsToPlay.length);
+    }
+  }
+
   const res = await mostWinningSummonerTankCombo(availableTeamsToPlay,
       matchDetails);
   if (res[0] && res[1]) {
@@ -1046,7 +1056,7 @@ async  function initCSTeams(possibleTeams, matchDetails,matchSplintersSummoners 
   } else {
     sql += " rule = '"+mustRules+"'  and "
   }
-  sql += "  startMana >="+ fromMana +" and startMana <= "+ endMana +"   GROUP BY cs  HAVING    tl >0.70   and sum(totalcnt - lostTotalCnt) >10  order by len asc ,  sum(teams -lostTeams ) desc , tl desc "
+  sql += "  startMana >="+ fromMana +" and startMana <= "+ endMana +"   GROUP BY cs  HAVING    tl >0.65   and sum(totalcnt - lostTotalCnt) >5  order by len asc ,  sum(teams -lostTeams ) desc , tl desc "
   const data = await dbUtils.sqlQuery(sql);
   const string = JSON.stringify(data);
   const rs = JSON.parse(string);

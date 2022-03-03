@@ -254,21 +254,80 @@ async function clickMembersCard(page, teamToPlay) {
     for (i = 1; i <= 6; i++) {
         console.log('play: ', teamToPlay.cards[i].toString());
         if (teamToPlay.cards[i]) {
-            await page.waitForXPath(`//div[@card_detail_id="${teamToPlay.cards[i].toString()}"]`, { timeout: 20000 })
-                .then(card => { card.click();console.log(chalk.bold.greenBright(teamToPlay.cards[i], 'clicked')) })
-                .catch(()=> {
-                    clicked = false;
-                    console.log(chalk.bold.redBright(teamToPlay.cards[i], 'not clicked'));
-                    summaryLogger.error("may be rule escape:",teamToPlay.cards,teamToPlay.cards[i])
-                });
-            if (!clicked) break
+            clicked = await  clickWithCheck(page,teamToPlay,i)
+            if(!clicked) {
+                console.log('break play: ', teamToPlay.cards[i].toString());
+            }
         } else {
             console.log('nocard ', i);
         }
-        await page.waitForTimeout(5000);
-    }
 
+    }
     return clicked
+}
+
+async function clickWithCheck(page, teamToPlay,i){
+    let clicked = true;
+    await page.waitForXPath(`//div[@card_detail_id="${teamToPlay.cards[i].toString()}"]/img`, { timeout: 20000 ,visible: true})
+    .then(card => {
+        card.focus();
+        card.click();
+        console.log(chalk.bold.greenBright(teamToPlay.cards[i], 'clicked'));
+    })
+    .catch(()=> {
+        clicked = false;
+        console.log(chalk.bold.redBright(teamToPlay.cards[i], 'not clicked'));
+        summaryLogger.error("may be rule escape:",teamToPlay.cards,teamToPlay.cards[i])
+    });
+
+    await page.waitForTimeout(1000);
+
+    const selector = "div[card_detail_id='"+teamToPlay.cards[i].toString()+"'] > img"
+    await  page.evaluate((selector) => {
+        console.log("selector:",selector)
+        return document.querySelector(selector).click()
+    },selector);
+
+    await page.waitForTimeout(3000);
+
+    // check
+    await page.waitForXPath(`//div[@card_detail_id="${teamToPlay.cards[i].toString()}"]`, { timeout: 20000 })
+    .then(card => card.getProperty('className'))
+    .then((cn) => cn.jsonValue())
+    .then(className => {
+        console.log(className)
+        if(className.indexOf("card--selected") ==  -1) {
+            clicked = false;
+            console.log(teamToPlay.cards[i],":","clicked=false")
+        } else {
+            console.log(teamToPlay.cards[i],":","check selected")
+        }
+    })
+    .catch(()=> {
+        clicked = false;
+        console.log(chalk.bold.redBright(teamToPlay.cards[i], 'check not clicked'));
+    });
+
+    return clicked;
+}
+
+async function autoScroll(page){
+    await page.evaluate(async () => {
+        await new Promise((resolve, reject) => {
+            var totalHeight = 0;
+            var distance = 100;
+            var timer = setInterval(() => {
+                var scrollHeight = document.body.scrollHeight;
+                window.scrollBy(0, distance);
+                totalHeight += distance;
+
+                if(totalHeight >= scrollHeight){
+                    clearInterval(timer);
+                    resolve();
+                }
+            }, 100);
+        });
+    });
 }
 
 async function clickCreateTeamButton(page) {
@@ -331,11 +390,24 @@ async function startBotPlayMatch(page, browser) {
                 height: 1600,
                 deviceScaleFactor: 1,
             });
-
-            await page.goto('https://splinterlands.io/');
+            await page.goto('https://splinterlands.io/').catch(() =>{
+                console.log("opening browser error ......")
+                throw new PageRestartException(`Restart needed.`);
+            });
     } catch (e) {
-            summaryLogger.error("page session error")
-            throw new PageRestartException("session closed error")
+        console.log("page session error")
+        try {
+            await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36');
+            await page.setViewport({
+                width: 1800,
+                height: 1600,
+                deviceScaleFactor: 1,
+            });
+            await page.goto('https://splinterlands.com/');
+        } catch (e) {
+            console.log("page session error")
+            throw new PageRestartException(`Restart needed.`);
+        }
     }
     try {
         await page.waitForTimeout(8000*3);
@@ -354,7 +426,7 @@ async function startBotPlayMatch(page, browser) {
             });
         }
 
-        await page.goto('https://splinterlands.io/?p=battle_history');
+        await page.goto('https://splinterlands.io/?p=battle_history');//https://splinterlands.com/
         await page.waitForTimeout(8000*3);
         await closePopups(page);
         await closePopups(page);
@@ -499,6 +571,7 @@ async function startBotPlayMatch(page, browser) {
             splinters: splinters,
             myCards: myCards,
             enemyRecent: enemyRecent,
+            rating:rating,
             logContent:{account:account,isWin:'',mana:mana ,rules:rules,splinters:splinters.join("|")}
         }
         await page.waitForTimeout(2000*2);
@@ -742,7 +815,7 @@ async function run() {
                     const sleepingTime = sleepingTimeInMinutes * 60000;
                     let randomTime = Math.ceil(Math.random()*5)* 60000 + sleepingTime ;
                     if((winTotal+loseTotal) >=5 &&  loseTotal/(winTotal+loseTotal) >= 0.7 ){
-                        randomTime = 30 * 60000;
+                        randomTime = 15 * 60000;
                         console.log("LostTooMatchException win : " + winTotal , " lost :" + loseTotal , "waittime mutil 3 :" , randomTime )
                     }
                     console.log(account, 'waiting for the next battle in', randomTime / 1000 / 60 , 'minutes at', new Date(Date.now() + randomTime).toLocaleString());
@@ -757,12 +830,20 @@ async function run() {
                 summaryLogger.error(summaryInfo)
                 if(e instanceof  PageRestartException) {
                     needRestart = true;
-                    summaryLogger.error("1 PageRestartException .........")
+                    console.log("1 PageRestartException .........")
                 }
             })
     }
     if(needRestart) {
-        summaryLogger.error("2 page restarting .........")
+        console.log("2.1 browser close .........")
+        const pages = await browser.pages();
+        await Promise.all(pages.map((page) => page.close())).catch(() =>{});
+        await browser.close().catch(() => {})
+
+        console.log("2.2 browser process kill .........")
+        if (browser && browser.process() != null) browser.process().kill('SIGINT');
+
+        console.log("3 page restarting .........")
         await run();
     }
 }
