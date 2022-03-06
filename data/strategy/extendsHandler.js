@@ -2,7 +2,13 @@ const extendStrategy = require("./extendStragy").sort((a,b) =>  a['order'] - b['
 const cardsDetails = require("../cardsDetails")
 const psbm = require("../../possibleTeams")
 
-function doExtendsHandler(team, ruleset, myCards , splinter) {
+function doExtendsHandler(team,matchDetails ) {
+  const ruleset = matchDetails.rules
+  const myCards = matchDetails.myCards
+  const splinter = matchDetails.splinters
+  const quest = matchDetails.quest
+
+
   console.log("---doExtendsHandler---start----",JSON.stringify(team))
   if (team == null || team.length == 0 || extendStrategy == null || extendStrategy.length == 0) {
     return team;
@@ -38,6 +44,13 @@ function doExtendsHandler(team, ruleset, myCards , splinter) {
         const colorStg = stg["color"];
         if(splinterStg  && (splinter.indexOf(splinterStg) == -1 ||  colorStg && teamColors.indexOf(colorStg) == -1 )){
           // console.log("splinterStg skip ....",splinterStg , colorStg , teamColors )
+          return;
+        }
+
+        // checkquest
+        const questStg = stg["quest"];
+        if(questStg && questStg == quest) {
+          console.log("doExtendsHandler match quest skip ....",quest)
           return;
         }
 

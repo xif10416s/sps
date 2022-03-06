@@ -210,6 +210,9 @@ docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CO
 docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3001:3000 -m 5g --memory-swap -1 --restart always -d --name browserless3001 browserless/chrome
 docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3002:3000 -m 6g --memory-swap -1 --restart always -d --name browserless3002 browserless/chrome
 docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3003:3000 -m 6g --memory-swap -1 --restart always -d --name browserless3003 browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3004:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3004 browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3005:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3005 browserless/chrome
+
 
 http://192.168.99.100:3000
 
@@ -225,6 +228,8 @@ cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh sugelafe
 cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh sugelafei2 1 
 cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh xifei123 1  
 cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh hkd123 1   
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh hkd1234 1 
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh hkd1234 1 
 
 ps -ef |grep sugelafei2 |awk '{print $2}'|xargs kill -9
 

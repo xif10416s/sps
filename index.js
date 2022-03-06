@@ -96,10 +96,11 @@ async function checkEcr(page) {
 
 async function checkNextQuest(page) {
     try {
-        const nextQuest = await getElementTextByXpath(page, '//*[@id="complete_text"]', 3000);
+        let nextQuest = await getElementTextByXpath(page, '//*[@id="complete_text"]', 3000);
         if(nextQuest) {
+            nextQuest = nextQuest.toString().replace("Next quest available in: ","")
             console.log(chalk.bold.whiteBright.bgMagenta('Your next Quest time is : ' + nextQuest ));
-            return nextQuest
+            return nextQuest.toString().trim()
         }
     } catch (e) {
         console.log(chalk.bold.redBright.bgBlack('next Quest time not defined'));
@@ -451,13 +452,16 @@ async function startBotPlayMatch(page, browser) {
             dailyClaim = false;
         }
         const isClaimDailyQuestMode = process.env.CLAIM_DAILY_QUEST_REWARD === 'false' ? false : true;
+        const isPowerAndRating =  parseInt(power) >= 15000  && parseInt(rating) >=1000 ;
         if (isClaimDailyQuestMode === true && dailyClaim == false  && quest?.total == quest?.completed) {
-            try {
-                await page.waitForSelector('#quest_claim_btn', { timeout: 5000*2 })
-                .then(button =>  button.click() ).then(() => dailyClaim = true);
-            } catch (e) {
-                dailyClaim = false;
-                console.info('no quest reward to be claimed waiting for the battle...')
+            if(isPowerAndRating) { // serviler I check
+                try {
+                    await page.waitForSelector('#quest_claim_btn', { timeout: 5000*2 })
+                    .then(button =>  button.click() ).then(() => dailyClaim = true);
+                } catch (e) {
+                    dailyClaim = false;
+                    console.info('no quest reward to be claimed waiting for the battle...')
+                }
             }
         }
         await page.waitForTimeout(5000*5);
@@ -480,6 +484,13 @@ async function startBotPlayMatch(page, browser) {
             console.log(chalk.bold.white(`Time needed to recover ECR, approximately ${1 * 60 + random/60000 } minutes.ecr:`),ecr ,isWaitForBeginWithHighECR);
             // await closeBrowser(browser);
             console.log(chalk.bold.white(`Initiating sleep mode. The bot will awaken at ${new Date(Date.now() + 1 * 3600 * 1000 + random).toLocaleString()}`));
+            // logsummsary
+            const summaryInfo = {time: new Date(Date.now() + 1 * 3600 * 1000 + random).toLocaleString() ,nextQuestTime:nextQuestTime ,  user: process.env.ACCOUNT, lastWin:  "-" , dailyClaim: dailyClaim , ECR: ecr , win: winTotal , lost: loseTotal , draw : undefinedTotal
+                , winRate: (winTotal /(winTotal+loseTotal+undefinedTotal)).toFixed(2) , dec: totalDec.toFixed(2)
+                , quest: quest?.splinter , questTotal:quest?.total, questCompleted:quest?.completed ,rating:rating ,power :power };
+
+            doSummaryLog(summaryInfo)
+
             await sleep(1 * 3600 * 1000+random);
             throw new Error(`Restart needed.`);
         }
@@ -572,6 +583,7 @@ async function startBotPlayMatch(page, browser) {
             myCards: myCards,
             enemyRecent: enemyRecent,
             rating:rating,
+            quest: quest.splinter,
             logContent:{account:account,isWin:'',mana:mana ,rules:rules,splinters:splinters.join("|")}
         }
         await page.waitForTimeout(2000*2);
@@ -671,19 +683,41 @@ async function startBotPlayMatch(page, browser) {
 
             // ask.logger.log(account,'Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal));
             // ask.logger.log(account,chalk.green('Total Earned: ' + totalDec + ' DEC'));
-            const summaryInfo = {time: new Date().toLocaleTimeString() ,  user: process.env.ACCOUNT, lastWin:  isWin , dailyClaim: dailyClaim , ECR: ecr , win: winTotal , lost: loseTotal , draw : undefinedTotal
+            const summaryInfo = {time: new Date().toLocaleTimeString() ,nextQuestTime:nextQuestTime,  user: process.env.ACCOUNT, lastWin:  isWin , dailyClaim: dailyClaim , ECR: ecr , win: winTotal , lost: loseTotal , draw : undefinedTotal
                 , winRate: (winTotal /(winTotal+loseTotal+undefinedTotal)).toFixed(2) , dec: totalDec.toFixed(2)
                 , quest: quest?.splinter , questTotal:quest?.total, questCompleted:quest?.completed ,rating:rating ,power :power };
-            summaryLogger.table([summaryInfo])
+
+            doSummaryLog(summaryInfo)
+
             matchDetails['logContent']['isWin'] = isWin
             matchDetails['logContent']['rating'] = rating
-            ask.logger.table([matchDetails['logContent']])
+            // ask.logger.table([matchDetails['logContent']])
             await csvWriter.writeRecords([matchDetails['logContent']]).then(()=> console.log('The CSV file was written successfully'));
     } catch (e) {
             const summaryInfo = {time: new Date().toLocaleTimeString() ,  user: process.env.ACCOUNT , win: winTotal , lost: loseTotal , draw : undefinedTotal, dec: totalDec , reason: e};
             summaryLogger.error(summaryInfo)
             console.log('Error handling browser not opened, internet connection issues, or battle cannot start:', e)
     }
+}
+
+function doSummaryLog(summaryInfo){
+    delete require.cache[require.resolve("./data/log/stat.json")]
+    let statJson = require('./data/log/stat')
+    statJson[process.env.ACCOUNT] = summaryInfo
+    fs.writeFile(`./data/log/stat.json`, JSON.stringify(statJson), function (err) {
+        if (err) {
+            console.log(err);
+        }
+    });
+
+    let summaryArray = []
+    statJson['users'].forEach( user =>{
+        if(statJson[user]){
+            summaryArray.push(statJson[user])
+        }
+    })
+
+    summaryLogger.table(summaryArray)
 }
 
 // 30 MINUTES INTERVAL BETWEEN EACH MATCH (if not specified in the .env file)
@@ -837,8 +871,10 @@ async function run() {
     if(needRestart) {
         console.log("2.1 browser close .........")
         const pages = await browser.pages();
-        await Promise.all(pages.map((page) => page.close())).catch(() =>{});
-        await browser.close().catch(() => {})
+        await Promise.all(pages.map((page) => page.close())).then(() => console.log("needRestart pages  closed...")).catch(() =>{console.log("needRestart pages close error")});
+        if(await  browser.isConnected()){
+            await browser.close().then(() => console.log("needRestart browser closed....")).catch(() => {console.log("needRestart browser close error")})
+        }
 
         console.log("2.2 browser process kill .........")
         if (browser && browser.process() != null) browser.process().kill('SIGINT');

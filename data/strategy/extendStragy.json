@@ -5,6 +5,7 @@
     "position": [1],
     "positionStrategy": 1 ,
     "replaceMana" : 0,
+     "quest":"neutral",
      "order" : 999
   },
   {"name" : "Corpse Fiend",

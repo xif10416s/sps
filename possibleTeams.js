@@ -731,38 +731,38 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
     }
 
     // sprinter neutral
-    if(quest.splinter == "neutral" && left > 0) {
-      let rules=  matchDetails.rules.split("|")
-      let replaceRule = matchDetails.rules;
-      if(rules.length > 1){
-        if(process.env.KEY_SINGLE_RULES.indexOf(rules[0]) == -1 && process.env.WEAK_KEY_RULES.indexOf(rules[0]) == -1
-        && rules[1] != "Taking Sides"){
-            rules[0] = "Taking Sides"
-        }
-
-        if(process.env.KEY_SINGLE_RULES.indexOf(rules[1]) == -1 && process.env.WEAK_KEY_RULES.indexOf(rules[1]) == -1
-            && rules[0] != "Taking Sides"){
-          rules[1] = "Taking Sides"
-        }
-        replaceRule = rules.join("|");
-      } else {
-        if(process.env.KEY_SINGLE_RULES.indexOf(matchDetails.rules) == -1 && process.env.WEAK_KEY_RULES.indexOf(matchDetails.rules) == -1
-            && matchDetails.rules != "Taking Sides"){
-          replaceRule  = "Taking Sides"
-        }
-      }
-      if(replaceRule != matchDetails.rules){
-        console.log("2-3-2",left + ' battles left for the neutral org:' + matchDetails.rules + ' to ', replaceRule);
-        // logger.log("2-3-2", left + ' battles left for the neutral org:' + matchDetails.rules + ' to' , replaceRule);
-        matchDetails.rules = replaceRule;
-        matchDetails['logContent']['QuestMatch'] = quest.splinter +":Taking Sides"
-      } else {
-        console.log('CHECK FOR QUEST skip: ',
-            matchDetails.rules);
-        // logger.log('CHECK FOR QUEST skip: ',
-        //     matchDetails.rules);
-      }
-    }
+    // if(quest.splinter == "neutral" && left > 0) {
+    //   let rules=  matchDetails.rules.split("|")
+    //   let replaceRule = matchDetails.rules;
+    //   if(rules.length > 1){
+    //     if(process.env.KEY_SINGLE_RULES.indexOf(rules[0]) == -1 && process.env.WEAK_KEY_RULES.indexOf(rules[0]) == -1
+    //     && rules[1] != "Taking Sides"){
+    //         rules[0] = "Taking Sides"
+    //     }
+    //
+    //     if(process.env.KEY_SINGLE_RULES.indexOf(rules[1]) == -1 && process.env.WEAK_KEY_RULES.indexOf(rules[1]) == -1
+    //         && rules[0] != "Taking Sides"){
+    //       rules[1] = "Taking Sides"
+    //     }
+    //     replaceRule = rules.join("|");
+    //   } else {
+    //     if(process.env.KEY_SINGLE_RULES.indexOf(matchDetails.rules) == -1 && process.env.WEAK_KEY_RULES.indexOf(matchDetails.rules) == -1
+    //         && matchDetails.rules != "Taking Sides"){
+    //       replaceRule  = "Taking Sides"
+    //     }
+    //   }
+    //   if(replaceRule != matchDetails.rules){
+    //     console.log("2-3-2",left + ' battles left for the neutral org:' + matchDetails.rules + ' to ', replaceRule);
+    //     // logger.log("2-3-2", left + ' battles left for the neutral org:' + matchDetails.rules + ' to' , replaceRule);
+    //     matchDetails.rules = replaceRule;
+    //     matchDetails['logContent']['QuestMatch'] = quest.splinter +":Taking Sides"
+    //   } else {
+    //     console.log('CHECK FOR QUEST skip: ',
+    //         matchDetails.rules);
+    //     // logger.log('CHECK FOR QUEST skip: ',
+    //     //     matchDetails.rules);
+    //   }
+    // }
 
     // sprinter snipe
     availableTeamsToPlay = doSpecialQuest(matchDetails,quest,availableTeamsToPlay,"snipe",left , 2000)
@@ -807,8 +807,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
       matchDetails);
   if (res[0] && res[1]) {
     console.log('Dont play for the quest, and play this:', res);
-    res[1] = extendsHandler.doExtendsHandler(res[1], matchDetails.rules,
-        matchDetails.myCards, matchDetails.splinters);
+    res[1] = extendsHandler.doExtendsHandler(res[1], matchDetails);
     console.log('Dont play for the quest, and play this doExtendsHandler realMana:',calcTotalMana(res[1]),' match mana :',matchDetails.mana, res[1].join("-") );
     console.log('final team mana:'+ calcTotalMana(res[1]), ' matchMana:',matchDetails.mana, res[1].join("-") );
     matchDetails['logContent']['tm'] = res[1].join("-")
@@ -910,7 +909,7 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
         filterTeams)
     if (mostWinningSummonerTankComboTeam
         && mostWinningSummonerTankComboTeam.length > 0) {
-      summonerTeamMap[mySummoner] = extendsHandler.doExtendsHandler(mostWinningSummonerTankComboTeam[1], matchDetails.rules, matchDetails.myCards, matchDetails.splinters);
+      summonerTeamMap[mySummoner] = extendsHandler.doExtendsHandler(mostWinningSummonerTankComboTeam[1], matchDetails);
     }
 
   }
@@ -935,15 +934,15 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
       mostWinningSummonerTankComboTeam
       && mostWinningSummonerTankComboTeam.length > 1
           ? mostWinningSummonerTankComboTeam[1] : []
-      , matchDetails.rules, matchDetails.myCards, matchDetails.splinters);
+      ,matchDetails);
   const enemyAgainstTeam = extendsHandler.doExtendsHandler(
       mostEnemyAgainstTeam && mostEnemyAgainstTeam.length > 1
           ? mostEnemyAgainstTeam[1] : []
-      , matchDetails.rules, matchDetails.myCards, matchDetails.splinters);
+      ,matchDetails);
   const againstrevertTeam = extendsHandler.doExtendsHandler(
       makeBestCombineByCsPFSTeam && makeBestCombineByCsPFSTeam.length > 1
           ? makeBestCombineByCsPFSTeam[1] : []
-      , matchDetails.rules, matchDetails.myCards, matchDetails.splinters);
+      , matchDetails);
 
   let possbiletEnemyTeam = []
   if(matchDetails['enemyPossbileTeams'] && matchDetails['enemyPossbileTeams'].length > 0){
@@ -975,13 +974,13 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
       mostWinningBcTeam
       && mostWinningBcTeam.length > 1
           ? mostWinningBcTeam[1] : []
-      , matchDetails.rules, matchDetails.myCards,matchDetails.splinters);
+      , matchDetails);
 
   const mostByCsTeam = extendsHandler.doExtendsHandler(
       makeBestCombineByCsTeam
       && makeBestCombineByCsTeam.length > 1
           ? makeBestCombineByCsTeam[1] : []
-      , matchDetails.rules, matchDetails.myCards,matchDetails.splinters);
+      , matchDetails);
   console.timeEnd("battle")
   return {
     mostWinTeam: mostWinTeam,

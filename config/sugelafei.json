@@ -1,5 +1,5 @@
 {
-  "name": "SUGELAFEI",
+  "name": "sugelafei",
   "password": "5HwZhueBihhGaSPe4PWxScsKCVf4nCEybqdrU6oaZ238xUUePsp",
   "port": 3002,
   "favourite_summoner": "",
@@ -7,6 +7,6 @@
   "max_cnt": "9999" ,
   "PREFER_CS": "true",
   "MINUTES_BATTLES_INTERVAL": 5,
-  "ECR_RECOVER_TO": 60,
-  "CLAIM_DAILY_QUEST_REWARD": "false"
+  "ECR_RECOVER_TO": 95,
+  "CLAIM_DAILY_QUEST_REWARD": "true"
 }
