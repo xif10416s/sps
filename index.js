@@ -470,7 +470,8 @@ async function startBotPlayMatch(page, browser) {
 
         const isWaitForBeginWithHighECR = ecr && process.env.ECR_RECOVER_TO &&  ecr <= parseFloat(process.env.ECR_RECOVER_TO)
             && quest?.total == quest?.completed;
-        if ( isWaitForBeginWithHighECR) {
+        const checkRatingAndPower =  parseInt(power) >= 10000 && parseInt(rating) >=1050 ||  parseInt(power) < 10000
+        if ( isWaitForBeginWithHighECR && checkRatingAndPower) {
             // if (ecr < parseFloat(process.env.ECR_STOP_LIMIT)) {
             //     console.log(chalk.bold.red(`ECR lower than limit ${process.env.ECR_STOP_LIMIT}%. reduce the limit in the env file config or wait until ECR will be at ${process.env.ECR_RECOVER_TO || '100'}%`));
             // } else if (ecr < parseFloat(process.env.ECR_RECOVER_TO)) {
@@ -869,12 +870,19 @@ async function run() {
             })
     }
     if(needRestart) {
-        console.log("2.1 browser close .........")
-        const pages = await browser.pages();
-        await Promise.all(pages.map((page) => page.close())).then(() => console.log("needRestart pages  closed...")).catch(() =>{console.log("needRestart pages close error")});
+        console.log("2.1 page close .........")
+        browser.pages().then((pages) => {
+            pages.map((page) => page.close().then("needRestart page closed")
+            .catch(() =>{console.log("needRestart pages close error")}))
+        });
+
+        await sleep(10000);
+        console.log("2.2 browser close .........")
         if(await  browser.isConnected()){
-            await browser.close().then(() => console.log("needRestart browser closed....")).catch(() => {console.log("needRestart browser close error")})
+            browser.close().then(() => console.log("needRestart browser closed....")).catch(() => {console.log("needRestart browser close error")})
         }
+
+        await sleep(10000);
 
         console.log("2.2 browser process kill .........")
         if (browser && browser.process() != null) browser.process().kill('SIGINT');
@@ -882,6 +890,18 @@ async function run() {
         console.log("3 page restarting .........")
         await run();
     }
+}
+
+function delayPromise(ms) {
+    return new Promise(function (resolve) {
+        setTimeout(resolve, ms);
+    });
+}
+function timeoutPromise(promise, ms) {
+    var timeout = delayPromise(ms).then(function () {
+        throw new Error('Operation timed out after ' + ms + ' ms');
+    });
+    return Promise.race([promise, timeout]);
 }
 
 async function closeBrowser(browser) {

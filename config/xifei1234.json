@@ -1,12 +1,13 @@
 {
-  "name": "sugelafei",
-  "password": "5HwZhueBihhGaSPe4PWxScsKCVf4nCEybqdrU6oaZ238xUUePsp",
-  "port": 3002,
+  "name": "xifei1234",
+  "password": "5JjstmL9GcrZihFXyaxY4EcT28DzMW67ovZgDQpXoR7EzsH7Bb3",
+  "port": 3005,
   "favourite_summoner": "",
   "skip_cs": "false",
   "max_cnt": "9999" ,
   "PREFER_CS": "true",
   "MINUTES_BATTLES_INTERVAL": 5,
-  "ECR_RECOVER_TO": 95,
+  "ECR_RECOVER_TO": 90,
+  "QUEST_PRIORITY": "false" ,
   "CLAIM_DAILY_QUEST_REWARD": "false"
 }

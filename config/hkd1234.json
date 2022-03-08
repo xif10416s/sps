@@ -8,6 +8,6 @@
   "MINUTES_BATTLES_INTERVAL": 5,
   "PREFER_CS": "true",
   "ECR_RECOVER_TO": 95,
-  "QUEST_PRIORITY": "false" ,
+  "QUEST_PRIORITY": "true" ,
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }
