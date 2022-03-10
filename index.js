@@ -457,7 +457,13 @@ async function startBotPlayMatch(page, browser) {
             if(isPowerAndRating) { // serviler I check
                 try {
                     await page.waitForSelector('#quest_claim_btn', { timeout: 5000*2 })
-                    .then(button =>  button.click() ).then(() => dailyClaim = true);
+                    .then(button =>  button.click() ).then(() => {
+                        dailyClaim = true;
+                        winTotal=0;
+                        undefinedTotal=1;
+                        loseTotal=0;
+                        totalDec=0;
+                    });
                 } catch (e) {
                     dailyClaim = false;
                     console.info('no quest reward to be claimed waiting for the battle...')
@@ -488,7 +494,7 @@ async function startBotPlayMatch(page, browser) {
             // logsummsary
             const summaryInfo = {time: new Date(Date.now() + 1 * 3600 * 1000 + random).toLocaleString() ,nextQuestTime:nextQuestTime ,  user: process.env.ACCOUNT, lastWin:  "-" , dailyClaim: dailyClaim , ECR: ecr , win: winTotal , lost: loseTotal , draw : undefinedTotal
                 , winRate: (winTotal /(winTotal+loseTotal+undefinedTotal)).toFixed(2) , dec: totalDec.toFixed(2)
-                , quest: quest?.splinter , questTotal:quest?.total, questCompleted:quest?.completed ,rating:rating ,power :power };
+                , quest: quest?.splinter , qt:quest?.total, qc:quest?.completed ,rating:rating ,power :power };
 
             doSummaryLog(summaryInfo)
 
@@ -686,7 +692,7 @@ async function startBotPlayMatch(page, browser) {
             // ask.logger.log(account,chalk.green('Total Earned: ' + totalDec + ' DEC'));
             const summaryInfo = {time: new Date().toLocaleTimeString() ,nextQuestTime:nextQuestTime,  user: process.env.ACCOUNT, lastWin:  isWin , dailyClaim: dailyClaim , ECR: ecr , win: winTotal , lost: loseTotal , draw : undefinedTotal
                 , winRate: (winTotal /(winTotal+loseTotal+undefinedTotal)).toFixed(2) , dec: totalDec.toFixed(2)
-                , quest: quest?.splinter , questTotal:quest?.total, questCompleted:quest?.completed ,rating:rating ,power :power };
+                , quest: quest?.splinter  + ":" + teamToPlay.cards[7] , qt:quest?.total, qc:quest?.completed ,rating:rating ,power :power };
 
             doSummaryLog(summaryInfo)
 

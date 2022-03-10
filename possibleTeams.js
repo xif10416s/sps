@@ -679,7 +679,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
 
   //CHECK FOR QUEST:
   matchDetails['logContent']['QuestMatch'] = "skip"
-  if (priorityToTheQuest && availableTeamsToPlay.length > 10000 && quest
+  if (priorityToTheQuest && availableTeamsToPlay.length > 5000 && quest
       && quest.total) {
     const left = quest.total - quest.completed;
     const questCheck = matchDetails.splinters.includes(quest.splinter) && left
@@ -689,7 +689,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
           team => team[7] === quest.splinter);
       console.log("2-3-1",left + ' battles left for the splinter' + quest.splinter + ' quest');
       // logger.log("2-3-1", left + ' battles left for the splinter' + quest.splinter + ' quest')
-      console.log("2-3-1",'play for the quest splinter', quest.splinter, '? ', questCheck);
+      console.log("2-3-1",'play for the quest splinter', quest.splinter, '? ', questCheck," length:",filteredTeamsForQuest.length);
       // for death splinter
       if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 1000  && quest.splinter == 'death' && matchDetails.orgMana <= 18 ){
         console.log('Try to play for the quest with Teams size (V1):death',
@@ -709,6 +709,16 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
       // for earth splinter
       if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 1000  && quest.splinter == 'earth'  && matchDetails.orgMana >= 44 ){
         console.log('Try to play for the quest with Teams size (V1):earth',
+            filteredTeamsForQuest.length);
+        availableTeamsToPlay = filteredTeamsForQuest;
+        matchDetails['logContent']['QuestMatch'] = quest.splinter +":" + availableTeamsToPlay.length
+      }
+
+      console.log("dragon length : ", availableTeamsToPlay.filter(
+          team => team[7] === "dragon").length)
+      // for dragon splinter
+      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 50  && quest.splinter == 'dragon'  && matchDetails.orgMana >= 28 ){
+        console.log('Try to play for the quest with Teams size (V1):dragon',
             filteredTeamsForQuest.length);
         availableTeamsToPlay = filteredTeamsForQuest;
         matchDetails['logContent']['QuestMatch'] = quest.splinter +":" + availableTeamsToPlay.length
@@ -794,7 +804,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
   // }
 
   // do prefer summoners
-  if(matchDetails.rating && (matchDetails.rating <=1000)) {
+  if(matchDetails.rating && (matchDetails.rating <=1100)) {
     const filteredTeamsForLowRatting = availableTeamsToPlay.filter(
         team => team[0] === 259);
     if(filteredTeamsForLowRatting.length >= 2) {
