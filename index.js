@@ -81,6 +81,7 @@ async function closePopups(page) {
     await clickOnElement(page, '.modal-close', 4000, 2000);
 }
 
+//
 async function checkEcr(page) {
     try {
         const ecr = await getElementTextByXpath(page, "//div[@class='dec-options'][1]/div[@class='value'][2]/div", 3000);
@@ -91,6 +92,19 @@ async function checkEcr(page) {
         }
     } catch (e) {
         console.log(chalk.bold.redBright.bgBlack('ECR not defined'));
+    }
+}
+
+async function checkDec(page) {
+    try {
+        const dec = await getElementText(page, "#bs-example-navbar-collapse-1 > ul.nav.navbar-nav.navbar-right > li:nth-child(2) > div.dec-container > div.balance", 3000);
+        if(dec) {
+            console.log(chalk.bold.whiteBright.bgMagenta('Your current Dec ' + dec));
+            // ask.logger.log(chalk.bold.whiteBright.bgMagenta('Your current Energy Capture Rate is ' + ecr.split('.')[0] + "%"));
+            return parseFloat(dec.replaceAll(",",""))
+        }
+    } catch (e) {
+        console.log(chalk.bold.redBright.bgBlack('dec not defined'));
     }
 }
 
@@ -435,6 +449,7 @@ async function startBotPlayMatch(page, browser) {
         const rating = await checkRating(page);
         const power = await checkPower(page);
         const ecr = await checkEcr(page);
+        const dec = await checkDec(page)
         const nextQuestTime = await  checkNextQuest(page)
         // if (ecr === undefined) throw new Error('Fail to get ECR.')
         console.log('getting user quest info from splinterlands API...')
@@ -492,9 +507,9 @@ async function startBotPlayMatch(page, browser) {
             // await closeBrowser(browser);
             console.log(chalk.bold.white(`Initiating sleep mode. The bot will awaken at ${new Date(Date.now() + 1 * 3600 * 1000 + random).toLocaleString()}`));
             // logsummsary
-            const summaryInfo = {time: new Date(Date.now() + 1 * 3600 * 1000 + random).toLocaleString() ,nextQuestTime:nextQuestTime ,  user: process.env.ACCOUNT, lastWin:  "-" , dailyClaim: dailyClaim , ECR: ecr , win: winTotal , lost: loseTotal , draw : undefinedTotal
+            const summaryInfo = {time: new Date(Date.now() + 1 * 3600 * 1000 + random).toLocaleTimeString() ,nextQuestTime:nextQuestTime ,  user: process.env.ACCOUNT, dailyClaim: dailyClaim , ECR: ecr , win: winTotal , lost: loseTotal , draw : undefinedTotal
                 , winRate: (winTotal /(winTotal+loseTotal+undefinedTotal)).toFixed(2) , dec: totalDec.toFixed(2)
-                , quest: quest?.splinter , qt:quest?.total, qc:quest?.completed ,rating:rating ,power :power };
+                , quest: quest?.splinter , lastWin:  "-" , qt:quest?.total, qc:quest?.completed ,rating:rating ,power :power ,totalDEC:dec  };
 
             doSummaryLog(summaryInfo)
 
@@ -690,9 +705,9 @@ async function startBotPlayMatch(page, browser) {
 
             // ask.logger.log(account,'Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal));
             // ask.logger.log(account,chalk.green('Total Earned: ' + totalDec + ' DEC'));
-            const summaryInfo = {time: new Date().toLocaleTimeString() ,nextQuestTime:nextQuestTime,  user: process.env.ACCOUNT, lastWin:  isWin , dailyClaim: dailyClaim , ECR: ecr , win: winTotal , lost: loseTotal , draw : undefinedTotal
+            const summaryInfo = {time: new Date().toLocaleTimeString() ,nextQuestTime:nextQuestTime,  user: process.env.ACCOUNT , dailyClaim: dailyClaim , ECR: ecr , win: winTotal , lost: loseTotal , draw : undefinedTotal
                 , winRate: (winTotal /(winTotal+loseTotal+undefinedTotal)).toFixed(2) , dec: totalDec.toFixed(2)
-                , quest: quest?.splinter  + ":" + teamToPlay.cards[7] , qt:quest?.total, qc:quest?.completed ,rating:rating ,power :power };
+                , quest: quest?.splinter  + ":" + teamToPlay.cards[7] , lastWin:  isWin , qt:quest?.total, qc:quest?.completed ,rating:rating ,power :power ,totalDEC:dec };
 
             doSummaryLog(summaryInfo)
 

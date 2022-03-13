@@ -87,6 +87,20 @@
   <div> &nbsp; &nbsp; &nbsp;from:  <input id="fromMana" style="width:50px;"/>&nbsp; &nbsp; &nbsp;end:  <input id="endMana" style="width:50px;"/>&nbsp; &nbsp; &nbsp;
     &nbsp; &nbsp; &nbsp;len:  <input id="len" style="width:50px;"/>&nbsp; &nbsp; &nbsp;
   </div>
+
+  <div style="font-size: 20px;">
+    <div>
+      <input type="checkbox" name="category" style="width:25px;height:25px;" value="fire"/>fire
+      <input type="checkbox" name="category" style="width:25px;height:25px;" value="water"/>water
+      <input type="checkbox" name="category" style="width:25px;height:25px;" value="earth"/>earth
+    </div>
+    <div>
+      <input type="checkbox" name="category" style="width:25px;height:25px;" value="life"/>life
+      <input type="checkbox" name="category" style="width:25px;height:25px;"  value="death"/>death
+      <input type="checkbox" name="category" style="width:25px;height:25px;" value="dragon"/>dragon
+    </div>
+
+  </div>
   <div>
     <select name="rule1" id="rule1">
       <option value="-1">null.jpg</option>
@@ -211,7 +225,13 @@
           rule =  $("#rule2").val()+ "|" +  rule ;
         }
       }
-      let reqUrl = "/api/cs2Analysis?from=" + $("#fromMana").val() +"&end=" + $("#endMana").val() +"&rule="+rule +"&len="+ $("#len").val();
+
+      var spiners = ''
+      $("input[name='category']:checked").each(function () {
+        spiners += $(this).attr('value') + '|';
+      });
+
+      let reqUrl = "/api/cs2Analysis?from=" + $("#fromMana").val() +"&end=" + $("#endMana").val() +"&rule="+rule +"&len="+ $("#len").val() +"&sp="+spiners;
       $.get(reqUrl, function (data, status) {
         if(data.mostCS.length == 0 ){
           alert("空！")

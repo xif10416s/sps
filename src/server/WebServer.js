@@ -246,10 +246,26 @@ http.createServer(async function (request, response) {
       let end = arg1.end;
       let rule = arg1.rule;
       let lenSql = arg1.len && arg1.len != '' ? ' len = '+ arg1.len + ' and ': '' ;
-      let ruleSql = rule &&  rule != "-1" ? " rule like '%" +rule+"%'" :" rule='default' "
-      ruleSql = " 1=1 "
+      let ruleSql = rule &&  rule != "-1" ? " rule like '%" +rule+"%'" :" 1=1 "
+
+      let sp = arg1.sp
+      if (sp == '') {
+        sp = splinters;
+      } else {
+        sp = sp.slice(0, sp.length - 1).split("|")
+      }
+
+      const sms =  ptm.getSplintersSummoners(sp)
+
+      const topCsLikeSql = sms.map( cs => {
+        return   " cs like '" + cs+"-%' "
+      }).join(" or ")
+
+      console.table(topCsLikeSql)
+
+      // ruleSql = " 1=1 "
       let sql = " select cs , sum(teams) as ts ,sum(lostTeams) as lts  , sum(totalCnt) as tt , sum(lostTotalCnt) as lts , sum(teams)/sum(teams+lostTeams) as tl from battle_stat_v4 where "
-          +  lenSql + " startMana >= "+ from +"  and  endMana <= "+ end +" and "+ ruleSql + " GROUP BY cs  HAVING   sum(teams) > 3   and tl >= 0.70  order by  len asc,  tl desc  ,sum(teams -lostTeams ) desc limit 30"
+          +  lenSql + " startMana >= "+ from +"  and  startMana <= "+ end +" and "+ ruleSql + " and ("+ topCsLikeSql +") GROUP BY cs  HAVING   sum(teams) > 3   and tl >= 0.70  order by  len asc,  tl desc  ,sum(teams -lostTeams ) desc limit 30"
 
       let data = await dbUtils.sqlQuery(sql);
       let string = JSON.stringify(data);
