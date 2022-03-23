@@ -124,10 +124,11 @@ async function checkNextQuest(page) {
 async function checkRating(page) {
 
     try {
-        const rating = await getElementTextByXpath(page, '//*[@id="about_player__status"]/div[1]/div[2]/div/div/div[2]/div[1]/div[1]/span[2]', 3000);
+        let rating = await getElementTextByXpath(page, '//*[@id="about_player__status"]/div[1]/div[2]/div/div/div[2]/div[1]/div[1]/span[2]', 3000);
         if(rating) {
+            rating = rating.replaceAll(",","").replaceAll("(","").replaceAll(")","")
             console.log(chalk.bold.whiteBright.bgMagenta('Your current Rate is ' + rating));
-            return parseFloat(rating.replace(",",""))
+            return parseFloat(rating)
         }
     } catch (e) {
         console.log(chalk.bold.redBright.bgBlack('rating not defined'));
@@ -486,6 +487,21 @@ async function startBotPlayMatch(page, browser) {
             }
         }
         await page.waitForTimeout(5000*5);
+
+        if(process.env.SKIP_QUEST && quest?.splinter && process.env.SKIP_QUEST.split(',').includes(quest?.splinter) && quest?.total !== quest?.completed) {
+            try {
+                await page.click('#quest_new_btn')
+                .then(() => page.waitForTimeout(5000))
+                .then(async a=>{
+                    await page.reload();
+                    console.log('New quest requested')})
+                .catch(e=>console.log('Cannot click on new quest'))
+
+            } catch(e) {
+                console.log('Error while skipping new quest')
+            }
+        }
+
         // const isQuestFinishedAndLowECR = ecr && process.env.ECR_STOP_LIMIT  && ecr <= parseFloat(process.env.ECR_STOP_LIMIT)
         //     && quest?.total == quest?.completed;
 
@@ -517,19 +533,7 @@ async function startBotPlayMatch(page, browser) {
             throw new Error(`Restart needed.`);
         }
 
-        if(process.env.SKIP_QUEST && quest?.splinter && process.env.SKIP_QUEST.split(',').includes(quest?.splinter) && quest?.total !== quest?.completed) {
-            try {
-                await page.click('#quest_new_btn')
-                    .then(() => page.waitForTimeout(5000))
-                    .then(async a=>{
-                        await page.reload();
-                        console.log('New quest requested')})
-                    .catch(e=>console.log('Cannot click on new quest'))
 
-            } catch(e) {
-                console.log('Error while skipping new quest')
-            }
-        }
 
         console.log('getting user cards collection from splinterlands API...')
         // const myCards = await getCards()

@@ -706,6 +706,22 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
         matchDetails['logContent']['QuestMatch'] = quest.splinter +":" + availableTeamsToPlay.length
       }
 
+      // for fire splinter
+      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 1000  && quest.splinter == 'fire'  && matchDetails.orgMana >= 20 && matchDetails.orgMana <= 28 ){
+        console.log('Try to play for the quest with Teams size (V1):fire',
+            filteredTeamsForQuest.length);
+        availableTeamsToPlay = filteredTeamsForQuest;
+        matchDetails['logContent']['QuestMatch'] = quest.splinter +":" + availableTeamsToPlay.length
+      }
+
+      // for life splinter
+      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 1000  && quest.splinter == 'life'  && (matchDetails.orgMana >= 40 || matchDetails.orgMana <= 20 )){
+        console.log('Try to play for the quest with Teams size (V1):life',
+            filteredTeamsForQuest.length);
+        availableTeamsToPlay = filteredTeamsForQuest;
+        matchDetails['logContent']['QuestMatch'] = quest.splinter +":" + availableTeamsToPlay.length
+      }
+
       // for earth splinter
       if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 1000  && quest.splinter == 'earth'  && matchDetails.orgMana >= 44 ){
         console.log('Try to play for the quest with Teams size (V1):earth',
@@ -775,10 +791,10 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
     // }
 
     // sprinter snipe
-    availableTeamsToPlay = doSpecialQuest(matchDetails,quest,availableTeamsToPlay,"snipe",left , 2000)
+    availableTeamsToPlay = doSpecialQuest(matchDetails,quest,availableTeamsToPlay,"snipe",left , 1000)
 
     //  "sneak"
-    availableTeamsToPlay = doSpecialQuest(matchDetails,quest,availableTeamsToPlay,"sneak",left , 2000)
+    availableTeamsToPlay = doSpecialQuest(matchDetails,quest,availableTeamsToPlay,"sneak",left , 1000)
 
   }
 

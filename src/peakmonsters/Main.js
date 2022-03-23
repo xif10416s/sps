@@ -208,7 +208,7 @@ async function doPKCheck(account , passward ,page){
             console.log(pf)
             // const aNum =  parseFloat(h1.minHours.replaceAll("'","").split(" ")[0])
             // const aHour = h1.minHours.indexOf("days") != -1 ? 24 : 1 ;
-            if(pf >= 100 && h1.indexOf("hours") != -1) {
+            if(pf >= 100 && h1.indexOf("hrs") != -1) {
               rsArr.push({
                 "account": "["+account+"]",
                 "maxPower": pf,

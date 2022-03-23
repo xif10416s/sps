@@ -5,7 +5,7 @@
   "favourite_summoner": "",
   "skip_cs": "false",
   "max_cnt": "9999" ,
-  "MINUTES_BATTLES_INTERVAL": 5,
+  "MINUTES_BATTLES_INTERVAL": 1,
   "PREFER_CS": "true",
   "ECR_RECOVER_TO": 95,
   "QUEST_PRIORITY": "true" ,
