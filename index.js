@@ -19,6 +19,7 @@ let loseTotal = 0;
 let undefinedTotal = 0;
 const ecrRecoveryRatePerHour = 1.04;
 let dailyClaim = false;
+let claimTime = "-"
 
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 let  statFile = './logs/stat.csv';
@@ -479,6 +480,7 @@ async function startBotPlayMatch(page, browser) {
                         undefinedTotal=1;
                         loseTotal=0;
                         totalDec=0;
+                        claimTime = new Date().toLocaleTimeString();
                     });
                 } catch (e) {
                     dailyClaim = false;
@@ -523,7 +525,7 @@ async function startBotPlayMatch(page, browser) {
             // await closeBrowser(browser);
             console.log(chalk.bold.white(`Initiating sleep mode. The bot will awaken at ${new Date(Date.now() + 1 * 3600 * 1000 + random).toLocaleString()}`));
             // logsummsary
-            const summaryInfo = {time: new Date(Date.now() + 1 * 3600 * 1000 + random).toLocaleTimeString() ,nextQuestTime:nextQuestTime ,  user: process.env.ACCOUNT, dailyClaim: dailyClaim , ECR: ecr , win: winTotal , lost: loseTotal , draw : undefinedTotal
+            const summaryInfo = {time: new Date(Date.now() + 1 * 3600 * 1000 + random).toLocaleTimeString() ,NQT:nextQuestTime,CT: claimTime ,  user: process.env.ACCOUNT, claim: dailyClaim , ECR: ecr , win: winTotal , lost: loseTotal , draw : undefinedTotal
                 , winRate: (winTotal /(winTotal+loseTotal+undefinedTotal)).toFixed(2) , dec: totalDec.toFixed(2)
                 , quest: quest?.splinter , lastWin:  "-" , qt:quest?.total, qc:quest?.completed ,rating:rating ,power :power ,totalDEC:dec  };
 
@@ -709,7 +711,7 @@ async function startBotPlayMatch(page, browser) {
 
             // ask.logger.log(account,'Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal));
             // ask.logger.log(account,chalk.green('Total Earned: ' + totalDec + ' DEC'));
-            const summaryInfo = {time: new Date().toLocaleTimeString() ,nextQuestTime:nextQuestTime,  user: process.env.ACCOUNT , dailyClaim: dailyClaim , ECR: ecr , win: winTotal , lost: loseTotal , draw : undefinedTotal
+            const summaryInfo = {time: new Date().toLocaleTimeString() ,NQT:nextQuestTime,CT: claimTime ,  user: process.env.ACCOUNT, claim: dailyClaim  , ECR: ecr , win: winTotal , lost: loseTotal , draw : undefinedTotal
                 , winRate: (winTotal /(winTotal+loseTotal+undefinedTotal)).toFixed(2) , dec: totalDec.toFixed(2)
                 , quest: quest?.splinter  + ":" + teamToPlay.cards[7] , lastWin:  isWin , qt:quest?.total, qc:quest?.completed ,rating:rating ,power :power ,totalDEC:dec };
 
@@ -757,7 +759,7 @@ let puppeteer_options = {
     headless: isHeadlessMode, // default is true
     args: ['--no-sandbox',
     '--disable-setuid-sandbox',
-        '--proxy-server=127.0.0.1:1080',
+        // '--proxy-server=127.0.0.1:1080',
     //'--disable-dev-shm-usage',
     //'--disable-accelerated-2d-canvas',
     // '--disable-canvas-aa',

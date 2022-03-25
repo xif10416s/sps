@@ -216,7 +216,7 @@ docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CO
 docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3007:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3007 browserless/chrome
 
 
-docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 13000:3000 -m 1g --memory-swap -1 --restart always -d --name browserless13000 browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=5"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=5"    -p 13000:3000 -m 4g --memory-swap -1 --restart always -d --name browserless13000 browserless/chrome
 
 http://192.168.99.100:3000
 
@@ -281,3 +281,6 @@ node --max-old-space-size=5192 src/server/WebServer.js
 browserless/chrome
 https://github.com/browserless/chrome
 https://docs.browserless.io/docs/docker.html
+
+
+chrome debug

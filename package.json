@@ -23,6 +23,7 @@
     "node-fetch": "^2.6.1",
     "pg": "^8.0.3",
     "puppeteer": "^10.1.0",
+    "puppeteer-page-proxy": "^1.2.8",
     "request": "^2.88.2"
   }
 }
