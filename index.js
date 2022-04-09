@@ -82,6 +82,19 @@ async function closePopups(page) {
     await clickOnElement(page, '.modal-close', 4000, 2000);
 }
 
+async function checkLeague(page) {
+    try {
+        const league = await getElementText(page, "#current_league_text");
+        if(league) {
+            console.log(chalk.bold.whiteBright.bgMagenta('Your current league is ' + league));
+            // ask.logger.log(chalk.bold.whiteBright.bgMagenta('Your current Energy Capture Rate is ' + ecr.split('.')[0] + "%"));
+            return league
+        }
+    } catch (e) {
+        console.log(chalk.bold.redBright.bgBlack('league not defined'));
+    }
+}
+
 //
 async function checkEcr(page) {
     try {
@@ -102,7 +115,7 @@ async function checkDec(page) {
         if(dec) {
             console.log(chalk.bold.whiteBright.bgMagenta('Your current Dec ' + dec));
             // ask.logger.log(chalk.bold.whiteBright.bgMagenta('Your current Energy Capture Rate is ' + ecr.split('.')[0] + "%"));
-            return parseFloat(dec.replaceAll(",",""))
+            return parseInt(dec.replaceAll(",",""))
         }
     } catch (e) {
         console.log(chalk.bold.redBright.bgBlack('dec not defined'));
@@ -150,6 +163,22 @@ async function checkPower(page) {
     }
 }
 
+async function uplevelLeage(page) {
+    try {
+        await page.click('#adv_btn_container > button')
+        .then(() => page.waitForTimeout(1000))
+        .then(() =>{
+             page.keyboard.press('Enter');
+        })
+        .then(() => page.waitForTimeout(5000))
+        .then(async a=>{
+            await page.reload();
+            console.log('New quest requested')})
+        .catch(e=>console.log('Cannot click on up level leage'))
+    } catch(e) {
+        console.log('Error while click on up level leage')
+    }
+}
 
 async function findSeekingEnemyModal(page, visibleTimeout=15000) {
     let findOpponentDialogStatus = 0;
@@ -448,10 +477,13 @@ async function startBotPlayMatch(page, browser) {
         await closePopups(page);
         await closePopups(page);
 
+        await uplevelLeage(page)
+
         const rating = await checkRating(page);
         const power = await checkPower(page);
         const ecr = await checkEcr(page);
         const dec = await checkDec(page)
+        const league = await  checkLeague(page)
         const nextQuestTime = await  checkNextQuest(page)
         // if (ecr === undefined) throw new Error('Fail to get ECR.')
         console.log('getting user quest info from splinterlands API...')
@@ -470,8 +502,9 @@ async function startBotPlayMatch(page, browser) {
         }
         const isClaimDailyQuestMode = process.env.CLAIM_DAILY_QUEST_REWARD === 'false' ? false : true;
         const isPowerAndRating =  parseInt(power) >= 15000  && parseInt(rating) >=1000 ;
+        const isLeageBRONZE = league ? league.indexOf("BRONZE") != -1 : false;
         if (isClaimDailyQuestMode === true && dailyClaim == false  && quest?.total == quest?.completed) {
-            if(isPowerAndRating) { // serviler I check
+            if(isPowerAndRating && !isLeageBRONZE) { // serviler I check
                 try {
                     await page.waitForSelector('#quest_claim_btn', { timeout: 5000*2 })
                     .then(button =>  button.click() ).then(() => {
@@ -480,7 +513,8 @@ async function startBotPlayMatch(page, browser) {
                         undefinedTotal=1;
                         loseTotal=0;
                         totalDec=0;
-                        claimTime = new Date().toLocaleTimeString();
+                        const tm = new Date().toLocaleString('en-GB').split(",")
+                        claimTime = tm[0].split("/")[0] + tm[1].slice(0,6)
                     });
                 } catch (e) {
                     dailyClaim = false;
@@ -527,7 +561,7 @@ async function startBotPlayMatch(page, browser) {
             // logsummsary
             const summaryInfo = {time: new Date(Date.now() + 1 * 3600 * 1000 + random).toLocaleTimeString() ,NQT:nextQuestTime,CT: claimTime ,  user: process.env.ACCOUNT, claim: dailyClaim , ECR: ecr , win: winTotal , lost: loseTotal , draw : undefinedTotal
                 , winRate: (winTotal /(winTotal+loseTotal+undefinedTotal)).toFixed(2) , dec: totalDec.toFixed(2)
-                , quest: quest?.splinter , lastWin:  "-" , qt:quest?.total, qc:quest?.completed ,rating:rating ,power :power ,totalDEC:dec  };
+                , quest: quest != null ? quest?.splinter : "-" , lastWin:  "-" , qt: quest != null ? quest?.total  : "-" , qc:quest != null ? quest?.completed  : "-" ,rating:rating ,power :power ,totalDEC:dec ,league:league };
 
             doSummaryLog(summaryInfo)
 
@@ -691,6 +725,31 @@ async function startBotPlayMatch(page, browser) {
                     // ask.logger.log('You won! Reward: ', decWon , ' DEC');
                     totalDec += !isNaN(parseFloat(decWon)) ? parseFloat(decWon) : 0 ;
                     winTotal += 1;
+
+                    // ---------- check daily claim start
+                    if (isClaimDailyQuestMode === true && dailyClaim == false  && quest?.total == quest?.total - 1) {
+                        if(isPowerAndRating && !isLeageBRONZE) { // serviler I check
+                            const quest = await getQuest();
+                            if(quest && quest?.total == quest?.completed) {
+                                try {
+                                    await page.waitForSelector('#quest_claim_btn', { timeout: 5000*2 })
+                                    .then(button =>  button.click() ).then(() => {
+                                        dailyClaim = true;
+                                        winTotal=0;
+                                        undefinedTotal=1;
+                                        loseTotal=0;
+                                        totalDec=0;
+                                        const tm = new Date().toLocaleString('en-GB').split(",")
+                                        claimTime = tm[0].split("/")[0] + tm[1].slice(0,6)
+                                    });
+                                } catch (e) {
+                                    dailyClaim = false;
+                                    console.info('no quest reward to be claimed waiting for the battle...')
+                                }
+                            }
+                        }
+                    }
+                    // ---------- check daily claim end
                 }
                 else {
                     console.log(chalk.red('You lost'));
@@ -713,7 +772,7 @@ async function startBotPlayMatch(page, browser) {
             // ask.logger.log(account,chalk.green('Total Earned: ' + totalDec + ' DEC'));
             const summaryInfo = {time: new Date().toLocaleTimeString() ,NQT:nextQuestTime,CT: claimTime ,  user: process.env.ACCOUNT, claim: dailyClaim  , ECR: ecr , win: winTotal , lost: loseTotal , draw : undefinedTotal
                 , winRate: (winTotal /(winTotal+loseTotal+undefinedTotal)).toFixed(2) , dec: totalDec.toFixed(2)
-                , quest: quest?.splinter  + ":" + teamToPlay.cards[7] , lastWin:  isWin , qt:quest?.total, qc:quest?.completed ,rating:rating ,power :power ,totalDEC:dec };
+                , quest: quest?.splinter  + ":" + teamToPlay.cards[7] , lastWin:  isWin , qt:quest?.total, qc:quest?.completed ,rating:rating ,power :power ,totalDEC:dec ,league:league };
 
             doSummaryLog(summaryInfo)
 
@@ -845,7 +904,7 @@ async function run() {
     while (start) {
         console.log('Recover Status: ', page.recoverStatus)
         config.doConfigInit(process.env.ACCOUNT)
-        if( (winTotal+loseTotal) >=20  && loseTotal/(winTotal+loseTotal) >= 0.7 ){
+        if( (winTotal+loseTotal) >=40  && loseTotal/(winTotal+loseTotal) >= 0.7 ){
             console.log("LostTooMatchException win : " + winTotal , " lost :" + loseTotal )
             const summaryInfo = {time: new Date().toLocaleTimeString() ,  user: process.env.ACCOUNT , win: winTotal , lost: loseTotal , draw : undefinedTotal, dec: totalDec , reason: "LostTooMatchException"};
             summaryLogger.error(summaryInfo)
@@ -876,7 +935,7 @@ async function run() {
                     const sleepingTimeInMinutes = process.env.MINUTES_BATTLES_INTERVAL;
                     const sleepingTime = sleepingTimeInMinutes * 60000;
                     let randomTime = Math.ceil(Math.random()*5)* 60000 + sleepingTime ;
-                    if((winTotal+loseTotal) >=5 &&  loseTotal/(winTotal+loseTotal) >= 0.7 ){
+                    if((winTotal+loseTotal) >=30 &&  loseTotal/(winTotal+loseTotal) >= 0.7 ){
                         randomTime = 15 * 60000;
                         console.log("LostTooMatchException win : " + winTotal , " lost :" + loseTotal , "waittime mutil 3 :" , randomTime )
                     }

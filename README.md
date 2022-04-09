@@ -231,9 +231,9 @@ npm --max-old-space-size=4192  start  -- --username sugelafei  >> logs/sugelafei
 cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh sugelafei 1 
 cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh sugelafei2 1 
 cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh xifei123 1  
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh xifei1234 1 
 cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh hkd123 1   
 cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh hkd1234 1 
-cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh xifei1234 1 
 cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh xqm123 
 cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh xqm1234 
 
@@ -256,24 +256,14 @@ cd /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/spark && source bin/ac
 net stop LxssManager
 net start LxssManager
 
-sudo service ssh --full-restart
-sudo service cron restart 
-
-
 https://api2.splinterlands.com/cards/get_details
 
 ## docker start
 sudo swapon -p 5 /mnt/sda1/swap/swapfile
 
- cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs && watch -n 5  tail -n10  ---disable-inotify  Summary.txt
+ cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs && watch -n 5  tail -n15  ---disable-inotify  Summary.txt
 cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs &&  tail -f ---disable-inotify  SummaryError.txt
- cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs && watch -n 5  tail -n10  ---disable-inotify  rentStat.txt
-
-
-tail -f ---disable-inotify  /mnt/d/source/python/spsAuto/splinterlands-bot/logs/hkd123/hkd1231-log.txt
-tail -f ---disable-inotify  /mnt/d/source/python/spsAuto/splinterlands-bot/logs/sugelafei/sugelafei1-log.txt
-tail -f ---disable-inotify  /mnt/d/source/python/spsAuto/splinterlands-bot/logs/sugelafei2/sugelafei21-log.txt
-tail -f ---disable-inotify  /mnt/d/source/python/spsAuto/splinterlands-bot/logs/xifei123/xifei1231-log.txt
+ cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs && watch -n 5  tail -n20  ---disable-inotify  rentStat.txt
 
 
 node --max-old-space-size=5192 src/server/WebServer.js
@@ -283,4 +273,15 @@ https://github.com/browserless/chrome
 https://docs.browserless.io/docs/docker.html
 
 
-chrome debug
+## chrome debug
+192.168.99.1
+127.0.0.1
+kill -s 9 `pgrep node`
+
+ps aux|grep battlesGetDataRawV2|awk '{print $2}'|xargs kill -9
+
+
+win restart:
+一、wsl
+sudo service ssh --full-restart
+sudo service cron restart 

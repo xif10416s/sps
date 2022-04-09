@@ -52,10 +52,10 @@ function doLog(arr){
   summaryLogger.table(sortArr)
 }
 async function doCheck() {
-  const browser = await puppeteer.launch(puppeteer_options);
+  const browser = await puppeteer.connect(puppeteer_options);
   //const page = await browser.newPage();
   let [page] = await browser.pages();
-  await page.setDefaultNavigationTimeout(300000);
+  await page.setDefaultNavigationTimeout(600000);
   // const useProxy = require('puppeteer-page-proxy');
   // await useProxy(page, 'http://127.0.0.1:1081');
 
@@ -184,15 +184,25 @@ async function doPKCheck(account, passward, page) {
     console.log("----evaluate start-------", new Date().toLocaleString())
 
     async function getTextBySelector(selector) {
-      const element = await page.waitForSelector(selector, {timeout: 10000});
-      const text = await element.evaluate(el => el.textContent);
-      return text;
+      const element = await page.waitForSelector(selector, {timeout: 1000}).then((element) =>{return element.evaluate(el => el.textContent)}).catch((e) =>{ return null });
+      // if(element) {
+      //   const text = await element.evaluate(el => el.textContent);
+      //   return text;
+      // } else {
+      //   return  null;
+      // }
+      // console.log(element)
+      return element
     }
 
     async function collectData(account, rsArr, index) {
       try {
         const h1 = await getTextBySelector(
             "#app > div.page-container > div > div > div > div > div.row.display-flex-row > div.col-md-10.col-md-pull-2 > div > div.table-responsive > table > tbody > tr:nth-child("+index+") > td:nth-child(10) > small")
+        if(h1 == null) {
+          console.log(index,"finished...")
+          return false;
+        }
         const p1 = await getTextBySelector(
             "#app > div.page-container > div > div > div > div > div.row.display-flex-row > div.col-md-10.col-md-pull-2 > div > div.table-responsive > table > tbody > tr:nth-child("+index+") > td:nth-child(7) > small > span")
         const d1 = await getTextBySelector(
@@ -203,31 +213,46 @@ async function doPKCheck(account, passward, page) {
         // console.log(pf)
         // const aNum =  parseFloat(h1.minHours.replaceAll("'","").split(" ")[0])
         // const aHour = h1.minHours.indexOf("days") != -1 ? 24 : 1 ;
-        if (pf >= 100 && h1.toUpperCase().indexOf(HOURS) != -1) {
+        const name = await getTextBySelector("#app > div.page-container > div > div > div > div > div.row.display-flex-row > div.col-md-10.col-md-pull-2 > div > div.table-responsive > table > tbody > tr:nth-child("+index+") > td.text-left.text-semibold.smallable > div > div")
+        if (pf >= 100 && h1.toUpperCase().indexOf(HOURS) != -1 && rsArr.length <= 5) {
           rsArr.push({
             "account": "[" + account + "]",
+            "card":name.split("\n          ")[1],
             "maxPower": pf,
             "cp/dec": d1,
             "minHours": h1,
             "time": new Date().toLocaleTimeString()
           })
-          return true;
+        }
+
+
+        if(name.indexOf("Mylor Crowling") != -1) {
+          rsArr.push({
+            "account": "["+account+"]",
+            "card":name.split("\n          ")[1],
+            "maxPower": "Mylor",
+            "cp/dec" : d1,
+            "minHours": h1,
+            "time": new Date().toLocaleTimeString()
+          })
         }
       } catch (e) {
-        // console.log(e)
+        console.log(index,e)
+        return false
       }
-      return false;
+      return true;
     }
 
     let tempArr = []
     let cnt = 1;
-    for (let i = 1; i <= 15; i++) {
+    for (let i = 1; i <= 150; i++) {
       // console.log("-----------,",i)
       if (await collectData(account, tempArr, i)) {
         cnt++;
-      }
-      if (cnt >= 5) {
-        break;
+      } else {
+        if(cnt >= 20) {
+          break;
+        }
       }
     }
 
@@ -235,36 +260,44 @@ async function doPKCheck(account, passward, page) {
     console.log("----evaluate end-------", new Date().toLocaleString())
     rsArr = rsArr.concat(tempArr)
 
-    try {
-      await page.reload();
-      await page.waitForTimeout(20000);
-      page.focus(
-          "#app > div.page-container > div > div > div > div > div.row.display-flex-row > div.col-md-2.col-md-push-10 > div > div > div > div > div.category-content.no-padding > ul > li:nth-child(4) > div > div > input")
-      page.type(
-          "#app > div.page-container > div > div > div > div > div.row.display-flex-row > div.col-md-2.col-md-push-10 > div > div > div > div > div.category-content.no-padding > ul > li:nth-child(4) > div > div > input",
-          "Mylor Crowling")
-      await page.waitForTimeout(1000)
-      page.focus(
-          "#app > div.page-container > div > div > div > div > div.row.display-flex-row > div.col-md-2.col-md-push-10 > div > div > div > div > div.category-content.no-padding > ul > li:nth-child(3) > div > div > div > input")
-      await page.waitForTimeout(3000)
-      const mylor = await page.evaluate((account) => {
-        const h1 = document.querySelector(
-            "#app > div.page-container > div > div > div > div > div.row.display-flex-row > div.col-md-10.col-md-pull-2 > div > div.table-responsive > table > tbody > tr:nth-child(1) > td:nth-child(10) > small").textContent
-        const d1 = document.querySelector(
-            "#app > div.page-container > div > div > div > div > div.row.display-flex-row > div.col-md-10.col-md-pull-2 > div > div.table-responsive > table > tbody > tr:nth-child(1) > td.text-right.smallable > div > div > small").textContent
-        return {
-          "account": account,
-          "maxPower": "mylor",
-          "cp/dec": d1,
-          "minHours": h1,
-          "time": new Date().toLocaleTimeString()
-        }
-      }, account);
-
-      rsArr.push(mylor)
-    } catch (e) {
-      // console.log("mylor:", e)
-    }
+    // try {
+    //   // await page.reload();
+    //   // await page.waitForTimeout(5000);
+    //   await page.waitForSelector("#app > div.page-container > div > div > div > div > div.row.display-flex-row > div.col-md-2.col-md-push-10 > div > div > div > div > div.category-content.no-padding > ul > li:nth-child(2) > div > div > input", {timeout: 5000})
+    //   .then(()=>{
+    //     page.focus("#app > div.page-container > div > div > div > div > div.row.display-flex-row > div.col-md-2.col-md-push-10 > div > div > div > div > div.category-content.no-padding > ul > li:nth-child(2) > div > div > input")
+    //   })
+    //   .then(() =>{
+    //     page.type(
+    //         "#app > div.page-container > div > div > div > div > div.row.display-flex-row > div.col-md-2.col-md-push-10 > div > div > div > div > div.category-content.no-padding > ul > li:nth-child(2) > div > div > input",
+    //         "Mylor Crowling")
+    //   }).then(() =>{
+    //      page.waitForTimeout(5000)
+    //   }).then(() =>{
+    //     page.focus(
+    //         "#app > div.page-container > div > div > div > div > div.row.display-flex-row > div.col-md-2.col-md-push-10 > div > div > div > div > div.category-content.no-padding > ul > li:nth-child(3) > div > div > div > input")
+    //   }).then(() =>{
+    //     page.waitForTimeout(3000)
+    //   })
+    //
+    //   const mylor = await page.evaluate((account) => {
+    //     const h1 = document.querySelector(
+    //         "#app > div.page-container > div > div > div > div > div.row.display-flex-row > div.col-md-10.col-md-pull-2 > div > div.table-responsive > table > tbody > tr > td.text-right.smallable > div > div > small").textContent
+    //     const d1 = document.querySelector(
+    //         "#app > div.page-container > div > div > div > div > div.row.display-flex-row > div.col-md-10.col-md-pull-2 > div > div.table-responsive > table > tbody > tr > td:nth-child(10) > small").textContent
+    //     return {
+    //       "account": account,
+    //       "maxPower": "mylor",
+    //       "cp/dec": d1,
+    //       "minHours": h1,
+    //       "time": new Date().toLocaleTimeString()
+    //     }
+    //   }, account);
+    //
+    //   rsArr.push(mylor)
+    // } catch (e) {
+    //   // console.log("mylor:", e)
+    // }
 
     // console.log(rsArr)
 
