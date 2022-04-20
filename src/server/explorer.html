@@ -1,285 +1,67 @@
-<!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>xxx</title>
-  <script type="text/javascript" src="jquery-3.6.0.min.js"></script>
-  <script type="text/javascript" src="imageselect.js"></script>
-  <link href="imageselect.css" media="screen" rel="stylesheet" type="text/css"/>
-  <script src="../../../sps/popup.js"></script>
+  <link href="main.min.css" rel="stylesheet" type="text/css">
+  <style>
+    .thumb:not(.thumb-rounded) img {
+      width: 40px;
+      border-radius: 3px;
+    }
+    .img-responsive  {
+      width: 40px;
+      height: 40px;
+      border-radius: 3px;
+    }
+
+  </style>
 </head>
-<style>
-  * {
-    padding: 0;
-    margin: 0;
-  }
+<ul id="ul">
+  <!--<li data-v-7d99ab1e="" style="" class="media no-overflow"><div data-v-7d99ab1e=""><div class="media-left"><span class="btn border-indigo-300 text-indigo-300 btn-flat btn-icon btn-rounded btn-sm"><i class="icon-medal2"></i></span></div> <div class="media-body">-->
+    <!--Rewards claimed by-->
+    <!--<a href="/@sugelafei/cards" class="text-semibold keychainify-checked">sugelafei</a> (<a>Hide details</a>)-->
+    <!--<div class="media-annotation"><a href="https://hiveblocks.com/tx/92fd4245622ba5d038080a36624231e4bd263af8" target="_blank" class="text-muted keychainify-checked">2 days ago</a> &lt;!&ndash;&ndash;&gt;</div></div> <div class="well well-sm mt-10"><ul class="list-inline list-inline-separate text-center mb-15"><li>ID: 92fd4245622ba5d038080a36624231e4bd263af8</li> <li>-->
+    <!--Type: <span class="text-semibold">quest</span></li> <li>-->
+    <!--Cards Total Value: <span class="text-semibold">$ 0.079</span></li> <li>-->
+    <!--Cards Burn Value: <span class="text-semibold">15 DEC</span></li></ul> <div class="row"><div class="col-md-2 text-center mb-5"><div class="thumb"><img src="https://d36mxiodymuqjm.cloudfront.net/cards_beta/Pelacor%20Conjurer.jpg" alt="Card" class="img-responsive"></div> <small>-->
+    <!--Pelacor Conjurer-->
+    <!--<div class="text-size-mini">-->
+      <!--(Value: <span class="text-semibold">$ 0.027</span>)-->
+    <!--</div></small></div> &lt;!&ndash;&ndash;&gt;<div class="col-md-2 text-center mb-5"><div class="thumb"><img src="https://d36mxiodymuqjm.cloudfront.net/cards_beta/Venari%20Heatsmith.jpg" alt="Card" class="img-responsive"></div> <small>-->
+    <!--Venari Heatsmith-->
+    <!--<div class="text-size-mini">-->
+      <!--(Value: <span class="text-semibold">$ 0.025</span>)-->
+    <!--</div></small></div> &lt;!&ndash;&ndash;&gt;<div class="col-md-2 text-center mb-5"><div class="thumb"><img src="https://d36mxiodymuqjm.cloudfront.net/cards_beta/Pelacor%20Conjurer.jpg" alt="Card" class="img-responsive"></div> <small>-->
+    <!--Pelacor Conjurer-->
+    <!--<div class="text-size-mini">-->
+      <!--(Value: <span class="text-semibold">$ 0.027</span>)-->
+    <!--</div></small></div> &lt;!&ndash;&ndash;&gt;</div></div> <div class="well well-sm mt-10"><div class="row"><div class="col-md-3 text-center mb-5"><img src="https://d36mxiodymuqjm.cloudfront.net/website/icons/img_dec_fx_256.png" alt="DEC" class="img-responsive" style="height: 150px; padding: 10px 0px; margin: 0px auto;"> <ul class="list-inline list-inline-separate no-margin-bottom">&lt;!&ndash;&ndash;&gt; <li><small>Qty: <span class="text-semibold">10</span></small></li></ul></div><div class="col-md-3 text-center mb-5"><img src="https://d36mxiodymuqjm.cloudfront.net/website/ui_elements/shop/potions/potion_gold.png" alt="Potion" class="img-responsive" style="height: 150px; padding: 10px 0px; margin: 0px auto;"> <ul class="list-inline list-inline-separate no-margin-bottom"><li><small>Type: <span class="text-semibold">gold</span></small></li> <li><small>Qty: <span class="text-semibold">1</span></small></li></ul></div><div class="col-md-3 text-center mb-5"><img src="https://d36mxiodymuqjm.cloudfront.net/website/icons/img_dec_fx_256.png" alt="DEC" class="img-responsive" style="height: 150px; padding: 10px 0px; margin: 0px auto;"> <ul class="list-inline list-inline-separate no-margin-bottom">&lt;!&ndash;&ndash;&gt; <li><small>Qty: <span class="text-semibold">5</span></small></li></ul></div></div></div> <hr class="mt-10 mb-10"></div></li>-->
 
-  table {
-    border-collapse: collapse;
-    border-spacing: 0;
-    border: 1px solid #c0c0c0;
-  }
-
-  th, td {
-    border: 1px solid #d0d0d0;
-    color: #404060;
-    padding: 10px;
-  }
-
-  th {
-    background-color: #09c;
-    font: bold 16px "微软雅黑";
-    color: #fff;
-  }
-
-  td {
-    font: 14px "微软雅黑";
-  }
-
-  tbody tr {
-    background-color: #f0f0f0;
-  }
-
-  tbody tr:hover {
-    cursor: pointer;
-    background-color: #fafafa;
-  }
-</style>
-<script>
-
-</script>
-<body>
-
-<div style="display:flex">
-  <div> &nbsp; &nbsp; &nbsp; <input id="cs" style="width:500px;"/>
-  </div>
-
-  <div>
-    <button id="bt" style="width: 80px;height: 40px;">test</button>
-  </div>
-</div>
-<div style="display:flex">
-  <div>
-    <table>
-      <thead>
-      <tr>
-        <th colspan="3">最值得买的</th>
-      </tr>
-      </thead>
-      <tbody id="J_TbData">
-      </tbody>
-    </table>
-  </div>
-  <div>
-    <table>
-      <thead>
-      <tr>
-        <th colspan="3">最近组合</th>
-      </tr>
-      </thead>
-      <tbody id="J_TbData2">
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<div style="display:flex">
-  <div> &nbsp; &nbsp; &nbsp;from:  <input id="fromMana" style="width:50px;"/>&nbsp; &nbsp; &nbsp;end:  <input id="endMana" style="width:50px;"/>&nbsp; &nbsp; &nbsp;
-    &nbsp; &nbsp; &nbsp;len:  <input id="len" style="width:50px;"/>&nbsp; &nbsp; &nbsp;
-  </div>
-
-  <div style="font-size: 20px;">
-    <div>
-      <input type="checkbox" name="category" style="width:25px;height:25px;" value="fire"/>fire
-      <input type="checkbox" name="category" style="width:25px;height:25px;" value="water"/>water
-      <input type="checkbox" name="category" style="width:25px;height:25px;" value="earth"/>earth
-    </div>
-    <div>
-      <input type="checkbox" name="category" style="width:25px;height:25px;" value="life"/>life
-      <input type="checkbox" name="category" style="width:25px;height:25px;"  value="death"/>death
-      <input type="checkbox" name="category" style="width:25px;height:25px;" value="dragon"/>dragon
-    </div>
-
-  </div>
-  <div>
-    <select name="rule1" id="rule1">
-      <option value="-1">null.jpg</option>
-      <option value="Aim True">aim-true.webp</option>
-      <option value="Armored Up">armored-up.webp</option>
-      <option value="Back to Basics">back-to-basics.webp</option>
-      <option value="Broken Arrows">broken-arrows.webp</option>
-      <option value="Close Range">close-range.webp</option>
-      <option value="Earthquake">earthquake.webp</option>
-      <option value="Equalizer">equalizer.webp</option>
-      <option value="Equal Opportunity">equal-opportunity.webp</option>
-      <option value="Even Stevens">even-stevens.webp</option>
-      <option value="Explosive Weaponry">Explosive-Weaponry.webp</option>
-      <option value="Fog of War">fog-of-war.webp</option>
-      <option value="Healed Out">healed-out.webp</option>
-      <option value="Heavy Hitters">heavy-hitters.webp</option>
-      <option value="Holy Protection">Holy-Protection.webp</option>
-      <option value="Keep Your Distance">keep-your-distance.webp</option>
-      <option value="Little League">little-league.webp</option>
-      <option value="Lost Legendaries">lost-legendaries.webp</option>
-      <option value="Lost Magic">lost-magic.webp</option>
-      <option value="Melee Mayhem">melee-mayhem.webp</option>
-      <option value="Noxious Fumes">noxious-fumes.webp</option>
-      <option value="Odd Ones Out">odd-ones-out.webp</option>
-      <option value="Reverse Speed">reverse-speed.webp</option>
-      <option value="Rise of the Commons">rise-of-the-commons.webp</option>
-      <option value="Silenced Summoners">silenced-summoners.webp</option>
-      <option value="Spreading Fury">Spreading-Fury.webp</option>
-      <option value="Stampede">stampede.webp</option>
-      <option value="Standard">standard.webp</option>
-      <option value="Super Sneak">super-sneak.webp</option>
-      <option value="Taking Sides">taking-sides.webp</option>
-      <option value="Target Practice">target-practice.webp</option>
-      <option value="Unprotected">unprotected.webp</option>
-      <option value="Up Close and Personal">up-close-personal.webp</option>
-      <option value="Weak Magic">weak-magic.webp</option>
-    </select>
-  </div>
-  &nbsp; &nbsp; &nbsp;
-  <div>
-    <select name="rule2" id="rule2">
-      <option value="-1">null.jpg</option>
-      <option value="Aim True">aim-true.webp</option>
-      <option value="Armored Up">armored-up.webp</option>
-      <option value="Back to Basics">back-to-basics.webp</option>
-      <option value="Broken Arrows">broken-arrows.webp</option>
-      <option value="Close Range">close-range.webp</option>
-      <option value="Earthquake">earthquake.webp</option>
-      <option value="Equalizer">equalizer.webp</option>
-      <option value="Equal Opportunity">equal-opportunity.webp</option>
-      <option value="Even Stevens">even-stevens.webp</option>
-      <option value="Explosive Weaponry">Explosive-Weaponry.webp</option>
-      <option value="Fog of War">fog-of-war.webp</option>
-      <option value="Healed Out">healed-out.webp</option>
-      <option value="Heavy Hitters">heavy-hitters.webp</option>
-      <option value="Holy Protection">Holy-Protection.webp</option>
-      <option value="Keep Your Distance">keep-your-distance.webp</option>
-      <option value="Little League">little-league.webp</option>
-      <option value="Lost Legendaries">lost-legendaries.webp</option>
-      <option value="Lost Magic">lost-magic.webp</option>
-      <option value="Melee Mayhem">melee-mayhem.webp</option>
-      <option value="Noxious Fumes">noxious-fumes.webp</option>
-      <option value="Odd Ones Out">odd-ones-out.webp</option>
-      <option value="Reverse Speed">reverse-speed.webp</option>
-      <option value="Rise of the Commons">rise-of-the-commons.webp</option>
-      <option value="Silenced Summoners">silenced-summoners.webp</option>
-      <option value="Spreading Fury">Spreading-Fury.webp</option>
-      <option value="Stampede">stampede.webp</option>
-      <option value="Standard">standard.webp</option>
-      <option value="Super Sneak">super-sneak.webp</option>
-      <option value="Taking Sides">taking-sides.webp</option>
-      <option value="Target Practice">target-practice.webp</option>
-      <option value="Unprotected">unprotected.webp</option>
-      <option value="Up Close & Personal">up-close-personal.webp</option>
-      <option value="Weak Magic">weak-magic.webp</option>
-    </select>
-  </div>
-  <div>
-    <button id="bt2" style="width: 80px;height: 40px;">test</button>
-  </div>
-</div>
-<div >
-  <table style="width: 80%;">
-    <thead>
-    <tr>
-      <th colspan="3">最值得买的</th>
-    </tr>
-    </thead>
-    <tbody id="J_TbData3">
-    </tbody>
-  </table>
-</div>
-
-</body>
+  <!--<li data-v-7d99ab1e="" style="" class="media no-overflow"><div data-v-7d99ab1e=""><div class="media-left"><span class="btn border-indigo-300 text-indigo-300 btn-flat btn-icon btn-rounded btn-sm"><i class="icon-medal2"></i></span></div> <div class="media-body">-->
+    <!--Rewards claimed by-->
+    <!--<a href="/@sugelafei/cards" class="text-semibold keychainify-checked">sugelafei</a> (<a>Hide details</a>)-->
+    <!--<div class="media-annotation"><a href="https://hiveblocks.com/tx/92fd4245622ba5d038080a36624231e4bd263af8" target="_blank" class="text-muted keychainify-checked">2 days ago</a> &lt;!&ndash;&ndash;&gt;</div></div> <div class="well well-sm mt-10"><ul class="list-inline list-inline-separate text-center mb-15"><li>ID: 92fd4245622ba5d038080a36624231e4bd263af8</li> <li>-->
+    <!--Type: <span class="text-semibold">quest</span></li> <li>-->
+    <!--Cards Total Value: <span class="text-semibold">$ 0.079</span></li> <li>-->
+    <!--Cards Burn Value: <span class="text-semibold">15 DEC</span></li></ul> <div class="row"><div class="col-md-2 text-center mb-5"><div class="thumb"><img src="https://d36mxiodymuqjm.cloudfront.net/cards_beta/Pelacor%20Conjurer.jpg" alt="Card" class="img-responsive"></div> <small>-->
+    <!--Pelacor Conjurer-->
+    <!--<div class="text-size-mini">-->
+      <!--(Value: <span class="text-semibold">$ 0.027</span>)-->
+    <!--</div></small></div> &lt;!&ndash;&ndash;&gt;<div class="col-md-2 text-center mb-5"><div class="thumb"><img src="https://d36mxiodymuqjm.cloudfront.net/cards_beta/Venari%20Heatsmith.jpg" alt="Card" class="img-responsive"></div> <small>-->
+    <!--Venari Heatsmith-->
+    <!--<div class="text-size-mini">-->
+      <!--(Value: <span class="text-semibold">$ 0.025</span>)-->
+    <!--</div></small></div> &lt;!&ndash;&ndash;&gt;<div class="col-md-2 text-center mb-5"><div class="thumb"><img src="https://d36mxiodymuqjm.cloudfront.net/cards_beta/Pelacor%20Conjurer.jpg" alt="Card" class="img-responsive"></div> <small>-->
+    <!--Pelacor Conjurer-->
+    <!--<div class="text-size-mini">-->
+      <!--(Value: <span class="text-semibold">$ 0.027</span>)-->
+    <!--</div></small></div> &lt;!&ndash;&ndash;&gt;</div></div> <div class="well well-sm mt-10"><div class="row"><div class="col-md-3 text-center mb-5"><img src="https://d36mxiodymuqjm.cloudfront.net/website/icons/img_dec_fx_256.png" alt="DEC" class="img-responsive" style="height: 150px; padding: 10px 0px; margin: 0px auto;"> <ul class="list-inline list-inline-separate no-margin-bottom">&lt;!&ndash;&ndash;&gt; <li><small>Qty: <span class="text-semibold">10</span></small></li></ul></div><div class="col-md-3 text-center mb-5"><img src="https://d36mxiodymuqjm.cloudfront.net/website/ui_elements/shop/potions/potion_gold.png" alt="Potion" class="img-responsive" style="height: 150px; padding: 10px 0px; margin: 0px auto;"> <ul class="list-inline list-inline-separate no-margin-bottom"><li><small>Type: <span class="text-semibold">gold</span></small></li> <li><small>Qty: <span class="text-semibold">1</span></small></li></ul></div><div class="col-md-3 text-center mb-5"><img src="https://d36mxiodymuqjm.cloudfront.net/website/icons/img_dec_fx_256.png" alt="DEC" class="img-responsive" style="height: 150px; padding: 10px 0px; margin: 0px auto;"> <ul class="list-inline list-inline-separate no-margin-bottom">&lt;!&ndash;&ndash;&gt; <li><small>Qty: <span class="text-semibold">5</span></small></li></ul></div></div></div> <hr class="mt-10 mb-10"></div></li>-->
+</ul>
 
 <script>
   $(document).ready(function () {
-    function queryData(){
-
-    }
-
-    $("#bt").click(function () {
-      let reqUrl = "/api/csAnalysis?cs=" + $("#cs").val();
-      $.get(reqUrl, function (data, status) {
-        let html = '';
-        data.mostUser.slice(0,data.mostUser.length-1).forEach(item =>{
-          html += createItemDiv(item['name']);
-        })
-        $("#J_TbData").html(html);
-
-        $("#J_TbData2").html('<div>'+data.mostUser[data.mostUser.length -1].name+'</div>');
-      })
+    let reqUrl = "/api/explorer"
+    $.get(reqUrl, function (data, status) {
+      $("#ul").html(data.htmlStr);
     });
-
-
-    $("#bt2").click(function () {
-      let rule = $("#rule1").val();
-      if ($("#rule2").val() != "-1") {
-        if($("#rule2").val() > rule){
-          rule = rule + "|" + $("#rule2").val();
-        } else {
-          rule =  $("#rule2").val()+ "|" +  rule ;
-        }
-      }
-
-      var spiners = ''
-      $("input[name='category']:checked").each(function () {
-        spiners += $(this).attr('value') + '|';
-      });
-
-      let reqUrl = "/api/cs2Analysis?from=" + $("#fromMana").val() +"&end=" + $("#endMana").val() +"&rule="+rule +"&len="+ $("#len").val() +"&sp="+spiners;
-      $.get(reqUrl, function (data, status) {
-        if(data.mostCS.length == 0 ){
-          alert("空！")
-        }
-        let html = '';
-        data.mostCS.forEach(item =>{
-          html += createTeamDiv(item);
-        })
-        $("#J_TbData3").html(html);
-      })
-    });
-
-
-    function createTeamDiv(item) {
-      var html = "";
-      html += "<div style=\"display:flex\">";
-      html += "<div style='width:10%;vertical-align: center'>";
-      html += "<span style='width:30%;'> 胜率:" + item['tl'] +"</span><span style='width:30%;' > 胜组：" + item['wt'] +"</span> <span style='width:30%;'>  败组：" + item['lt'] +"</span>";
-      html += "</div>";
-      item['teams'].forEach(team => {
-        html += createItemDiv(team)
-      })
-      html += "</div>";
-      return html;
-    }
-
-    function createItemDiv(name) {
-      var html = "";
-      html += "<div style = \"float:left;padding-right: 2px;\" >";
-      html += "<img src='" + name.replaceAll("'", "").replaceAll(" ", "_")
-          + ".png' style = 'width: 100px;'/><br/>"
-      html += "<div>"
-      html += "<label>" + name + "</label>"
-      html += "</div>"
-      html += "</div>";
-      return html;
-    }
-
-  });
-
-
-</script>
-<script>
-
-
-  $(document).ready(function () {
-    $('select[name=rule1]').ImageSelect({dropdownWidth: 25});
-    $('select[name=rule2]').ImageSelect({dropdownWidth: 25});
   });
 </script>
 </html>

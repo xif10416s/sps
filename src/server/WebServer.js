@@ -10,6 +10,7 @@ const mostUsefullMonster = require('../../db/data/mostUsefull');
 const splinters = ['fire', 'life', 'earth', 'water', 'death', 'dragon'];
 const dbUtils = require('../../db/script/dbUtils');
 
+
 function calcTotalMana(team) {
   let totalMana = 0 ;
   team.slice(0,7).forEach(item =>{
@@ -305,6 +306,14 @@ http.createServer(async function (request, response) {
       return;
     }
 
+  }
+
+  if (pathname.startsWith("/api/explorer")) {
+
+    response.writeHead(200, {'Content-Type': 'application/json'});
+    response.write(JSON.stringify({htmlStr: htmlStr}))
+    response.end()
+    return;
   }
 
   if (pathname.endsWith(".webp")) {

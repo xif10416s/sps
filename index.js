@@ -571,6 +571,7 @@ async function startBotPlayMatch(page, browser) {
             doSummaryLog(summaryInfo)
 
             await sleep(1 * 3600 * 1000+random);
+            runStat = true;
             throw new Error(`Restart needed.`);
         }
 
