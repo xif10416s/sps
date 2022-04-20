@@ -77,6 +77,9 @@ const extractGeneralInfo = (x) => {
 
 async function getBattleDetail(player = '') {
     try{
+        if(player == null || player == ''){
+            return [];
+        }
         return  await getBattleHistory(player).then(battles => battles.map(
             x => {
                 // console.log(x)

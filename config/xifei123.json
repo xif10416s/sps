@@ -3,7 +3,7 @@
   "password": "5JayvrytpFTiQjpHQcWntd9eXLmunuSGPid9TqvghmADww7T1LT",
   "port": 3000,
   "favourite_summoner": "",
-  "skip_cs": "false",
+  "skip_cs": "true",
   "max_cnt": "9999" ,
   "PREFER_CS": "true",
   "SKIP_QUEST": "dragon,death",

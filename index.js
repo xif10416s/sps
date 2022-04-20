@@ -20,6 +20,8 @@ let undefinedTotal = 0;
 const ecrRecoveryRatePerHour = 1.04;
 let dailyClaim = false;
 let claimTime = "-"
+let runFlgCnt = 0;
+let runStat = false;
 
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 let  statFile = './logs/stat.csv';
@@ -205,7 +207,9 @@ async function findSeekingEnemyModal(page, visibleTimeout=15000) {
 
 async function findCreateTeamButton(page, findOpponentDialogStatus=0, btnCreateTeamTimeout=5000) {
     console.log(`waiting for create team button: `,findOpponentDialogStatus);
-    let startFlag =  await page.waitForXPath('//*[@id="dialog_container"]/div/div/div/div[2]/div[3]/div[2]/button', { timeout: btnCreateTeamTimeout, visible: true })
+    const createTeamSelecotr= "#enemy_found_ranked > div > div > div.modal-body > div > div:nth-child(2) > button"
+    // let startFlag =  await page.waitForXPath('//*[@id="dialog_container"]/div/div/div/div[2]/div[3]/div[2]/button', { timeout: btnCreateTeamTimeout, visible: true })
+    let startFlag =  await page.waitForSelector(createTeamSelecotr, { timeout: btnCreateTeamTimeout, visible: true })
         .then(()=> { console.log('start the match'); return true; })
         .catch(async ()=> {
             if (findOpponentDialogStatus === 2) console.error('Is this account timed out from battle?');
@@ -213,7 +217,7 @@ async function findCreateTeamButton(page, findOpponentDialogStatus=0, btnCreateT
             return false;
         });
     if(!startFlag) {
-       return await page.waitForXPath('//*[@id="dialog_container"]/div/div/div/div[2]/div[3]/div[2]/button', { timeout: btnCreateTeamTimeout * 2 , visible: true})
+       return await page.waitForSelector(createTeamSelecotr, { timeout: btnCreateTeamTimeout * 2 , visible: true})
         .then(()=> { console.log('start the match'); return true; })
         .catch(async ()=> {
             if (findOpponentDialogStatus === 2) console.error('Is this account timed out from battle?');
@@ -468,6 +472,7 @@ async function startBotPlayMatch(page, browser) {
         {console.log('Login attempt...')
             await splinterlandsPage.login(page, account, password).catch(e=>{
                 console.log(e);
+                runStat = true;
                 throw new Error('Login Error');
             });
         }
@@ -779,11 +784,17 @@ async function startBotPlayMatch(page, browser) {
             matchDetails['logContent']['isWin'] = isWin
             matchDetails['logContent']['rating'] = rating
             // ask.logger.table([matchDetails['logContent']])
+            runStat = true;
+            runFlgCnt = 0;
             await csvWriter.writeRecords([matchDetails['logContent']]).then(()=> console.log('The CSV file was written successfully'));
     } catch (e) {
             const summaryInfo = {time: new Date().toLocaleTimeString() ,  user: process.env.ACCOUNT , win: winTotal , lost: loseTotal , draw : undefinedTotal, dec: totalDec , reason: e};
             summaryLogger.error(summaryInfo)
             console.log('Error handling browser not opened, internet connection issues, or battle cannot start:', e)
+            if(runStat == false){
+                runFlgCnt ++;
+            }
+            runStat = false;
     }
 }
 
@@ -904,6 +915,12 @@ async function run() {
     while (start) {
         console.log('Recover Status: ', page.recoverStatus)
         config.doConfigInit(process.env.ACCOUNT)
+        if(runFlgCnt >= 3) {
+            console.log("too many error" )
+            const summaryInfo = {time: new Date().toLocaleTimeString() ,  user: process.env.ACCOUNT , win: winTotal , lost: loseTotal , draw : undefinedTotal, dec: totalDec , reason: "LostTooMatchException"};
+            summaryLogger.error(summaryInfo)
+            throw new LostTooMatchException("win : " + winTotal , " lost :" + loseTotal)
+        }
         if( (winTotal+loseTotal) >=40  && loseTotal/(winTotal+loseTotal) >= 0.7 ){
             console.log("LostTooMatchException win : " + winTotal , " lost :" + loseTotal )
             const summaryInfo = {time: new Date().toLocaleTimeString() ,  user: process.env.ACCOUNT , win: winTotal , lost: loseTotal , draw : undefinedTotal, dec: totalDec , reason: "LostTooMatchException"};

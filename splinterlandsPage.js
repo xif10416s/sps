@@ -55,18 +55,18 @@ async function checkMana(page) {
 }
 
 async function checkMatchMana(page) {
-    const mana = await page.$$eval("div.col-md-12 > div.mana-cap__icon", el => el.map(x => x.getAttribute("data-original-title")));
+    const mana = await page.$$eval("#enemy_found_ranked > div > div > div.modal-body > section.combat__conflict.combat_info > div:nth-child(2) > div > div", el => el.map(x => x.getAttribute("data-original-title")));
     const manaValue = parseInt(mana[0].split(':')[1], 10);
     return manaValue;
 }
 
 async function checkMatchRules(page) {
-    const rules = await page.$$eval("div.combat__rules > div.row > div>  img", el => el.map(x => x.getAttribute("data-original-title")));
+    const rules = await page.$$eval("#enemy_found_ranked > div > div > div.modal-body > section.combat__conflict.combat_info > div.combat__rules > div > div  > img ", el => el.map(x => x.getAttribute("data-original-title")));
     return rules.map(x => x.split(':')[0]).join('|')
 }
 
 async function checkMatchActiveSplinters(page) {
-    const splinterUrls = await page.$$eval("div.col-sm-4 > img",
+    const splinterUrls = await page.$$eval("#enemy_found_ranked > div > div > div.modal-body > section.combat__conflict.combat_info > div.combat__splinters > div > img",
             el => el.map(x => x.getAttribute("src")));
     return splinterUrls.map(splinter => splinterIsActive(splinter)).filter(x => x);
 }

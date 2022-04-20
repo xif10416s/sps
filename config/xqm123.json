@@ -3,7 +3,7 @@
   "password": "5J6r3TY9LZwdqjBsc5zhoJjY9oJm7LR8p1rrAKvWQLRwEvUzhtu",
   "port": 3006,
   "favourite_summoner": "",
-  "skip_cs": "false",
+  "skip_cs": "true",
   "max_cnt": "9999" ,
   "PREFER_CS": "true",
   "MINUTES_BATTLES_INTERVAL": 2,
