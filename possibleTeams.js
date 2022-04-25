@@ -1060,7 +1060,7 @@ async  function initCSTeams(possibleTeams, matchDetails,matchSplintersSummoners 
   console.log("makeBestCombine select  : " , matchSplintersSummoners)
   // logger.log("makeBestCombine select  : " , matchSplintersSummoners)
   const myAviableSummoners = getSummoners(matchDetails.myCards,matchDetails.splinters)
-  let sql = "select cs , sum(teams)/sum(teams+lostTeams) as tl   from   battle_stat_v4 where ( " ;
+  let sql = "select cs , sum(teams)/sum(teams+lostTeams) as tl   from   battle_stat_v5 where ( " ;
   let csLike = "";
   for (var i = 0; i < myAviableSummoners.length; i++) {
     if(i != 0) {
@@ -1100,7 +1100,7 @@ async  function initPerferCSTeams(possibleTeams, matchDetails,matchSplintersSumm
   console.log("initPerferCSTeams select  : " , matchSplintersSummoners)
   // logger.log("initPerferCSTeams select  : " , matchSplintersSummoners)
   const myAviableSummoners = getSummoners(matchDetails.myCards,matchDetails.splinters)
-  let sql = "select cs , sum(teams)/sum(teams+lostTeams) as tl   from   battle_stat_v4 where ( " ;
+  let sql = "select cs , sum(teams)/sum(teams+lostTeams) as tl   from   battle_stat_v5 where ( " ;
   let csLike = "";
   for (var i = 0; i < myAviableSummoners.length; i++) {
     if(i != 0) {
@@ -1333,11 +1333,11 @@ async  function makeBestCombineByCs(possibleTeams, matchDetails, limitCnt = 3) {
   // }).join(" or ")
 
   // let isMatchPrefer = true;
-  // let sqlPrefer = " select  wcs as cs ,count(*) as cnt  from battle_stat_cs_ls_v3 where startMana >= ? and startMana <= ? and rule = ? and  ("+ topCsLikeSql +")  and (" + preferSql  +") and count >= "+  limitCnt +" group by wcs order by   cnt desc , count asc  " ;
+  // let sqlPrefer = " select  wcs as cs ,count(*) as cnt  from battle_stat_cs_ls_v5 where startMana >= ? and startMana <= ? and rule = ? and  ("+ topCsLikeSql +")  and (" + preferSql  +") and count >= "+  limitCnt +" group by wcs order by   cnt desc , count asc  " ;
   // let rs = await selectCsLs(sqlPrefer,params)
   // let matchCS = matchCsTeam(rs,possibleTeams)
   // if(matchCS == null ||  matchCS[1].length <= 10){
-    let sql = " select  wcs as cs ,count(*) as cnt  from battle_stat_cs_ls_v3 where startMana >= ? and startMana <= ? and rule = ? and ("+ topCsLikeSql  +") and count >="+ limitCnt   +"  group by wcs order by   cnt desc , count asc    limit 5000" ;
+    let sql = " select  wcs as cs ,count(*) as cnt  from battle_stat_cs_ls_v5 where startMana >= ? and startMana <= ? and rule = ? and ("+ topCsLikeSql  +") and count >="+ limitCnt   +"  group by wcs order by   cnt desc , count asc    limit 5000" ;
     let rs = await selectCsLs(sql,params)
     let matchCS = matchCsTeam(rs,possibleTeams)
     let isMatchPrefer = false;
@@ -1400,7 +1400,7 @@ async function extendsCombineSearch(cs , matchTeams,matchDetails,matchSplintersS
   const manaRange = getManaRange(matchDetails);
   let fromMana = manaRange[0];
   let endMana = manaRange[1];
-  let sql = "select cs , sum(teams)/sum(teams+lostTeams) as tl   from   battle_stat_v4 where  " ;
+  let sql = "select cs , sum(teams)/sum(teams+lostTeams) as tl   from   battle_stat_v5 where  " ;
   let csLike = "cs like '";
   let spCs =  cs.split("-")
   spCs.slice(2,spCs.length).forEach(itemCs =>{

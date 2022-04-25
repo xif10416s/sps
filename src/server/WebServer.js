@@ -265,7 +265,7 @@ http.createServer(async function (request, response) {
       console.table(topCsLikeSql)
 
       // ruleSql = " 1=1 "
-      let sql = " select cs , sum(teams) as ts ,sum(lostTeams) as lts  , sum(totalCnt) as tt , sum(lostTotalCnt) as lts , sum(teams)/sum(teams+lostTeams) as tl from battle_stat_v4 where "
+      let sql = " select cs , sum(teams) as ts ,sum(lostTeams) as lts  , sum(totalCnt) as tt , sum(lostTotalCnt) as lts , sum(teams)/sum(teams+lostTeams) as tl from battle_stat_v5 where "
           +  lenSql + " startMana >= "+ from +"  and  startMana <= "+ end +" and "+ ruleSql + " and ("+ topCsLikeSql +") GROUP BY cs  HAVING   sum(teams) > 3   and tl >= 0.70  order by  len asc,  tl desc  ,sum(teams -lostTeams ) desc limit 30"
 
       let data = await dbUtils.sqlQuery(sql);

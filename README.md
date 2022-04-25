@@ -249,8 +249,10 @@ cd /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/spark && source bin/ac
 
 
 // static weekly
-/mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --conf spark.local.dir=/mnt/f/temp  --master local[6] --driver-memory 24g  --name test
-/mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --conf spark.local.dir=/mnt/h/temp  --master local[10] --driver-memory 10g  --name test -i /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/scala/test2.scala
+copy source exec
+/mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --conf spark.local.dir=/mnt/h/temp  --master local[6] --driver-memory 2g  --name test
+-----/mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --conf spark.local.dir=/mnt/h/temp  --master local[10] --driver-memory 10g  --name test -i /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/scala/batSt_csv.scala
+
 
 -- wsl 
 net stop LxssManager
@@ -261,7 +263,7 @@ https://api2.splinterlands.com/cards/get_details
 ## docker start
 sudo swapon -p 5 /mnt/sda1/swap/swapfile
 
- cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs && watch -n 5  tail -n15  ---disable-inotify  Summary.txt
+ cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs && watch -n 5  tail -n12  ---disable-inotify  Summary.txt
 cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs &&  tail -f ---disable-inotify  SummaryError.txt
  cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs && watch -n 5  tail -n20  ---disable-inotify  rentStat.txt
 
@@ -285,3 +287,14 @@ win restart:
 一、wsl
 sudo service ssh --full-restart
 sudo service cron restart 
+
+mysql 配置
+C:\Program Files\MySQL\MySQL Server 8.0
+
+select * into outfile 'F:p20220420.txt' Fields TERMINATED by ','  From  battle_history_raw_v2 PARTITION(p20220420);
+load data infile 'F:12.csv' into table battle_stat_v5 Fields TERMINATED by ','  (startMana,endMana,cs,len,rule,summonerId,teams,totalCnt,lostTeams,lostTotalCnt)
+load data infile 'F:12.csv' into table battle_stat_cs_ls_v5 Fields TERMINATED by ','  (startMana,endMana,rule, wcs,wlen, lcs,llen,count)
+
+
+node anlysis/etl/dataExport.js
+node anlysis/etl/dataImport.js
