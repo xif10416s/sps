@@ -22,6 +22,10 @@ let dailyClaim = false;
 let claimTime = "-"
 let runFlgCnt = 0;
 let runStat = false;
+let preOwnDec = 0;
+let preDeltaDec = 0 ;
+let preOwnPower = 0 ;
+let preDeltaPower = 0;
 
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 let  statFile = './logs/stat.csv';
@@ -158,7 +162,7 @@ async function checkPower(page) {
         const power = await getElementTextByXpath(page, '//*[@id="power_progress"]/div[1]/span[2]', 3000);
         if(power) {
             console.log(chalk.bold.whiteBright.bgMagenta('Your current power is ' + power));
-            return parseFloat(power.replace(",",""))
+            return parseInt(power.replace(",",""))
         }
     } catch (e) {
         console.log(chalk.bold.redBright.bgBlack('power not defined'));
@@ -205,23 +209,26 @@ async function findSeekingEnemyModal(page, visibleTimeout=15000) {
     return findOpponentDialogStatus
 }
 
-async function findCreateTeamButton(page, findOpponentDialogStatus=0, btnCreateTeamTimeout=5000) {
-    console.log(`waiting for create team button: `,findOpponentDialogStatus);
-    const createTeamSelecotr= "#enemy_found_ranked > div > div > div.modal-body > div > div:nth-child(2) > button"
+async function findCreateTeamButton(page, findOpponentDialogStatus=0, btnCreateTeamTimeout=10000) {
+    console.log(`findCreateTeamButton waiting for create team button: `,findOpponentDialogStatus);
+    //#enemy_found_ranked > div > div > div.modal-body > div > div:nth-child(2) > button
+    //#enemy_found_ranked > div > div > div.modal-body > div > div:nth-child(2) > button
+    const createTeamSelecotr= '//*[@id="enemy_found_ranked"]/div/div/div[2]/div/div[2]/button'
     // let startFlag =  await page.waitForXPath('//*[@id="dialog_container"]/div/div/div/div[2]/div[3]/div[2]/button', { timeout: btnCreateTeamTimeout, visible: true })
-    let startFlag =  await page.waitForSelector(createTeamSelecotr, { timeout: btnCreateTeamTimeout, visible: true })
+    let startFlag =  await page.waitForXPath(createTeamSelecotr, { timeout: btnCreateTeamTimeout, visible: true })
         .then(()=> { console.log('start the match'); return true; })
         .catch(async ()=> {
-            if (findOpponentDialogStatus === 2) console.error('Is this account timed out from battle?');
-            console.error('btn--create-team not detected');
+            if (findOpponentDialogStatus === 2) console.log('Is this account timed out from battle?');
+            console.log('btn--create-team not detected');
             return false;
         });
+    console.log("findCreateTeamButton startFlag ",startFlag)
     if(!startFlag) {
-       return await page.waitForSelector(createTeamSelecotr, { timeout: btnCreateTeamTimeout * 2 , visible: true})
+       return await page.waitForXPath(createTeamSelecotr, { timeout: btnCreateTeamTimeout * 2 , visible: true})
         .then(()=> { console.log('start the match'); return true; })
         .catch(async ()=> {
-            if (findOpponentDialogStatus === 2) console.error('Is this account timed out from battle?');
-            console.error('btn--create-team not detected');
+            if (findOpponentDialogStatus === 2) console.log('Is this account timed out from battle?');
+            console.log('btn--create-team not detected');
             return false;
         });
     } else {
@@ -229,23 +236,26 @@ async function findCreateTeamButton(page, findOpponentDialogStatus=0, btnCreateT
     }
 }
 
+// start battle : <Battle> btn click
 async function launchBattle(page) {
     const maxRetries = 3;
     let retriesNum = 1;
     let btnCreateTeamTimeout = 50000*2;
-    //
+    // 1  pre battle:  check is already start a battle and search enemy
     let findOpponentDialogStatus = await findSeekingEnemyModal(page);
+    // 1.1  pre battle: create team
     let isStartBattleSuccess = await findCreateTeamButton(page, findOpponentDialogStatus);
 
     while (!isStartBattleSuccess && retriesNum <= maxRetries) {
         console.log(`Launch battle iter-[${retriesNum}]`)
         if (findOpponentDialogStatus === 0) {
             console.log('waiting for battle button')
+            // 2  wait BATTLE btn and click start battle , new battle
             isStartBattleSuccess = await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
                 .then(button => { button.click(); console.log('Battle button clicked'); return true })
                 .catch(()=> { console.error('[ERROR] waiting for Battle button. is Splinterlands in maintenance?'); return false; });
             if (!isStartBattleSuccess) { await reload(page); await sleep(5000); retriesNum++; continue }
-
+            // 3  search enemy dialog modal
             findOpponentDialogStatus = await findSeekingEnemyModal(page);
         }
 
@@ -490,6 +500,13 @@ async function startBotPlayMatch(page, browser) {
         const dec = await checkDec(page)
         const league = await  checkLeague(page)
         const nextQuestTime = await  checkNextQuest(page)
+
+        const deltaDec= preOwnDec > 0  && preOwnDec != dec ? dec - preOwnDec : preDeltaDec ;
+        preOwnDec = dec;
+        preDeltaDec = deltaDec;
+        const deltaPower = preOwnPower > 0 && preOwnPower != power ? power - preOwnPower : preDeltaPower;
+        preOwnPower = power;
+        preDeltaPower = deltaPower;
         // if (ecr === undefined) throw new Error('Fail to get ECR.')
         console.log('getting user quest info from splinterlands API...')
         const quest = await getQuest();
@@ -564,9 +581,9 @@ async function startBotPlayMatch(page, browser) {
             // await closeBrowser(browser);
             console.log(chalk.bold.white(`Initiating sleep mode. The bot will awaken at ${new Date(Date.now() + 1 * 3600 * 1000 + random).toLocaleString()}`));
             // logsummsary
-            const summaryInfo = {time: new Date(Date.now() + 1 * 3600 * 1000 + random).toLocaleTimeString() ,NQT:nextQuestTime,CT: claimTime ,  user: process.env.ACCOUNT, claim: dailyClaim , ECR: ecr , win: winTotal , lost: loseTotal , draw : undefinedTotal
-                , winRate: (winTotal /(winTotal+loseTotal+undefinedTotal)).toFixed(2) , dec: totalDec.toFixed(2)
-                , quest: quest != null ? quest?.splinter : "-" , lastWin:  "-" , qt: quest != null ? quest?.total  : "-" , qc:quest != null ? quest?.completed  : "-" ,rating:rating ,power :power ,totalDEC:dec ,league:league };
+            const summaryInfo = {time: new Date(Date.now() + 1 * 3600 * 1000 + random).toLocaleTimeString() ,NQT:nextQuestTime,CT: claimTime ,  user: process.env.ACCOUNT, claim: dailyClaim , ECR: ecr , WC: winTotal , LC: loseTotal , DC : undefinedTotal
+                , WR: (winTotal /(winTotal+loseTotal)).toFixed(2) , dec: totalDec.toFixed(2)
+                , quest: quest != null ? quest?.splinter : "-" , LW:  "-" , qt: quest != null ? quest?.total  : "-" , qc:quest != null ? quest?.completed  : "-" ,rating:rating ,power :power+"("+deltaPower+")" ,tDEC:dec+"("+deltaDec+")" ,league:league };
 
             doSummaryLog(summaryInfo)
 
@@ -712,7 +729,7 @@ async function startBotPlayMatch(page, browser) {
             });
         if (startFightFail) return
 
-        let isWin = "false";
+        let isWin = "F";
 
         await page.waitForTimeout(5000);
         await page.waitForSelector('#btnRumble', { timeout: 90000 }).then(()=>console.log('btnRumble visible')).catch(()=>console.log('btnRumble not visible'));
@@ -725,7 +742,7 @@ async function startBotPlayMatch(page, browser) {
                 const winner = await getElementText(page, 'section.player.winner .bio__name__display', 15000);
                 console.log("result win : ",winner.trim() ,':' , account.toLowerCase()  )
                 if (winner.trim() == account.toLowerCase()) {
-                    isWin = "true";
+                    isWin = "T";
                     const decWon = await getElementText(page, '.player.winner span.dec-reward span', 1000);
                     console.log(chalk.green('You won! Reward: ' + decWon + ' DEC'));
                     // ask.logger.log('You won! Reward: ', decWon , ' DEC');
@@ -761,11 +778,11 @@ async function startBotPlayMatch(page, browser) {
                     console.log(chalk.red('You lost'));
                     // ask.logger.log('You lost');
                     loseTotal += 1;
-                    isWin = false;
+                    isWin = "F";
                 }
             } catch {
                 console.log('Could not find winner - draw?');
-                isWin = "draw"
+                isWin = "D"
                 undefinedTotal += 1;
             }
             await clickOnElement(page, '.btn--done', 22000, 12000);
@@ -776,9 +793,9 @@ async function startBotPlayMatch(page, browser) {
 
             // ask.logger.log(account,'Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal));
             // ask.logger.log(account,chalk.green('Total Earned: ' + totalDec + ' DEC'));
-            const summaryInfo = {time: new Date().toLocaleTimeString() ,NQT:nextQuestTime,CT: claimTime ,  user: process.env.ACCOUNT, claim: dailyClaim  , ECR: ecr , win: winTotal , lost: loseTotal , draw : undefinedTotal
-                , winRate: (winTotal /(winTotal+loseTotal+undefinedTotal)).toFixed(2) , dec: totalDec.toFixed(2)
-                , quest: quest?.splinter  + ":" + teamToPlay.cards[7] , lastWin:  isWin , qt:quest?.total, qc:quest?.completed ,rating:rating ,power :power ,totalDEC:dec ,league:league };
+            const summaryInfo = {time: new Date().toLocaleTimeString() ,NQT:nextQuestTime,CT: claimTime ,  user: process.env.ACCOUNT, claim: dailyClaim  , ECR: ecr , WC: winTotal , LC: loseTotal , DC : undefinedTotal
+                , WR: (winTotal /(winTotal+loseTotal)).toFixed(2) , dec: totalDec.toFixed(2)
+                , quest: quest?.splinter  + ":" + teamToPlay.cards[7] , LW:  isWin , qt:quest?.total, qc:quest?.completed ,rating:rating ,power :power+"("+deltaPower+")" ,tDEC:dec+"("+deltaDec+")" ,league:league };
 
             doSummaryLog(summaryInfo)
 

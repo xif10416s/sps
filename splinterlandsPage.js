@@ -1,4 +1,6 @@
 const battlesGet = require('./battlesGet');
+const { getElementText } = require('./helper');
+
 async function login(page, account, password) {
     try {
         await page.waitForSelector('#log_in_button > button').then(() => page.waitForTimeout(3000 * 3)).then(() => page.click('#log_in_button > button'))
@@ -55,18 +57,20 @@ async function checkMana(page) {
 }
 
 async function checkMatchMana(page) {
-    const mana = await page.$$eval("#enemy_found_ranked > div > div > div.modal-body > section.combat__conflict.combat_info > div:nth-child(2) > div > div", el => el.map(x => x.getAttribute("data-original-title")));
-    const manaValue = parseInt(mana[0].split(':')[1], 10);
+    // const mana = await page.$$eval("#enemy_found_ranked > div > div > div.modal-body > section.combat__conflict.combat_info > div:nth-child(2) > div > div", el => el.map(x => x.getAttribute("data-original-title")));
+    const mana = await getElementText(page,"#enemy_found_ranked > div > div > div.modal-body > section.combat__conflict > div > div:nth-child(6) > div > div > div > div")
+    console.log("checkMatchMana :" , mana.trim())
+    const manaValue = parseInt(mana.trim(), 10);
     return manaValue;
 }
 
 async function checkMatchRules(page) {
-    const rules = await page.$$eval("#enemy_found_ranked > div > div > div.modal-body > section.combat__conflict.combat_info > div.combat__rules > div > div  > img ", el => el.map(x => x.getAttribute("data-original-title")));
+    const rules = await page.$$eval("#enemy_found_ranked > div > div > div.modal-body > section.combat__conflict > div > div.combat__rules > div > div > img", el => el.map(x => x.getAttribute("data-original-title")));
     return rules.map(x => x.split(':')[0]).join('|')
 }
 
 async function checkMatchActiveSplinters(page) {
-    const splinterUrls = await page.$$eval("#enemy_found_ranked > div > div > div.modal-body > section.combat__conflict.combat_info > div.combat__splinters > div > img",
+    const splinterUrls = await page.$$eval("#enemy_found_ranked > div > div > div.modal-body > section.combat__conflict > div > div.combat__splinters > div > img",
             el => el.map(x => x.getAttribute("src")));
     return splinterUrls.map(splinter => splinterIsActive(splinter)).filter(x => x);
 }

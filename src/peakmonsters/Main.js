@@ -200,7 +200,7 @@ async function doPKCheck(account, passward, page) {
         const h1 = await getTextBySelector(
             "#app > div.page-container > div > div > div > div > div.row.display-flex-row > div.col-md-10.col-md-pull-2 > div > div.table-responsive > table > tbody > tr:nth-child("+index+") > td:nth-child(10) > small")
         if(h1 == null) {
-          console.log(index,"finished...")
+          // console.log(index,"finished...")
           return false;
         }
         const p1 = await getTextBySelector(
@@ -210,11 +210,17 @@ async function doPKCheck(account, passward, page) {
         const pf = parseInt(
             p1.replaceAll("'", "").replaceAll("(", "").replaceAll(")",
                 "").replaceAll(",", ""))
-        // console.log(pf)
+
+        const owner = await getTextBySelector(
+            "#app > div.page-container > div > div > div > div > div.row.display-flex-row > div.col-md-10.col-md-pull-2 > div > div.table-responsive > table > tbody > tr:nth-child("+index+") > td:nth-child(9)")
+        // console.log("owner:",owner , " account:",account , "index:", owner.indexOf(account) )
         // const aNum =  parseFloat(h1.minHours.replaceAll("'","").split(" ")[0])
         // const aHour = h1.minHours.indexOf("days") != -1 ? 24 : 1 ;
         const name = await getTextBySelector("#app > div.page-container > div > div > div > div > div.row.display-flex-row > div.col-md-10.col-md-pull-2 > div > div.table-responsive > table > tbody > tr:nth-child("+index+") > td.text-left.text-semibold.smallable > div > div")
-        if (pf >= 100 && h1.toUpperCase().indexOf(HOURS) != -1 && rsArr.length <= 5) {
+        if (pf >= 100 && h1.toUpperCase().indexOf(HOURS) != -1 && rsArr.length <= 5 && owner.indexOf(account) == -1) {
+          // if(account == "xifei123") {
+          //   console.log(owner,account, owner.indexOf(account) == -1 )
+          // }
           rsArr.push({
             "account": "[" + account + "]",
             "card":name.split("\n          ")[1],

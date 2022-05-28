@@ -264,7 +264,6 @@ https://api2.splinterlands.com/cards/get_details
 sudo swapon -p 5 /mnt/sda1/swap/swapfile
 
  cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs && watch -n 5  tail -n12  ---disable-inotify  Summary.txt
-cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs &&  tail -f ---disable-inotify  SummaryError.txt
  cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs && watch -n 5  tail -n20  ---disable-inotify  rentStat.txt
 
 
