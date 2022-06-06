@@ -17,7 +17,7 @@ let totalDec = 0;
 let winTotal = 0;
 let loseTotal = 0;
 let undefinedTotal = 0;
-const ecrRecoveryRatePerHour = 1.04;
+let getNewDailyClaim = false;
 let dailyClaim = false;
 let claimTime = "-"
 let runFlgCnt = 0;
@@ -75,10 +75,25 @@ const summaryFile = fs.createWriteStream('./logs/Summary.txt', {'flags': 'a'});
 const summaryErrorFile = fs.createWriteStream('./logs/SummaryError.txt', {'flags': 'a'});
 let summaryLogger = new console.Console(summaryFile, summaryErrorFile);
 
-async function getQuest() {
-    return quests.getPlayerQuest(account.toLowerCase())
-        .then(x=>x)
-        .catch(e=>console.log('No quest data, splinterlands API didnt respond, or you are wrongly using the email and password instead of username and posting key'))
+// async function getQuest() {
+//     return quests.getPlayerQuest(account.toLowerCase())
+//         .then(x=>x)
+//         .catch(e=>console.log('No quest data, splinterlands API didnt respond, or you are wrongly using the email and password instead of username and posting key'))
+// }
+
+async function getQuest(page) {
+    try {
+        const splinter = await getElementText(page, "#quest_title1");
+        const total = await getElementText(page,"#quest_chest_total_text")
+        const completed = await getElementText(page,"#quest_chest_progress_text")
+        const nct = await getElementText(page,"#complete_text")
+        const fc = await getElementText(page,"#quest_chests_earned")
+
+        return {splinter: splinter.split(":")[1].trim().toLowerCase() ,total : parseInt(total.replaceAll(",","")) , completed: parseInt(completed.replaceAll(",","")) , nct:nct.replaceAll(" ","") , fc : parseInt(fc)}
+    } catch (e) {
+        console.log(e)
+    }
+    return null;
 }
 
 async function closePopups(page) {
@@ -179,7 +194,7 @@ async function uplevelLeage(page) {
         .then(() => page.waitForTimeout(5000))
         .then(async a=>{
             await page.reload();
-            console.log('New quest requested')})
+            console.log('uplevelLeage  requested')})
         .catch(e=>console.log('Cannot click on up level leage'))
     } catch(e) {
         console.log('Error while click on up level leage')
@@ -251,7 +266,7 @@ async function launchBattle(page) {
         if (findOpponentDialogStatus === 0) {
             console.log('waiting for battle button')
             // 2  wait BATTLE btn and click start battle , new battle
-            isStartBattleSuccess = await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
+            isStartBattleSuccess = await page.waitForXPath("//*[@id='battle_category_btn']", { timeout: 20000 })
                 .then(button => { button.click(); console.log('Battle button clicked'); return true })
                 .catch(()=> { console.error('[ERROR] waiting for Battle button. is Splinterlands in maintenance?'); return false; });
             if (!isStartBattleSuccess) { await reload(page); await sleep(5000); retriesNum++; continue }
@@ -488,6 +503,8 @@ async function startBotPlayMatch(page, browser) {
         }
 
         await page.goto('https://splinterlands.io/?p=battle_history');//https://splinterlands.com/
+        await page.waitForTimeout(8000);
+        await page.reload();
         await page.waitForTimeout(8000*3);
         await closePopups(page);
         await closePopups(page);
@@ -499,8 +516,7 @@ async function startBotPlayMatch(page, browser) {
         const ecr = await checkEcr(page);
         const dec = await checkDec(page)
         const league = await  checkLeague(page)
-        const nextQuestTime = await  checkNextQuest(page)
-
+        // const nextQuestTime = await  checkNextQuest(page)
         const deltaDec= preOwnDec > 0  && preOwnDec != dec ? dec - preOwnDec : preDeltaDec ;
         preOwnDec = dec;
         preDeltaDec = deltaDec;
@@ -509,64 +525,70 @@ async function startBotPlayMatch(page, browser) {
         preDeltaPower = deltaPower;
         // if (ecr === undefined) throw new Error('Fail to get ECR.')
         console.log('getting user quest info from splinterlands API...')
-        const quest = await getQuest();
+
+        // check focus new quest , current focus quest  end
+        await focusNewQuest(page);
+
+        let quest = await getQuest(page);
         if(!quest) {
             console.log('Error for quest details. Splinterlands API didnt work or you used incorrect username, remove @ and dont use email')
+            await page.waitForTimeout(5000*5);
+            quest = await getQuest(page);
+            if(!quest) {
+                throw new LostTooMatchException("no quest ........")
+            }
         } else {
             console.log("quest:",quest)
         }
 
+        const nextQuestTime = quest.nct
+
         //if quest done claim reward. default to true. to deactivate daily quest rewards claim, set CLAIM_DAILY_QUEST_REWARD false in the env file
         console.log('claim daily quest setting:', process.env.CLAIM_DAILY_QUEST_REWARD, 'Quest details: ', quest);
         // ask.logger.log('claim daily quest setting:', process.env.CLAIM_DAILY_QUEST_REWARD, 'Quest details: ', quest);
-        if(quest && quest?.total > quest?.completed) {
-            dailyClaim = false;
-        }
+        // TODO
+        // if(quest && quest?.total > quest?.completed) {
+        //     dailyClaim = false;
+        // }
         const isClaimDailyQuestMode = process.env.CLAIM_DAILY_QUEST_REWARD === 'false' ? false : true;
         const isPowerAndRating =  parseInt(power) >= 15000  && parseInt(rating) >=1000 ;
         const isLeageBRONZE = league ? league.indexOf("BRONZE") != -1 : false;
-        if (isClaimDailyQuestMode === true && dailyClaim == false  && quest?.total == quest?.completed) {
+        console.log("isLeageBRONZE ," , isLeageBRONZE)
+        // TODO auto claim daily
+        if (isClaimDailyQuestMode === true ) {
             if(isPowerAndRating && !isLeageBRONZE) { // serviler I check
-                try {
-                    await page.waitForSelector('#quest_claim_btn', { timeout: 5000*2 })
-                    .then(button =>  button.click() ).then(() => {
-                        dailyClaim = true;
-                        winTotal=0;
-                        undefinedTotal=1;
-                        loseTotal=0;
-                        totalDec=0;
-                        const tm = new Date().toLocaleString('en-GB').split(",")
-                        claimTime = tm[0].split("/")[0] + tm[1].slice(0,6)
-                    });
-                } catch (e) {
-                    dailyClaim = false;
-                    console.info('no quest reward to be claimed waiting for the battle...')
-                }
+                await doDailyClaim(page);
             }
         }
         await page.waitForTimeout(5000*5);
 
-        if(process.env.SKIP_QUEST && quest?.splinter && process.env.SKIP_QUEST.split(',').includes(quest?.splinter) && quest?.total !== quest?.completed) {
-            try {
-                await page.click('#quest_new_btn')
-                .then(() => page.waitForTimeout(5000))
-                .then(async a=>{
-                    await page.reload();
-                    console.log('New quest requested')})
-                .catch(e=>console.log('Cannot click on new quest'))
-
-            } catch(e) {
-                console.log('Error while skipping new quest')
-            }
+        // match rule skip , get new quest
+        if(process.env.SKIP_QUEST && quest?.splinter && process.env.SKIP_QUEST.split(',').includes(quest?.splinter) ) {
+            await newQuest(page,false)
         }
 
         // const isQuestFinishedAndLowECR = ecr && process.env.ECR_STOP_LIMIT  && ecr <= parseFloat(process.env.ECR_STOP_LIMIT)
         //     && quest?.total == quest?.completed;
 
-        const isWaitForBeginWithHighECR = ecr && process.env.ECR_RECOVER_TO &&  ecr <= parseFloat(process.env.ECR_RECOVER_TO)
-            && quest?.total == quest?.completed;
+        //TODO
+        // && quest?.total > parseInt(process.env.TARGET_FP)  && quest?.total - quest?.completed >= parseInt(process.env.TARGET_FP)
+        const isWaitForBeginWithHighECR = ecr && process.env.ECR_RECOVER_TO &&  ecr <= parseFloat(process.env.ECR_RECOVER_TO) ;
+            // && quest?.total == quest?.completed;
         const checkRatingAndPower =  parseInt(power) >= 10000 && parseInt(rating) >=1050 ||  parseInt(power) < 10000
-        if ( isWaitForBeginWithHighECR && checkRatingAndPower) {
+        // task finish analysis
+        let isNotEnoughtTimeFinish = isDailyTaskWithoutEnoughTime(quest);
+        // fc == 0
+        if(isNotEnoughtTimeFinish && getNewDailyClaim == false && quest.fc == 0) {
+            await newQuest(page,true);
+            if(getNewDailyClaim) {
+                console.log("isNotEnoughtTimeFinish but  not getNewDailyClaim ... do new Quest try , getNewDailyClaim:",getNewDailyClaim ,"quest.fc:",quest.fc)
+                isNotEnoughtTimeFinish = false;
+            }
+        }
+
+        // do sleep
+        if ( isWaitForBeginWithHighECR && checkRatingAndPower && isNotEnoughtTimeFinish) {
+            console.log("checkRatingAndPower",checkRatingAndPower , parseInt(process.env.TARGET_FP))
             // if (ecr < parseFloat(process.env.ECR_STOP_LIMIT)) {
             //     console.log(chalk.bold.red(`ECR lower than limit ${process.env.ECR_STOP_LIMIT}%. reduce the limit in the env file config or wait until ECR will be at ${process.env.ECR_RECOVER_TO || '100'}%`));
             // } else if (ecr < parseFloat(process.env.ECR_RECOVER_TO)) {
@@ -732,8 +754,12 @@ async function startBotPlayMatch(page, browser) {
         let isWin = "F";
 
         await page.waitForTimeout(5000);
-        await page.waitForSelector('#btnRumble', { timeout: 90000 }).then(()=>console.log('btnRumble visible')).catch(()=>console.log('btnRumble not visible'));
+        let isRumbleVisable = true;
+        await page.waitForSelector('#btnRumble', { timeout: 90000 }).then(()=>console.log('btnRumble visible')).catch(()=>{console.log('btnRumble not visible'); isRumbleVisable = false;});
         await page.waitForTimeout(5000);
+        if(!isRumbleVisable){
+            await page.waitForSelector('#btnRumble', { timeout: 90000 }).then(()=>console.log('btnRumble visible')).catch(()=>{console.log('btnRumble not visible'); isRumbleVisable = false;});
+        }
         await page.$eval('#btnRumble', elem => elem.click()).then(()=>console.log('btnRumble clicked')).catch(()=>console.log('btnRumble didnt click')); //start rumble
         await page.waitForSelector('#btnSkip', { timeout: 10000 }).then(()=>console.log('btnSkip visible')).catch(()=>console.log('btnSkip not visible'));
         await page.$eval('#btnSkip', elem => elem.click()).then(()=>console.log('btnSkip clicked')).catch(()=>console.log('btnSkip not visible')); //skip rumble
@@ -749,29 +775,13 @@ async function startBotPlayMatch(page, browser) {
                     totalDec += !isNaN(parseFloat(decWon)) ? parseFloat(decWon) : 0 ;
                     winTotal += 1;
 
-                    // ---------- check daily claim start
-                    if (isClaimDailyQuestMode === true && dailyClaim == false  && quest?.total == quest?.total - 1) {
+                    // ---------- check daily claim start TODO
+                    if (isClaimDailyQuestMode === true ) {
                         if(isPowerAndRating && !isLeageBRONZE) { // serviler I check
-                            const quest = await getQuest();
-                            if(quest && quest?.total == quest?.completed) {
-                                try {
-                                    await page.waitForSelector('#quest_claim_btn', { timeout: 5000*2 })
-                                    .then(button =>  button.click() ).then(() => {
-                                        dailyClaim = true;
-                                        winTotal=0;
-                                        undefinedTotal=1;
-                                        loseTotal=0;
-                                        totalDec=0;
-                                        const tm = new Date().toLocaleString('en-GB').split(",")
-                                        claimTime = tm[0].split("/")[0] + tm[1].slice(0,6)
-                                    });
-                                } catch (e) {
-                                    dailyClaim = false;
-                                    console.info('no quest reward to be claimed waiting for the battle...')
-                                }
-                            }
+                            await doDailyClaim(page);
                         }
                     }
+                    // await page.waitForTimeout(5000*5);
                     // ---------- check daily claim end
                 }
                 else {
@@ -816,6 +826,104 @@ async function startBotPlayMatch(page, browser) {
     }
 }
 
+async function focusNewQuest(page){
+    try {
+        await page.waitForXPath('//*[@id="focus_new_btn"]', { timeout: 5000 ,visible: true})
+        .then(fbtn  => fbtn.click())
+        .then(()=> console.log('1  focus_new_btn New quest clicked ', new Date()))
+        .then(()=> page.waitForTimeout(30000))
+        .then(async ()=>{
+            await page.reload();
+            console.log('1.1  focus_new_btn New quest page reload', new Date())})
+        .then(()=> page.waitForTimeout(30000))
+        .then(()=> console.log('1.2  focus_new_btn New quest reload wait end  ', new Date()))
+        .then(() =>{
+            resetDailyStat();
+        })
+        .catch(e=>console.log('2. Cannot click on focus_new_btn'))
+    } catch (e) {
+        console.log('2. Error while start new quest')
+    }
+}
+function resetDailyStat(){
+    winTotal=0;
+    undefinedTotal=1;
+    loseTotal=0;
+    totalDec=0;
+    getNewDailyClaim = false;
+}
+
+async function doDailyClaim(page) {
+    try {
+        await page.waitForSelector('#quest_claim_btn', { timeout: 5000*2 })
+        .then(button =>  button.click() ).then(() => {
+            dailyClaim = true;
+            resetDailyStat();
+            const tm = new Date().toLocaleString('en-GB').split(",")
+            claimTime = tm[0].split("/")[0] + tm[1].slice(0,6)
+            page.waitForTimeout(60000);
+        });
+    } catch (e) {
+        dailyClaim = false;
+        console.info('no quest reward to be claimed waiting for the battle...')
+    }
+}
+
+async function newQuest(page , isNotEnoughtTime){
+    try {
+        await page.click('#quest_new_btn')
+        .then(() => page.waitForTimeout(20000))
+        .then(async a=>{
+            await page.reload();
+            console.log('New quest requested');
+            getNewDailyClaim = isNotEnoughtTime;
+        })
+        .then(() => page.waitForTimeout(30000))
+        .catch(e=>console.log('Cannot click on new quest'))
+
+    } catch(e) {
+        console.log('Error while skipping new quest')
+    }
+}
+
+function isDailyTaskWithoutEnoughTime(quest) {
+    if(quest == null ){
+        return false;
+    }
+
+    if(quest.nct == null  ||  quest.nct.trim().length  == 0  ){
+        return false;
+    }
+    const remainHours = parseInt(quest.nct.split(":")[0])
+
+    // least run end hours  23:59 , 22:59 , 21,20,19,18
+    // 20 = 4 ,
+    let leastEndHours = 20;
+    //  init quest failed , new quest try 6 hours
+    if(getNewDailyClaim ) {
+        console.log("isNotEnoughtTimeFinish but  not getNewDailyClaim true , try more  ...")
+        leastEndHours = 18;
+    }
+    // least 4 hours running
+    if(remainHours >= leastEndHours  ) {
+        return false;
+    }
+
+    let checkResult = false;
+    let startHour = 24;
+    const dpRate = ( quest.completed + quest.total * quest.fc ) / (startHour - remainHours)
+    const remainDp  =  quest.total -  quest.completed;
+    if(remainDp - dpRate * ( remainHours - 0.5) >= -100  ){
+        checkResult = true;
+    }
+
+    if(checkResult){
+        console.log("*****DailyTaskWithoutEnoughTime : " , quest.nct , quest.total , quest.completed ,quest.fc);
+        console.log("dpRate:",dpRate , "per/hour  remainDp:", remainDp , "remainHours:",remainHours ,"tryNew:",getNewDailyClaim)
+    }
+    return checkResult;
+}
+
 function doSummaryLog(summaryInfo){
     delete require.cache[require.resolve("./data/log/stat.json")]
     let statJson = require('./data/log/stat')
@@ -846,6 +954,7 @@ let puppeteer_options = {
     browserWSEndpoint: 'ws://192.168.99.100:'+ process.env.wsport,
     headless: isHeadlessMode, // default is true
     args: ['--no-sandbox',
+        // '--proxy-server=192.168.99.1:1081',
     '--disable-setuid-sandbox',
         // '--proxy-server=127.0.0.1:1080',
     //'--disable-dev-shm-usage',
@@ -969,7 +1078,8 @@ async function run() {
                     await page.waitForTimeout(5000);
                     const sleepingTimeInMinutes = process.env.MINUTES_BATTLES_INTERVAL;
                     const sleepingTime = sleepingTimeInMinutes * 60000;
-                    let randomTime = Math.ceil(Math.random()*5)* 60000 + sleepingTime ;
+                    //Math.ceil(Math.random()*2)* 60000 +
+                    let randomTime =  sleepingTime ;
                     if((winTotal+loseTotal) >=30 &&  loseTotal/(winTotal+loseTotal) >= 0.7 ){
                         randomTime = 15 * 60000;
                         console.log("LostTooMatchException win : " + winTotal , " lost :" + loseTotal , "waittime mutil 3 :" , randomTime )

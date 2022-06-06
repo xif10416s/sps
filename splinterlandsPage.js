@@ -4,7 +4,7 @@ const { getElementText } = require('./helper');
 async function login(page, account, password) {
     try {
         await page.waitForSelector('#log_in_button > button').then(() => page.waitForTimeout(3000 * 3)).then(() => page.click('#log_in_button > button'))
-        console.log(account + " " + password)
+        console.log("login in button clicked : " , account + " " + password )
         await page.waitForSelector('#email')
             .then(() => page.waitForTimeout(3000))
             .then(() => page.focus('#email'))
