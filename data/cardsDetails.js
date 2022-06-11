@@ -1,4 +1,4 @@
-const cardsDetails = require("./cardsDetails_b_0225.json");
+const cardsDetails = require("./cardsDetails.json");
 
 
 const cardsDetailsNameMap = {}

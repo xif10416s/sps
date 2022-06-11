@@ -529,6 +529,20 @@ async function startBotPlayMatch(page, browser) {
         // check focus new quest , current focus quest  end
         await focusNewQuest(page);
 
+        // do daily quest claim
+        const isClaimDailyQuestMode = process.env.CLAIM_DAILY_QUEST_REWARD === 'false' ? false : true;
+        const isPowerAndRating =  parseInt(power) >= 15000  && parseInt(rating) >=1000 ;
+        const isLeageBRONZE = league ? league.indexOf("BRONZE") != -1 : false;
+        console.log("isLeageBRONZE ," , isLeageBRONZE)
+        // TODO auto claim daily
+        if (isClaimDailyQuestMode === true ) {
+            if(isPowerAndRating && !isLeageBRONZE) { // serviler I check
+                await doDailyClaim(page);
+            }
+        }
+        await page.waitForTimeout(5000*5);
+
+        // get quest info
         let quest = await getQuest(page);
         if(!quest) {
             console.log('Error for quest details. Splinterlands API didnt work or you used incorrect username, remove @ and dont use email')
@@ -550,17 +564,7 @@ async function startBotPlayMatch(page, browser) {
         // if(quest && quest?.total > quest?.completed) {
         //     dailyClaim = false;
         // }
-        const isClaimDailyQuestMode = process.env.CLAIM_DAILY_QUEST_REWARD === 'false' ? false : true;
-        const isPowerAndRating =  parseInt(power) >= 15000  && parseInt(rating) >=1000 ;
-        const isLeageBRONZE = league ? league.indexOf("BRONZE") != -1 : false;
-        console.log("isLeageBRONZE ," , isLeageBRONZE)
-        // TODO auto claim daily
-        if (isClaimDailyQuestMode === true ) {
-            if(isPowerAndRating && !isLeageBRONZE) { // serviler I check
-                await doDailyClaim(page);
-            }
-        }
-        await page.waitForTimeout(5000*5);
+
 
         // match rule skip , get new quest
         if(process.env.SKIP_QUEST && quest?.splinter && process.env.SKIP_QUEST.split(',').includes(quest?.splinter) ) {
@@ -587,7 +591,7 @@ async function startBotPlayMatch(page, browser) {
         }
 
         // do sleep
-        if ( isWaitForBeginWithHighECR && checkRatingAndPower && isNotEnoughtTimeFinish) {
+        if ( (isWaitForBeginWithHighECR &&  quest.fc >= 0 &&  quest.completed/quest.total <= 0.3 || isNotEnoughtTimeFinish ) && checkRatingAndPower  ) {
             console.log("checkRatingAndPower",checkRatingAndPower , parseInt(process.env.TARGET_FP))
             // if (ecr < parseFloat(process.env.ECR_STOP_LIMIT)) {
             //     console.log(chalk.bold.red(`ECR lower than limit ${process.env.ECR_STOP_LIMIT}%. reduce the limit in the env file config or wait until ECR will be at ${process.env.ECR_RECOVER_TO || '100'}%`));
@@ -603,7 +607,7 @@ async function startBotPlayMatch(page, browser) {
             // await closeBrowser(browser);
             console.log(chalk.bold.white(`Initiating sleep mode. The bot will awaken at ${new Date(Date.now() + 1 * 3600 * 1000 + random).toLocaleString()}`));
             // logsummsary
-            const summaryInfo = {time: new Date(Date.now() + 1 * 3600 * 1000 + random).toLocaleTimeString() ,NQT:nextQuestTime,CT: claimTime ,  user: process.env.ACCOUNT, claim: dailyClaim , ECR: ecr , WC: winTotal , LC: loseTotal , DC : undefinedTotal
+            const summaryInfo = {time: new Date(Date.now() + 1 * 3600 * 1000 + random).toLocaleTimeString() ,NQT:nextQuestTime,CT: claimTime ,  user: process.env.ACCOUNT, NQ: getNewDailyClaim , ECR: ecr , WC: winTotal , LC: loseTotal  , FC : quest.fc
                 , WR: (winTotal /(winTotal+loseTotal)).toFixed(2) , dec: totalDec.toFixed(2)
                 , quest: quest != null ? quest?.splinter : "-" , LW:  "-" , qt: quest != null ? quest?.total  : "-" , qc:quest != null ? quest?.completed  : "-" ,rating:rating ,power :power+"("+deltaPower+")" ,tDEC:dec+"("+deltaDec+")" ,league:league };
 
@@ -803,7 +807,7 @@ async function startBotPlayMatch(page, browser) {
 
             // ask.logger.log(account,'Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal));
             // ask.logger.log(account,chalk.green('Total Earned: ' + totalDec + ' DEC'));
-            const summaryInfo = {time: new Date().toLocaleTimeString() ,NQT:nextQuestTime,CT: claimTime ,  user: process.env.ACCOUNT, claim: dailyClaim  , ECR: ecr , WC: winTotal , LC: loseTotal , DC : undefinedTotal
+            const summaryInfo = {time: new Date().toLocaleTimeString() ,NQT:nextQuestTime,CT: claimTime ,  user: process.env.ACCOUNT, NQ: getNewDailyClaim  , ECR: ecr , WC: winTotal , LC: loseTotal , FC : quest.fc
                 , WR: (winTotal /(winTotal+loseTotal)).toFixed(2) , dec: totalDec.toFixed(2)
                 , quest: quest?.splinter  + ":" + teamToPlay.cards[7] , LW:  isWin , qt:quest?.total, qc:quest?.completed ,rating:rating ,power :power+"("+deltaPower+")" ,tDEC:dec+"("+deltaDec+")" ,league:league };
 
@@ -894,15 +898,22 @@ function isDailyTaskWithoutEnoughTime(quest) {
     if(quest.nct == null  ||  quest.nct.trim().length  == 0  ){
         return false;
     }
-    const remainHours = parseInt(quest.nct.split(":")[0])
+    let remainHours = parseInt(quest.nct.split(":")[0])
+    const remainMiniutes = parseInt(quest.nct.split(":")[1])
+    if(remainHours == 0 && remainMiniutes <=20 ){
+        return false;
+    }
 
+    if(remainMiniutes >= 35){
+        remainHours = remainHours + 0.5;
+    }
     // least run end hours  23:59 , 22:59 , 21,20,19,18
-    // 20 = 4 ,
-    let leastEndHours = 20;
-    //  init quest failed , new quest try 6 hours
+    // 16 =8, 18 = 6, 20 = 4 ,
+    let leastEndHours = 22;
+    //  init quest failed , new quest try 8 hours
     if(getNewDailyClaim ) {
         console.log("isNotEnoughtTimeFinish but  not getNewDailyClaim true , try more  ...")
-        leastEndHours = 18;
+        leastEndHours = 19;
     }
     // least 4 hours running
     if(remainHours >= leastEndHours  ) {
@@ -913,13 +924,13 @@ function isDailyTaskWithoutEnoughTime(quest) {
     let startHour = 24;
     const dpRate = ( quest.completed + quest.total * quest.fc ) / (startHour - remainHours)
     const remainDp  =  quest.total -  quest.completed;
-    if(remainDp - dpRate * ( remainHours - 0.5) >= -100  ){
+    if(remainDp - dpRate * remainHours >= -(remainHours * (40 +  remainHours))  ){
         checkResult = true;
     }
 
     if(checkResult){
         console.log("*****DailyTaskWithoutEnoughTime : " , quest.nct , quest.total , quest.completed ,quest.fc);
-        console.log("dpRate:",dpRate , "per/hour  remainDp:", remainDp , "remainHours:",remainHours ,"tryNew:",getNewDailyClaim)
+        console.log("dpRate:",dpRate , "per/hour  remainDp:", remainDp , "remainHours:",remainHours ,"tryNew:",getNewDailyClaim,-(remainHours * 40))
     }
     return checkResult;
 }

@@ -8,6 +8,6 @@
   "PREFER_CS": "true",
   "MINUTES_BATTLES_INTERVAL": 2,
   "SKIP_QUEST": "dragon,death",
-  "ECR_RECOVER_TO": 65,
+  "ECR_RECOVER_TO": 60,
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }

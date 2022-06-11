@@ -116,7 +116,7 @@ let account = '';
 const fs = require('fs');
 let dateStr = new Date().toISOString().split("T")[0];
 
-const file = fs.createWriteStream('./logs/'+ process.env.ACCOUNT  +"/" + dateStr + '.txt');
+const file = fs.createWriteStream('./logs/'+ process.env.ACCOUNT  +"/" + 1 + '.txt');
 let logger = new console.Console(file, file);
 
 // ### 融合点
@@ -640,23 +640,23 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
   // check for enemy
   if (process.env.CONSIDER_ENEMY === 'true' && matchDetails.enemyRecent
       && matchDetails.enemyRecent.length > 0) {
-    let enemyPossbileTeams = [];
+    let enemyPossbileTeams = matchDetails.enemyRecent;
     // map
-    console.log(
-        "2-3 second step teamSelection collect enemy teams, recent teams:",
-        matchDetails.enemyRecent.length)
-    const manaRange = getManaRange(matchDetails)
-    let manaMatchTeams = enemy.filterManaMatch(matchDetails.enemyRecent,
-        matchDetails.orgMana, manaRange[0],manaRange[1] , matchDetails.splinters);
-    if (manaMatchTeams && manaMatchTeams.length > 0) {
-      let manaRuleMatchTeams = enemy.filterRuleMatch(manaMatchTeams,
-          matchDetails.rules);
-      console.log("manaMatchTeams-------", manaMatchTeams.length);
-      console.log("manaRuleMatchTeams-------", manaRuleMatchTeams.length);
-      if (manaRuleMatchTeams && manaRuleMatchTeams.length > 0) {
-        enemyPossbileTeams = manaRuleMatchTeams;
-      }
-    }
+    // console.log(
+    //     "2-3 second step teamSelection collect enemy teams, recent teams:",
+    //     matchDetails.enemyRecent.length)
+    // const manaRange = getManaRange(matchDetails)
+    // let manaMatchTeams = enemy.filterManaMatch(matchDetails.enemyRecent,
+    //     matchDetails.orgMana, manaRange[0],manaRange[1] , matchDetails.splinters);
+    // if (manaMatchTeams && manaMatchTeams.length > 0) {
+    //   let manaRuleMatchTeams = enemy.filterRuleMatch(manaMatchTeams,
+    //       matchDetails.rules);
+    //   console.log("manaMatchTeams-------", manaMatchTeams.length);
+    //   console.log("manaRuleMatchTeams-------", manaRuleMatchTeams.length);
+    //   if (manaRuleMatchTeams && manaRuleMatchTeams.length > 0) {
+    //     enemyPossbileTeams = manaRuleMatchTeams;
+    //   }
+    // }
     // if (enemyPossbileTeams.length == 0) {
     //   let manaMatchTeams2 = enemy.filterManaMatch(matchDetails.enemyRecent,
     //       matchDetails.orgMana, 2, matchDetails.splinters);
@@ -674,7 +674,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
     //     "2-3 second step teamSelection collect enemy teams, enemyPossbileTeams",
     //     enemyPossbileTeams.length)
     matchDetails['enemyPossbileTeams'] = enemyPossbileTeams;
-    matchDetails['enemySplinterTeams'] = manaMatchTeams;
+    matchDetails['enemySplinterTeams'] = enemyPossbileTeams;
   }
 
   //CHECK FOR QUEST: TODO

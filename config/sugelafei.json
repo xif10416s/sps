@@ -7,8 +7,7 @@
   "max_cnt": "9999" ,
   "PREFER_CS": "true",
   "MINUTES_BATTLES_INTERVAL": 1,
-  "SKIP_QUEST": "death",
-  "ECR_RECOVER_TO": 90,
+  "ECR_RECOVER_TO": 60,
   "TARGET_FP": 18000,
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }

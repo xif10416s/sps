@@ -247,6 +247,7 @@ cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh hkd1234 
 cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh xqm123 
 cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/start.sh xqm1234 
 
+
 ps -ef |grep sugelafei2 |awk '{print $2}'|xargs kill -9
 
 cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  ./shell/stop.sh hkd123 sugelafei2
@@ -274,8 +275,6 @@ https://api2.splinterlands.com/cards/get_details
 ## docker start
 sudo swapon -p 5 /mnt/sda1/swap/swapfile
 
- cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs && watch -n 5  tail -n12  ---disable-inotify  Summary.txt
- cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs && watch -n 5  tail -n20  ---disable-inotify  rentStat.txt
 
 
 node --max-old-space-size=5192 src/server/WebServer.js
@@ -293,10 +292,12 @@ kill -s 9 `pgrep node`
 ps aux|grep battlesGetDataRawV2|awk '{print $2}'|xargs kill -9
 
 
-win restart:
-一、wsl
-sudo service ssh --full-restart
-sudo service cron restart 
+
+
+tail -200f /var/log/supervisor/supervisord.log
+
+sudo find / -name supervisor.sock
+unlink /run/supervisor/supervisor.sock
 
 mysql 配置
 C:\Program Files\MySQL\MySQL Server 8.0
@@ -310,3 +311,30 @@ node anlysis/etl/dataExport.js
 node anlysis/etl/dataImport.js
 
 docker-machine ssh default 
+
+win restart:
+一、wsl
+sudo service ssh --full-restart
+sudo service cron restart 
+
+二、supervisord
+sudo supervisord -c /etc/supervisor/supervisord.conf
+sudo service supervisor start
+修改了被守护的进程的源码，需要重启对这个进程的守护才能生效
+sudo supervisorctl start(stop,restart) program_name
+sudo supervisorctl reload
+sudo supervisorctl
+
+
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  tail -f ---disable-inotify logs/xqm123/xqm123.log
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  tail -f ---disable-inotify logs/xqm1234/xqm1234.log
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  tail -f ---disable-inotify logs/hkd123/hkd123.log
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  tail -f ---disable-inotify logs/hkd1234/hkd1234.log
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  tail -f ---disable-inotify logs/xifei123/xifei123.log
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  tail -f ---disable-inotify logs/xifei1234/xifei1234.log
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  tail -f ---disable-inotify logs/sugelafei/sugelafei.log
+cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  tail -f ---disable-inotify logs/sugelafei2/sugelafei2.log
+
+
+ cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs && watch -n 5  tail -n12  ---disable-inotify  Summary.txt
+ cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs && watch -n 5  tail -n20  ---disable-inotify  rentStat.txt

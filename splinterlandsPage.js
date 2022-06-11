@@ -1,5 +1,6 @@
 const battlesGet = require('./battlesGet');
 const { getElementText } = require('./helper');
+const cardsDetail = require('./data/cardsDetails');
 
 async function login(page, account, password) {
     try {
@@ -77,39 +78,91 @@ async function checkMatchActiveSplinters(page) {
 
 
 // 对手信息
-async function checkMatchEnemy(page) {
-    console.log("checkMatchEnemy .........")
-    try {
-        // const recent_team = await page.$$eval("div.recent-team > div.recent-team-tooltip >  ul.team__monsters > li.team__monster",
-        //     el =>el.map(x => x.getAttribute("data-original-title")));
-        //
-        // let rs = recent_team.map(sm => {
-        //     if(sm){
-        //         let sp = sm.split('★')
-        //         return [sp[0].trim(),sp[1].trim()]
-        //     } else {
-        //         return ['','']
-        //     }
-        // })
-        //-------------
-        const pName = await page.$$eval("div.bio__details > div.bio__name >  span.bio__name__display ",
-            el =>el.map(x => x.innerText));
+// async function checkMatchEnemy(page) {
+//     console.log("checkMatchEnemy .........")
+//     try {
+//         // const recent_team = await page.$$eval("div.recent-team > div.recent-team-tooltip >  ul.team__monsters > li.team__monster",
+//         //     el =>el.map(x => x.getAttribute("data-original-title")));
+//         //
+//         // let rs = recent_team.map(sm => {
+//         //     if(sm){
+//         //         let sp = sm.split('★')
+//         //         return [sp[0].trim(),sp[1].trim()]
+//         //     } else {
+//         //         return ['','']
+//         //     }
+//         // })
+//         //-------------
+//         const pName = await page.$$eval("div.bio__details > div.bio__name >  span.bio__name__display ",
+//             el =>el.map(x => x.innerText));
+//
+//         const enemyBattles = await battlesGet.getBattleDetail(pName[0]);
+//         console.log("Enemy name :" ,pName , "enemyBattles : ",enemyBattles.length)
+//         if(enemyBattles && enemyBattles.length >0){
+//             // const len = enemyBattles.length > 30 ? 30 :  enemyBattles.length;
+//             // let topBattles = enemyBattles.slice(0,len)
+//             // console.log("enemyBattles ---:",enemyBattles.length , JSON.stringify(enemyBattles))
+//             return enemyBattles;
+//         } else {
+//             return [];
+//         }
+//     } catch (e) {
+//         console.log(e)
+//     }
+//     return []
+// }
 
-        const enemyBattles = await battlesGet.getBattleDetail(pName[0]);
-        console.log("Enemy name :" ,pName , "enemyBattles : ",enemyBattles.length)
-        if(enemyBattles && enemyBattles.length >0){
-            // const len = enemyBattles.length > 30 ? 30 :  enemyBattles.length;
-            // let topBattles = enemyBattles.slice(0,len)
-            // console.log("enemyBattles ---:",enemyBattles.length , JSON.stringify(enemyBattles))
-            return enemyBattles;
-        } else {
-            return [];
-        }
+async function checkMatchEnemy(page) {
+    console.log("checkMatchEnemy v2 .........")
+    try {
+        const teams = await page.$$eval("#enemy_found_ranked > div > div > div.modal-body > section:nth-child(1) > div > div.bio > div:nth-child(2) > div.recently-played-splinters > span.recently-played-splinters__list > div > div > ul",
+            ul =>ul.map(u => {
+                const tms =  u.getElementsByClassName("team__monster")
+                let titles = []
+                for (let i = 0; i < tms.length ; i++) {
+                    const title =  tms[i].getAttribute("data-original-title");
+                    titles.push(title);
+                }
+                return titles;
+            }));
+
+        // console.log("teams:",teams)
+        const recent_team =  teams.map( teamTitles =>{
+            let parseTeam = {};
+            let totalMana = 0;
+            for (let i = 0; i < teamTitles.length; i++) {
+                const titleAttr =  teamTitles[i]
+                if(titleAttr != null){
+                    let sp = titleAttr.split('★')
+                    const cardId = cardsDetail.cardsDetailsNameMap[sp[0].trim()]['cardDetailId'];
+                    const cardLevel = parseInt(sp[1].trim())
+                    const mana = parseInt(cardsDetail.cardsDetailsNameMap[sp[0].trim()]['statSum1']['mana'])
+                    totalMana +=mana;
+                    if(i == 0) {
+                        parseTeam['summoner_id'] = cardId
+                        parseTeam['summoner_level'] = cardLevel
+                    } else {
+                        parseTeam['monster_'+i+'_id'] = cardId
+                        parseTeam['monster_'+i+'_level'] = cardLevel
+                    }
+                } else {
+                    parseTeam['monster_'+i+'_id'] = ''
+                    parseTeam['monster_'+i+'_level'] = ''
+                }
+            }
+            parseTeam['mana_cap']=totalMana
+            return parseTeam;
+        })
+
+        // console.log("checkMatchEnemy v2 ...recent_team:",recent_team)
+        return recent_team;
     } catch (e) {
         console.log(e)
     }
     return []
 }
+
+
 //UNUSED ?
 const splinterIsActive = (splinterUrl) => {
     const splinter = splinterUrl.split('/').slice(-1)[0].replace('.svg', '').replace('icon_splinter_', '');
