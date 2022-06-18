@@ -13,7 +13,7 @@ let puppeteer_options = {
   headless: true, // default is true
   args: ['--no-sandbox',
     '--disable-setuid-sandbox',
-    '--proxy-server=192.168.99.1:1081',
+    // '--proxy-server=192.168.99.1:1081',
     //'--disable-dev-shm-usage',
     //'--disable-accelerated-2d-canvas',
     // '--disable-canvas-aa',
@@ -156,10 +156,12 @@ async function doPKCheck(account, passward, page) {
     console.log("-----------nav end---------")
     if(!isClosedModel) {
       await page.waitForSelector("#app > div.sweet-modal-overlay.theme-dark.sweet-modal-clickable.is-visible > div > div.sweet-buttons > div > button",
-          {visible: true, timeout: 600000})
+          {visible: true, timeout: 300000})
       .then(() =>{
         isClosedModel = true;
         page.click("#app > div.sweet-modal-overlay.theme-dark.sweet-modal-clickable.is-visible > div > div.sweet-buttons > div > button")
+      }).catch((e) =>{
+        console.log(e)
       })
       console.log("---close  mode -----")
     }

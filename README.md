@@ -226,6 +226,7 @@ docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http:/
 docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3007:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3007 browserless/chrome
 
 
+docker run  -e "MAX_QUEUE_LENGTH=5"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=5"    -p 13000:3000 -m 4g --memory-swap -1 --restart always -d --name browserless13000 browserless/chrome
 docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"   -e "MAX_QUEUE_LENGTH=5"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=5"    -p 13000:3000 -m 4g --memory-swap -1 --restart always -d --name browserless13000 browserless/chrome
 
 http://192.168.99.100:3000
@@ -261,7 +262,7 @@ cd /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/spark && source bin/ac
 
 // static weekly
 copy source exec
-/mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --conf spark.local.dir=/mnt/h/temp  --master local[6] --driver-memory 2g  --name test
+/mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --conf spark.local.dir=/mnt/h/temp  --master local[6] --driver-memory 4g  --name test
 -----/mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --conf spark.local.dir=/mnt/h/temp  --master local[10] --driver-memory 10g  --name test -i /mnt/d/source/python/spsAuto/splinterlands-bot/anlysis/scala/batSt_csv.scala
 
 

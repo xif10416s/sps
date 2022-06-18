@@ -10,5 +10,6 @@
   "SKIP_QUEST": "dragon,death",
   "ECR_RECOVER_TO": 60,
   "QUEST_PRIORITY": "true" ,
+  "MAX_REWARDS": "true",
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }

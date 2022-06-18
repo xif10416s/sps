@@ -167,9 +167,10 @@ http.createServer(async function (request, response) {
       let fromScore = arg1.fromScore;
       let endScore = arg1.endScore;
       let rule = arg1.rule;
+      console.log("------------",rule,fromScore)
 
 
-      console.log("------------",rule)
+
 
       console.log("/api/analysis ...........",rule)
       const result = mostUsefullMonster.slice(0, 50);
@@ -178,42 +179,42 @@ http.createServer(async function (request, response) {
         item['name'] = cardInfo['name'];
       })
 
-      let mostByRule = [];
-      if (rule != null && rule != -1) {
-        try {
-          mostByRule = require(
-              "../../data/ruleswin/" + rule.replace("|", "_") + "_cards")
-        } catch (e) {
-          if (rule.length > 1) {
-            let rules = rule.split("|");
-            let reserve = rules[1] + "_" + rules[0]
-            try {
-              mostByRule = require("../../data/ruleswin/" + reserve + "_cards")
-            } catch (e) {
-            }
-          }
-        }
+      // let mostByRule = [];
+      //
+      //   try {
+      //     mostByRule = require(
+      //         "../../data/ruleswin/" + rule.replace("|", "_") + "_cards")
+      //   } catch (e) {
+      //     if (rule.length > 1) {
+      //       let rules = rule.split("|");
+      //       let reserve = rules[1] + "_" + rules[0]
+      //       try {
+      //         mostByRule = require("../../data/ruleswin/" + reserve + "_cards")
+      //       } catch (e) {
+      //       }
+      //     }
+      //   }
+      //
+      //   if (mostByRule && mostByRule.length == 0) {
+      //     rule = rule.replace("and","&").replace("and","&").replace("and","&");
+      //     mostByRule = await dbAnalysis.getMostUsefullMonster(fromScore,
+      //         endScore, rule);
+      //     mostByRule.forEach(item => {
+      //       const cardInfo = cardDetail.cardsDetailsIDMap[item['id']];
+      //       item['name'] = cardInfo['name'];
+      //     })
+      //
+      //     fs.writeFile(`data/ruleswin/${rule.replace("|", "_")}_cards.json`,
+      //         JSON.stringify(mostByRule), function (err) {
+      //           if (err) {
+      //             console.log(err);
+      //           }
+      //         });
+      //   }
 
-        if (mostByRule && mostByRule.length == 0) {
-          rule = rule.replace("and","&").replace("and","&").replace("and","&");
-          mostByRule = await dbAnalysis.getMostUsefullMonster(fromScore,
-              endScore, rule);
-          mostByRule.forEach(item => {
-            const cardInfo = cardDetail.cardsDetailsIDMap[item['id']];
-            item['name'] = cardInfo['name'];
-          })
-
-          fs.writeFile(`data/ruleswin/${rule.replace("|", "_")}_cards.json`,
-              JSON.stringify(mostByRule), function (err) {
-                if (err) {
-                  console.log(err);
-                }
-              });
-        }
-      }
 
       response.writeHead(200, {'Content-Type': 'application/json'});
-      response.write(JSON.stringify({mostUser: result, mostByRule: mostByRule}))
+      response.write(JSON.stringify({mostUser: result, mostByRule: []}))
       response.end()
       return;
     }

@@ -9,5 +9,6 @@
   "MINUTES_BATTLES_INTERVAL": 1,
   "SKIP_QUEST": "dragon,death",
   "ECR_RECOVER_TO": 60,
+  "MAX_REWARDS": "true",
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }

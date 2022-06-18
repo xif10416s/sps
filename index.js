@@ -591,7 +591,7 @@ async function startBotPlayMatch(page, browser) {
         }
 
         // do sleep
-        if ( (isWaitForBeginWithHighECR &&  quest.fc >= 0 &&  quest.completed/quest.total <= 0.3 || isNotEnoughtTimeFinish ) && checkRatingAndPower  ) {
+        if ( (isWaitForBeginWithHighECR &&    quest.completed/quest.total <= 0.3  || (isNotEnoughtTimeFinish || (winTotal + loseTotal) >=10 )) && checkRatingAndPower && process.env.MAX_REWARDS == "false" ) {
             console.log("checkRatingAndPower",checkRatingAndPower , parseInt(process.env.TARGET_FP))
             // if (ecr < parseFloat(process.env.ECR_STOP_LIMIT)) {
             //     console.log(chalk.bold.red(`ECR lower than limit ${process.env.ECR_STOP_LIMIT}%. reduce the limit in the env file config or wait until ECR will be at ${process.env.ECR_RECOVER_TO || '100'}%`));
@@ -929,7 +929,7 @@ function isDailyTaskWithoutEnoughTime(quest) {
     }
 
     if(checkResult){
-        console.log("*****DailyTaskWithoutEnoughTime : " , quest.nct , quest.total , quest.completed ,quest.fc);
+        console.log("*****DailyTaskWithoutEnoughTime*******: " , quest.nct , quest.total , quest.completed ,quest.fc);
         console.log("dpRate:",dpRate , "per/hour  remainDp:", remainDp , "remainHours:",remainHours ,"tryNew:",getNewDailyClaim,-(remainHours * 40))
     }
     return checkResult;
