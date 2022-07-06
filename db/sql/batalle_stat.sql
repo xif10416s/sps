@@ -10,11 +10,12 @@ CREATE TABLE `battle_stat_v5`  (
   `totalCnt` int(9) NOT NULL,
   `lostTeams` int(9) NOT NULL default 0,
   `lostTotalCnt` int(9)  NOT NULL default 0,
-  PRIMARY KEY (`id`,`startMana`) USING BTREE,
+  PRIMARY KEY (`id`) USING BTREE,
   INDEX `index_cs`(`cs`) USING BTREE,
   INDEX `index_rule`(`rule`) USING BTREE,
-  INDEX `index_summonerId`(`summonerId`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic ;
+  INDEX `index_summonerId`(`summonerId`) USING BTREE,
+  INDEX `index_mana`(`startMana`,`endMana`) USING BTREE
+)  ENGINE = MYISAM CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic ;
 
 ALTER TABLE `battle_stat_v5` ADD UNIQUE (`startMana`,`cs`,`rule`,`summonerId`);
 

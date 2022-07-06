@@ -6,8 +6,8 @@
   "skip_cs": "false",
   "max_cnt": "9999" ,
   "PREFER_CS": "true",
-  "MINUTES_BATTLES_INTERVAL": 2,
-  "ECR_RECOVER_TO": 60,
-  "SKIP_QUEST": "dragon,death",
+  "MINUTES_BATTLES_INTERVAL": 10,
+  "ECR_RECOVER_TO": 90,
+  "SKIP_QUEST": "dragon,death,life",
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }

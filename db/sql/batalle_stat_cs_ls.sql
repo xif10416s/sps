@@ -8,11 +8,11 @@ CREATE TABLE `battle_stat_cs_ls_v5`  (
   `llen` int(9) NOT NULL,
   `rule` varchar(40) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `count` int(9) NOT NULL,
-  PRIMARY KEY (`id`, `startMana`) USING BTREE,
+  PRIMARY KEY (`id`) USING BTREE,
   INDEX `index_cs`(`lcs`) USING BTREE,
   INDEX `index_mana`(`startMana`,`endMana`) USING BTREE,
   INDEX `index_rule`(`rule`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic ;
+) ENGINE = MYISAM CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic ;
 
 ALTER TABLE `battle_stat_cs_ls_v5` ADD UNIQUE (`startMana`,`rule`,`wcs`,`lcs`);
 

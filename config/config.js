@@ -1,3 +1,4 @@
+//  "MAX_REWARDS": "true",
 function doConfigInit(username ){
   delete require.cache[require.resolve("./"+username+".json")]
   const userConfig = require("./"+username+".json")

@@ -1,5 +1,4 @@
 const dbUtils = require('../../db/script/dbUtils');
-const delta = 30;
 const fs = require('fs');
 
 const battStBasePath = "F:\\battleDataStat\\battle\\battleSt\\"
@@ -81,7 +80,7 @@ async function doImport(type) {
       console.log(sql + " " + new Date().toLocaleTimeString())
       await dbUtils.sqlQuery(sql, [])
       console.log(file +" --- end -- wait start"+ new Date().toLocaleTimeString())
-      await wait(60000*3);
+      await wait(3000);
       console.log(file +" --- end -- wait end"+ new Date().toLocaleTimeString())
     }
     dbUtils.pool.end(function (err) {
@@ -110,7 +109,7 @@ async function doImport(type) {
 
 (async () => {
   // await doMove("bat");
-  // await doImport("bat");
+  await doImport("bat");
   // await doMove("cs");
-  await doImport("cs");
+  // await doImport("cs");
 })()

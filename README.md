@@ -307,10 +307,23 @@ select * into outfile 'F:p20220420.txt' Fields TERMINATED by ','  From  battle_h
 load data infile 'F:12.csv' into table battle_stat_v5 Fields TERMINATED by ','  (startMana,endMana,cs,len,rule,summonerId,teams,totalCnt,lostTeams,lostTotalCnt)
 load data infile 'F:12.csv' into table battle_stat_cs_ls_v5 Fields TERMINATED by ','  (startMana,endMana,rule, wcs,wlen, lcs,llen,count)
 
-
+一，跑模型
+1. 导出
 node anlysis/etl/dataExport.js
+2. 分析
+/mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --conf spark.local.dir=/mnt/h/temp  --master local[6] --driver-memory 10g  --name test
+2.1 batSt_csc
+3  导入
+重建表
+SET SESSION BULK_INSERT_BUFFER_SIZE=256217728;
+SET SESSION MYISAM_SORT_BUFFER_SIZE=256217728;
+set global KEY_BUFFER_SIZE = 256217728 ;
+alter table battle_stat_v5 DISABLE keys ;
+alter table battle_stat_cs_ls_v5 DISABLE keys ;
 node anlysis/etl/dataImport.js
-
+4. 恢复所有
+alter table battle_stat_v5 ENABLE keys
+alter table battle_stat_cs_ls_v5 ENABLE keys
 docker-machine ssh default 
 
 win restart:
@@ -336,6 +349,6 @@ cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  tail -f ---disable-inotif
 cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  tail -f ---disable-inotify logs/sugelafei/sugelafei.log
 cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  tail -f ---disable-inotify logs/sugelafei2/sugelafei2.log
 
-
+ 
  cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs && watch -n 5  tail -n12  ---disable-inotify  Summary.txt
  cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs && watch -n 5  tail -n20  ---disable-inotify  rentStat.txt

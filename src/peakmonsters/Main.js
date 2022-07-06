@@ -219,7 +219,7 @@ async function doPKCheck(account, passward, page) {
         // const aNum =  parseFloat(h1.minHours.replaceAll("'","").split(" ")[0])
         // const aHour = h1.minHours.indexOf("days") != -1 ? 24 : 1 ;
         const name = await getTextBySelector("#app > div.page-container > div > div > div > div > div.row.display-flex-row > div.col-md-10.col-md-pull-2 > div > div.table-responsive > table > tbody > tr:nth-child("+index+") > td.text-left.text-semibold.smallable > div > div")
-        if (pf >= 100 && h1.toUpperCase().indexOf(HOURS) != -1 && rsArr.length <= 5 && owner.indexOf(account) == -1) {
+        if (pf >= 1000 && h1.toUpperCase().indexOf(HOURS) != -1 && rsArr.length <= 5 && owner.indexOf(account) == -1) {
           // if(account == "xifei123") {
           //   console.log(owner,account, owner.indexOf(account) == -1 )
           // }
@@ -234,16 +234,16 @@ async function doPKCheck(account, passward, page) {
         }
 
 
-        if(name.indexOf("Mylor Crowling") != -1) {
-          rsArr.push({
-            "account": "["+account+"]",
-            "card":name.split("\n          ")[1],
-            "maxPower": "Mylor",
-            "cp/dec" : d1,
-            "minHours": h1,
-            "time": new Date().toLocaleTimeString()
-          })
-        }
+        // if(name.indexOf("Mylor Crowling") != -1) {
+        //   rsArr.push({
+        //     "account": "["+account+"]",
+        //     "card":name.split("\n          ")[1],
+        //     "maxPower": "Mylor",
+        //     "cp/dec" : d1,
+        //     "minHours": h1,
+        //     "time": new Date().toLocaleTimeString()
+        //   })
+        // }
       } catch (e) {
         console.log(index,e)
         return false

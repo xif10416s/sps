@@ -17,6 +17,7 @@ let totalDec = 0;
 let winTotal = 0;
 let loseTotal = 0;
 let undefinedTotal = 0;
+let unSubmit = 0;
 let getNewDailyClaim = false;
 let dailyClaim = false;
 let claimTime = "-"
@@ -113,6 +114,19 @@ async function checkLeague(page) {
         }
     } catch (e) {
         console.log(chalk.bold.redBright.bgBlack('league not defined'));
+    }
+}
+
+async function checkSeasonRewards(page) {
+    try {
+        const src = await getElementText(page, "#pack_rewards");
+        if(src) {
+            console.log(chalk.bold.whiteBright.bgMagenta('Your current pack_rewards is ' + src));
+            // ask.logger.log(chalk.bold.whiteBright.bgMagenta('Your current Energy Capture Rate is ' + ecr.split('.')[0] + "%"));
+            return src
+        }
+    } catch (e) {
+        console.log(chalk.bold.redBright.bgBlack('pack_rewards not defined'));
     }
 }
 
@@ -297,14 +311,20 @@ async function launchBattle(page) {
 
 async function clickSummonerCard(page, teamToPlay) {
     let clicked = true;
-    await sleep(6000)
-    await page.waitForXPath(`//div[@card_detail_id="${teamToPlay.summoner}"]`, { timeout: 15000 })
-        .then(card => { card.click(); console.log(chalk.bold.greenBright(teamToPlay.summoner, 'clicked')); })
+    await  page.click("#page_container > div > div.deck-builder-page2__cards > div[card_detail_id='"+teamToPlay.summoner+"']")
+    .then(() => console.log(chalk.bold.greenBright(teamToPlay.summoner, 'summoner clicked by selector')))
+    .catch(()=>{
+        clicked = false;
+        console.log(chalk.bold.redBright('Summoner not clicked by selector.'))
+    });
+    if(!clicked) {
+        await page.waitForXPath(`//div[@card_detail_id="${teamToPlay.summoner}"]`, { timeout: 3000 })
+        .then(card => { card.click(); console.log(chalk.bold.greenBright(teamToPlay.summoner, 'summoner clicked')); })
         .catch(()=>{
             clicked = false;
             console.log(chalk.bold.redBright('Summoner not clicked.'))
         });
-
+    }
     return clicked
 }
 
@@ -363,7 +383,7 @@ async function clickWithCheck(page, teamToPlay,i){
         return document.querySelector(selector).click()
     },selector);
 
-    await page.waitForTimeout(3000);
+    await page.waitForTimeout(1000);
 
     // check
     await page.waitForXPath(`//div[@card_detail_id="${teamToPlay.cards[i].toString()}"]`, { timeout: 20000 })
@@ -407,11 +427,16 @@ async function autoScroll(page){
 
 async function clickCreateTeamButton(page) {
     let clicked = true;
-
+    console.log('clickCreateTeamButton reload start .....', new Date().toLocaleTimeString())
     await reload(page);
-    await page.waitForTimeout(20000);
-    await page.waitForSelector('.btn--create-team', { timeout: 20000 })
-        .then(e=> { e.click(); console.log('btn--create-team clicked'); })
+    await page.waitForNavigation();
+    console.log('clickCreateTeamButton reload end .....', new Date().toLocaleTimeString())
+    await page.waitForTimeout(1000);
+    await page.waitForSelector('.btn--create-team', { timeout: 10000 })
+        .then(e=> { e.click(); console.log('btn--create-team clicked', new Date().toLocaleTimeString()); })
+        .then(() => {
+            page.waitForTimeout(5000)
+        })
         .catch(()=>{
             clicked = false;
             console.log('Create team didnt work. Did the opponent surrender?');
@@ -420,9 +445,9 @@ async function clickCreateTeamButton(page) {
     return clicked
 }
 
-async function clickCards(page, teamToPlay, matchDetails) {
+async function clickCards(page, teamToPlay, matchDetails,retriesNum) {
     const maxRetries = 6;
-    let retriesNum = 1;
+    // let retriesNum = 1;
     let allCardsClicked = false;
 
     while (!allCardsClicked && retriesNum <= maxRetries) {
@@ -442,7 +467,7 @@ async function clickCards(page, teamToPlay, matchDetails) {
             retriesNum++;
             continue
         }
-        await page.waitForTimeout(5000 * 1);
+        await page.waitForTimeout(1000 * 1);
 
         if (!await clickMembersCard(page, teamToPlay)) {
             retriesNum++;
@@ -516,6 +541,7 @@ async function startBotPlayMatch(page, browser) {
         const ecr = await checkEcr(page);
         const dec = await checkDec(page)
         const league = await  checkLeague(page)
+        const seasonRewardCnt = await  checkSeasonRewards(page)
         // const nextQuestTime = await  checkNextQuest(page)
         const deltaDec= preOwnDec > 0  && preOwnDec != dec ? dec - preOwnDec : preDeltaDec ;
         preOwnDec = dec;
@@ -549,7 +575,7 @@ async function startBotPlayMatch(page, browser) {
             await page.waitForTimeout(5000*5);
             quest = await getQuest(page);
             if(!quest) {
-                throw new LostTooMatchException("no quest ........")
+               quest = {splinter: 'earth' ,total : 0 , completed: 0 , nct: "" , fc : 0}
             }
         } else {
             console.log("quest:",quest)
@@ -576,13 +602,14 @@ async function startBotPlayMatch(page, browser) {
 
         //TODO
         // && quest?.total > parseInt(process.env.TARGET_FP)  && quest?.total - quest?.completed >= parseInt(process.env.TARGET_FP)
-        const isWaitForBeginWithHighECR = ecr && process.env.ECR_RECOVER_TO &&  ecr <= parseFloat(process.env.ECR_RECOVER_TO) ;
+        const isWaitForBeginWithHighECR = ecr && process.env.ECR_RECOVER_TO &&  ecr <= parseFloat(process.env.ECR_RECOVER_TO) && quest.completed/quest.total <= 0.3;
+        const isOverECR = ecr && ecr >=95 ;
             // && quest?.total == quest?.completed;
         const checkRatingAndPower =  parseInt(power) >= 10000 && parseInt(rating) >=1050 ||  parseInt(power) < 10000
         // task finish analysis
         let isNotEnoughtTimeFinish = isDailyTaskWithoutEnoughTime(quest);
         // fc == 0
-        if(isNotEnoughtTimeFinish && getNewDailyClaim == false && quest.fc == 0) {
+        if(isNotEnoughtTimeFinish && getNewDailyClaim == false && quest.fc == 0 && (quest?.splinter == "dragon" || quest?.splinter == "death" || quest?.splinter == "life" )) {
             await newQuest(page,true);
             if(getNewDailyClaim) {
                 console.log("isNotEnoughtTimeFinish but  not getNewDailyClaim ... do new Quest try , getNewDailyClaim:",getNewDailyClaim ,"quest.fc:",quest.fc)
@@ -591,7 +618,7 @@ async function startBotPlayMatch(page, browser) {
         }
 
         // do sleep
-        if ( (isWaitForBeginWithHighECR &&    quest.completed/quest.total <= 0.3  || (isNotEnoughtTimeFinish || (winTotal + loseTotal) >=10 )) && checkRatingAndPower && process.env.MAX_REWARDS == "false" ) {
+        if ( (isWaitForBeginWithHighECR  || isNotEnoughtTimeFinish )&& !isOverECR && checkRatingAndPower && process.env.MAX_REWARDS == "false" ) {
             console.log("checkRatingAndPower",checkRatingAndPower , parseInt(process.env.TARGET_FP))
             // if (ecr < parseFloat(process.env.ECR_STOP_LIMIT)) {
             //     console.log(chalk.bold.red(`ECR lower than limit ${process.env.ECR_STOP_LIMIT}%. reduce the limit in the env file config or wait until ECR will be at ${process.env.ECR_RECOVER_TO || '100'}%`));
@@ -603,13 +630,13 @@ async function startBotPlayMatch(page, browser) {
             // ecrNeededToRecover = parseFloat(process.env.ECR_RECOVER_TO) - parseFloat(ecr);
             // recoveryTimeInHours = Math.ceil(ecrNeededToRecover / ecrRecoveryRatePerHour);
             const random =  Math.ceil(Math.random()*10)* 60000
-            console.log(chalk.bold.white(`Time needed to recover ECR, approximately ${1 * 60 + random/60000 } minutes.ecr:`),ecr ,isWaitForBeginWithHighECR);
+            console.log(chalk.bold.white(`Time needed to recover ECR, approximately ${1 * 30 + random/60000 } minutes.ecr:`),ecr ,isWaitForBeginWithHighECR);
             // await closeBrowser(browser);
-            console.log(chalk.bold.white(`Initiating sleep mode. The bot will awaken at ${new Date(Date.now() + 1 * 3600 * 1000 + random).toLocaleString()}`));
+            console.log(chalk.bold.white(`Initiating sleep mode. The bot will awaken at ${new Date(Date.now() + 1 * 1800 * 1000 + random).toLocaleString()}`));
             // logsummsary
-            const summaryInfo = {time: new Date(Date.now() + 1 * 3600 * 1000 + random).toLocaleTimeString() ,NQT:nextQuestTime,CT: claimTime ,  user: process.env.ACCOUNT, NQ: getNewDailyClaim , ECR: ecr , WC: winTotal , LC: loseTotal  , FC : quest.fc
-                , WR: (winTotal /(winTotal+loseTotal)).toFixed(2) , dec: totalDec.toFixed(2)
-                , quest: quest != null ? quest?.splinter : "-" , LW:  "-" , qt: quest != null ? quest?.total  : "-" , qc:quest != null ? quest?.completed  : "-" ,rating:rating ,power :power+"("+deltaPower+")" ,tDEC:dec+"("+deltaDec+")" ,league:league };
+            const summaryInfo = {time: new Date(Date.now() + 1 * 1800 * 1000 + random).toLocaleTimeString() ,NQT:nextQuestTime,CT: claimTime ,  user: process.env.ACCOUNT, NQ: getNewDailyClaim , ECR: ecr , WC: winTotal , LC: loseTotal  , FC : quest.fc
+                , WR: (winTotal /(winTotal+loseTotal)).toFixed(2) , dec: seasonRewardCnt  //totalDec.toFixed(2)
+                , quest: quest != null ? quest?.splinter : "-" , LW:  "-" , qt: quest != null ? quest?.total  : "-" , qc:quest != null ? quest?.completed  : "-" ,rating:rating ,power :power+"("+deltaPower+")" ,tDEC:dec+"("+deltaDec+")" ,league:league ,U:unSubmit};
 
             doSummaryLog(summaryInfo)
 
@@ -733,38 +760,41 @@ async function startBotPlayMatch(page, browser) {
             throw new Error('Team Selection error: no possible team to play');
         }
 
-        await page.waitForTimeout(10000);
+        await page.waitForTimeout(5000);
 
         // Click cards based on teamToPlay value.
-        if (!await clickCards(page, teamToPlay, matchDetails)) return
-
-        // start fight
-        await page.waitForTimeout(5000);
-        await page.waitForSelector('.btn-green', { timeout: 3000 }).then(()=>console.log('btn-green visible')).catch(()=>console.log('btn-green not visible'));
-        await page.$eval('.btn-green', elem => elem.click())
-            .then(()=>console.log('btn-green clicked'))
-            .catch(async ()=>{
-                console.log('Start Fight didnt work, waiting 5 sec and retry');
-                await page.waitForTimeout(5000);
-                await page.$eval('.btn-green', elem => elem.click())
-                    .then(()=>console.log('btn-green clicked'))
-                    .catch(()=>{
-                        startFightFail = true;
-                        console.log('Start Fight didnt work. Did the opponent surrender?');
-                    });
-            });
-        if (startFightFail) return
-
+        if (!await clickCards(page, teamToPlay, matchDetails,1)) return
         let isWin = "F";
+        if(await doGreenBtnStart(page)) return;
 
-        await page.waitForTimeout(5000);
+        let surrenderBtnVisible = false;
+        await page.waitForSelector('#btn_surrender', { visible:true, timeout: 5000 })
+        .then(()=> {
+            console.log('btn_surrender visible',new Date().toLocaleTimeString());
+            surrenderBtnVisible = true;
+        })
+        .catch(()=>{
+            console.log('btn_surrender not visible',new Date().toLocaleTimeString());
+        })
+
+        // await page.waitForTimeout(5000);
         let isRumbleVisable = true;
-        await page.waitForSelector('#btnRumble', { timeout: 90000 }).then(()=>console.log('btnRumble visible')).catch(()=>{console.log('btnRumble not visible'); isRumbleVisable = false;});
-        await page.waitForTimeout(5000);
-        if(!isRumbleVisable){
-            await page.waitForSelector('#btnRumble', { timeout: 90000 }).then(()=>console.log('btnRumble visible')).catch(()=>{console.log('btnRumble not visible'); isRumbleVisable = false;});
+        await page.waitForSelector('#btnRumble', { timeout: 30000 }).then(()=>console.log('btnRumble visible',new Date().toLocaleTimeString())).catch(()=>{console.log('btnRumble not visible',new Date().toLocaleTimeString()); isRumbleVisable = false;});
+        if(!surrenderBtnVisible && !isRumbleVisable){
+            console.log('**********************isRumbleVisable: false ');
+            if (!await clickCards(page, teamToPlay, matchDetails,2)) {
+                loseTotal +=1;
+                unSubmit +=1;
+                return;
+            }
+            if(await doGreenBtnStart(page)) return;
+            await page.waitForSelector('#btnRumble', { timeout: 30000 }).then(()=>console.log('btnRumble visible',new Date().toLocaleTimeString())).catch(()=>{console.log('btnRumble not visible',new Date().toLocaleTimeString()); isRumbleVisable = false;});
         }
-        await page.$eval('#btnRumble', elem => elem.click()).then(()=>console.log('btnRumble clicked')).catch(()=>console.log('btnRumble didnt click')); //start rumble
+        await page.$eval('#btnRumble', elem => elem.click()).then(()=>console.log('btnRumble clicked')).catch(()=>{
+            console.log('btnRumble didnt click');
+            loseTotal +=1;
+            unSubmit+=1;
+        }); //start rumble
         await page.waitForSelector('#btnSkip', { timeout: 10000 }).then(()=>console.log('btnSkip visible')).catch(()=>console.log('btnSkip not visible'));
         await page.$eval('#btnSkip', elem => elem.click()).then(()=>console.log('btnSkip clicked')).catch(()=>console.log('btnSkip not visible')); //skip rumble
         await page.waitForTimeout(5000);
@@ -808,8 +838,8 @@ async function startBotPlayMatch(page, browser) {
             // ask.logger.log(account,'Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal));
             // ask.logger.log(account,chalk.green('Total Earned: ' + totalDec + ' DEC'));
             const summaryInfo = {time: new Date().toLocaleTimeString() ,NQT:nextQuestTime,CT: claimTime ,  user: process.env.ACCOUNT, NQ: getNewDailyClaim  , ECR: ecr , WC: winTotal , LC: loseTotal , FC : quest.fc
-                , WR: (winTotal /(winTotal+loseTotal)).toFixed(2) , dec: totalDec.toFixed(2)
-                , quest: quest?.splinter  + ":" + teamToPlay.cards[7] , LW:  isWin , qt:quest?.total, qc:quest?.completed ,rating:rating ,power :power+"("+deltaPower+")" ,tDEC:dec+"("+deltaDec+")" ,league:league };
+                , WR: (winTotal /(winTotal+loseTotal)).toFixed(2) , dec: seasonRewardCnt// totalDec.toFixed(2)
+                , quest: quest?.splinter  + ":" + teamToPlay.cards[7] , LW:  isWin , qt:quest?.total, qc:quest?.completed ,rating:rating ,power :power+"("+deltaPower+")" ,tDEC:dec+"("+deltaDec+")" ,league:league,U:unSubmit };
 
             doSummaryLog(summaryInfo)
 
@@ -828,6 +858,35 @@ async function startBotPlayMatch(page, browser) {
             }
             runStat = false;
     }
+}
+
+async function doGreenBtnStart(page){
+    let startFightFail = false;
+    await page.waitForSelector('.btn-green', { timeout: 3000 }).then(()=>console.log('btn-green visible')).catch(()=>console.log('btn-green not visible'));
+    const leftTime = await getElementText(page,"#create-team-timer > div > div.countdown-time > div.countdown-time-container")
+    console.log("----------------leftTime--------",new Date().toLocaleTimeString(),leftTime)
+    await page.$eval('.btn-green', elem => elem.click())
+    .then(()=>console.log('btn-green clicked',new Date().toLocaleTimeString()))
+    .catch(async ()=>{
+        console.log('Start Fight didnt work, waiting 5 sec and retry');
+        await page.waitForTimeout(5000);
+        await page.$eval('.btn-green', elem => elem.click())
+        .then(()=>{
+            console.log('btn-green clicked');
+        })
+        .catch(()=>{
+            startFightFail = true;
+            console.log('Start Fight didnt work. Did the opponent surrender?');
+        });
+    });
+    if (startFightFail) {
+        return true;
+    }
+
+    await page.waitForTimeout(1000);
+
+
+    return  false;
 }
 
 async function focusNewQuest(page){
@@ -854,6 +913,7 @@ function resetDailyStat(){
     undefinedTotal=1;
     loseTotal=0;
     totalDec=0;
+    unSubmit=0;
     getNewDailyClaim = false;
 }
 
@@ -898,12 +958,15 @@ function isDailyTaskWithoutEnoughTime(quest) {
     if(quest.nct == null  ||  quest.nct.trim().length  == 0  ){
         return false;
     }
+
     let remainHours = parseInt(quest.nct.split(":")[0])
     const remainMiniutes = parseInt(quest.nct.split(":")[1])
     if(remainHours == 0 && remainMiniutes <=20 ){
         return false;
     }
-
+    if((winTotal + loseTotal) <=10) {
+        return false;
+    }
     if(remainMiniutes >= 35){
         remainHours = remainHours + 0.5;
     }

@@ -5,11 +5,10 @@
   "favourite_summoner": "",
   "skip_cs": "false",
   "max_cnt": "9999" ,
-  "MINUTES_BATTLES_INTERVAL": 1,
+  "MINUTES_BATTLES_INTERVAL": 3,
   "PREFER_CS": "true",
-  "SKIP_QUEST": "dragon,death",
-  "ECR_RECOVER_TO": 65,
+  "SKIP_QUEST": "dragon,death,life",
+  "ECR_RECOVER_TO": 90,
   "QUEST_PRIORITY": "true" ,
-  "MAX_REWARDS": "true",
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }

@@ -692,7 +692,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
       // logger.log("2-3-1", left + ' battles left for the splinter' + quest.splinter + ' quest')
       console.log("2-3-1",'play for the quest splinter', quest.splinter, '? ', questCheck," length:",filteredTeamsForQuest.length);
       // for death splinter
-      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > limitTeamsCnt  && quest.splinter == 'death' && matchDetails.orgMana <= 30 ){
+      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 3000  && quest.splinter == 'death' && matchDetails.orgMana <= 30 ){
         console.log('Try to play for the quest with Teams size (V1):death',
             filteredTeamsForQuest.length);
         availableTeamsToPlay = filteredTeamsForQuest;
@@ -700,7 +700,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
       }
 
       // for water splinter
-      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > limitTeamsCnt  && quest.splinter == 'water'  && matchDetails.orgMana >= 27 && matchDetails.orgMana <= 30 ){
+      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 500  && quest.splinter == 'water'  && matchDetails.orgMana >= 27 && matchDetails.orgMana <= 30 ){
         console.log('Try to play for the quest with Teams size (V1):water',
             filteredTeamsForQuest.length);
         availableTeamsToPlay = filteredTeamsForQuest;
@@ -708,7 +708,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
       }
 
       // for fire splinter
-      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > limitTeamsCnt  && quest.splinter == 'fire'  && matchDetails.orgMana >= 20 && matchDetails.orgMana <= 28 ){
+      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 1000  && quest.splinter == 'fire'  && matchDetails.orgMana >= 20 && matchDetails.orgMana <= 28 ){
         console.log('Try to play for the quest with Teams size (V1):fire',
             filteredTeamsForQuest.length);
         availableTeamsToPlay = filteredTeamsForQuest;
@@ -716,7 +716,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
       }
 
       // for life splinter
-      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > limitTeamsCnt  && quest.splinter == 'life'  && (matchDetails.orgMana >= 40 || matchDetails.orgMana <= 20 )){
+      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 3000  && quest.splinter == 'life'  && (matchDetails.orgMana >= 40 || matchDetails.orgMana <= 20 )){
         console.log('Try to play for the quest with Teams size (V1):life',
             filteredTeamsForQuest.length);
         availableTeamsToPlay = filteredTeamsForQuest;
@@ -734,7 +734,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
       console.log("dragon length : ", availableTeamsToPlay.filter(
           team => team[7] === "dragon").length)
       // for dragon splinter
-      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 50  && quest.splinter == 'dragon'  && matchDetails.orgMana >= 28 ){
+      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 1000  && quest.splinter == 'dragon'  && matchDetails.orgMana >= 28 ){
         console.log('Try to play for the quest with Teams size (V1):dragon',
             filteredTeamsForQuest.length);
         availableTeamsToPlay = filteredTeamsForQuest;
@@ -742,7 +742,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
       }
 
       //  no condition match teams
-      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 2000
+      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 5000
           && splinters.includes(quest.splinter)) {
         console.log('Try to play for the quest with Teams size (V1): ',
             filteredTeamsForQuest.length);
@@ -1225,7 +1225,9 @@ function sortByPreferCsOrder(rs) {
   }
   let sortRs = []
   const collectList = []
-  preferCs.forEach(cs => {
+  delete require.cache[require.resolve("./data/strategy/preferCs")]
+  const preferCs2 = require('./data/strategy/preferCs')
+  preferCs2.forEach(cs => {
     const cardIds = cs.split("%")
     rs.forEach( item => {
       const itemIds = item['cs'].split("-")
