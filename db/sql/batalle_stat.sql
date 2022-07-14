@@ -5,7 +5,7 @@ CREATE TABLE `battle_stat_v5`  (
   `cs` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `len` int(9) NOT NULL,
   `rule` varchar(40) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
-  `summonerId` int(9) NOT NULL,
+  `summonerId` int(9) NOT NULL, #失败的SId
   `teams` int(9) NOT NULL,
   `totalCnt` int(9) NOT NULL,
   `lostTeams` int(9) NOT NULL default 0,

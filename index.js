@@ -602,12 +602,12 @@ async function startBotPlayMatch(page, browser) {
 
         //TODO
         // && quest?.total > parseInt(process.env.TARGET_FP)  && quest?.total - quest?.completed >= parseInt(process.env.TARGET_FP)
-        const isWaitForBeginWithHighECR = ecr && process.env.ECR_RECOVER_TO &&  ecr <= parseFloat(process.env.ECR_RECOVER_TO) && quest.completed/quest.total <= 0.3;
+        const isWaitForBeginWithHighECR = ecr && process.env.ECR_RECOVER_TO &&  ecr <= parseFloat(process.env.ECR_RECOVER_TO) ;
         const isOverECR = ecr && ecr >=95 ;
             // && quest?.total == quest?.completed;
         const checkRatingAndPower =  parseInt(power) >= 10000 && parseInt(rating) >=1050 ||  parseInt(power) < 10000
         // task finish analysis
-        let isNotEnoughtTimeFinish = isDailyTaskWithoutEnoughTime(quest);
+        let isNotEnoughtTimeFinish =  false//isDailyTaskWithoutEnoughTime(quest);
         // fc == 0
         if(isNotEnoughtTimeFinish && getNewDailyClaim == false && quest.fc == 0 && (quest?.splinter == "dragon" || quest?.splinter == "death" || quest?.splinter == "life" )) {
             await newQuest(page,true);
@@ -617,9 +617,9 @@ async function startBotPlayMatch(page, browser) {
             }
         }
 
+        console.log("isWaitForBeginWithHighECR:",isWaitForBeginWithHighECR  , "isNotEnoughtTimeFinish",isNotEnoughtTimeFinish ,"checkRatingAndPower:",checkRatingAndPower,"!isOverECR:",!isOverECR)
         // do sleep
         if ( (isWaitForBeginWithHighECR  || isNotEnoughtTimeFinish )&& !isOverECR && checkRatingAndPower && process.env.MAX_REWARDS == "false" ) {
-            console.log("checkRatingAndPower",checkRatingAndPower , parseInt(process.env.TARGET_FP))
             // if (ecr < parseFloat(process.env.ECR_STOP_LIMIT)) {
             //     console.log(chalk.bold.red(`ECR lower than limit ${process.env.ECR_STOP_LIMIT}%. reduce the limit in the env file config or wait until ECR will be at ${process.env.ECR_RECOVER_TO || '100'}%`));
             // } else if (ecr < parseFloat(process.env.ECR_RECOVER_TO)) {

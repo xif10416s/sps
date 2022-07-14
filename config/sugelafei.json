@@ -9,6 +9,6 @@
   "MINUTES_BATTLES_INTERVAL": 5,
   "ECR_RECOVER_TO": 90,
   "TARGET_FP": 18000,
-  "SKIP_QUEST": "dragon,death,life",
+  "SKIP_QUEST": "dragon,death",
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }

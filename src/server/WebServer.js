@@ -44,6 +44,7 @@ http.createServer(async function (request, response) {
       let player = arg1.player
       console.log(rule, mana, enemy, sp, player)
       const enemyRecentTeams = await battlesGet.getBattleDetail(enemy)
+      // const enemyRecentTeams = []
       console.log("enemyRecentTeams :" ,enemyRecentTeams.length)
       let myCards = []
       try {

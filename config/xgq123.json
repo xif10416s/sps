@@ -1,13 +1,13 @@
 {
-  "name": "xqm123",
-  "password": "5J6r3TY9LZwdqjBsc5zhoJjY9oJm7LR8p1rrAKvWQLRwEvUzhtu",
-  "port": 3006,
+  "name": "xgq123",
+  "password": "5Ki3EqJYbcVWeG3JxGfS757aPWam46xBDwwZNS4DrBxYMWscFoE",
+  "port": 3008,
   "favourite_summoner": "",
   "skip_cs": "false",
   "max_cnt": "9999" ,
   "PREFER_CS": "true",
   "MINUTES_BATTLES_INTERVAL": 6,
   "SKIP_QUEST": "dragon,death,life",
-  "ECR_RECOVER_TO": 90,
+  "ECR_RECOVER_TO": 70,
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }

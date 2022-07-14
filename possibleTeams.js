@@ -361,24 +361,26 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
   // logger.log("4-2 third step most bestcombination  :", JSON.stringify(bestCombination))
 
   if(process.env.skip_cs && process.env.skip_cs == "false"){
+    console.log("4-4-0 third step makeBestCombine  start ............",new Date())
+    const bcTeams = await  makeBestCombine(possibleTeams,matchDetails,bestCombination.bestSummoner);
+    // && (matchDetails.rating <=1000 && bcTeams.length >= 100 ||  matchDetails.rating > 1000 && bcTeams.length >= 5 )
+    if(bcTeams &&  matchDetails.rating && (matchDetails.rating <=1000 && bcTeams.length >= 10 ||  matchDetails.rating > 1000 && bcTeams.length >= 5 ) ){
+      let bcCombine = await battles.mostWinningSummonerTank(bcTeams);
+      const mostWinningBcTeam = await findBestTeam(bcCombine, bcTeams)
+      console.log("4-4-0 third step makeBestCombine  used ............",new Date())
+      // logger.log("4-4-2 third step makeBestCombine  used ............",new Date())
+      return mostWinningBcTeam;
+    }
+
     console.log("4-4-1 third step makeBestCombineByCs  start ............",new Date())
     const byCsTeams = await  makeBestCombineByCs(possibleTeams,matchDetails,5);
-    if(byCsTeams != null &&  byCsTeams[1] &&  matchDetails.rating && (matchDetails.rating <=1000 && byCsTeams[1].length >= 100 ||  matchDetails.rating > 1000 && byCsTeams[1].length >= 5 )  ) {
+    //&&  matchDetails.rating && (matchDetails.rating <=1000 && byCsTeams[1].length >= 100 ||  matchDetails.rating > 1000 && byCsTeams[1].length >= 5 )
+    if(byCsTeams != null &&  byCsTeams[1] &&  matchDetails.rating && (matchDetails.rating <=1000 && byCsTeams[1].length >= 10 ||  matchDetails.rating > 1000 && byCsTeams[1].length >= 5 ) ) {
       let byCsCombine = await battles.mostWinningSummonerTank(byCsTeams[1]);
       const makeBestCombineByCsTeam = await findBestTeam(byCsCombine, byCsTeams[1])
       console.log("4-4-1 third step makeBestCombineByCsTeam  used ............",new Date())
       // logger.log("4-4-1 third step makeBestCombineByCsTeam  used ............",new Date())
       return makeBestCombineByCsTeam;
-    }
-
-    console.log("4-4-2 third step makeBestCombine  start ............",new Date())
-    const bcTeams = await  makeBestCombine(possibleTeams,matchDetails,bestCombination.bestSummoner);
-    if(bcTeams &&  matchDetails.rating && (matchDetails.rating <=1000 && bcTeams.length >= 100 ||  matchDetails.rating > 1000 && bcTeams.length >= 5 )  ){
-      let bcCombine = await battles.mostWinningSummonerTank(bcTeams);
-      const mostWinningBcTeam = await findBestTeam(bcCombine, bcTeams)
-      console.log("4-4-2 third step makeBestCombine  used ............",new Date())
-      // logger.log("4-4-2 third step makeBestCombine  used ............",new Date())
-      return mostWinningBcTeam;
     }
   } else {
     console.log("4-4 third step skip  makeBestCombine")
@@ -677,6 +679,17 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
     matchDetails['enemySplinterTeams'] = enemyPossbileTeams;
   }
 
+
+  // do prefer summoners
+  if(matchDetails.rating && (matchDetails.rating <=1100)) {
+    const filteredTeamsForLowRatting = availableTeamsToPlay.filter(
+        team => team[0] === 259);
+    if(filteredTeamsForLowRatting.length >= 2) {
+      availableTeamsToPlay = filteredTeamsForLowRatting;
+      console.log('do prefer summoners for low rating', availableTeamsToPlay.length);
+    }
+  }
+
   //CHECK FOR QUEST: TODO
   matchDetails['logContent']['QuestMatch'] = "skip"
   if (priorityToTheQuest && availableTeamsToPlay.length > 5000 && quest
@@ -692,7 +705,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
       // logger.log("2-3-1", left + ' battles left for the splinter' + quest.splinter + ' quest')
       console.log("2-3-1",'play for the quest splinter', quest.splinter, '? ', questCheck," length:",filteredTeamsForQuest.length);
       // for death splinter
-      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 3000  && quest.splinter == 'death' && matchDetails.orgMana <= 30 ){
+      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 500  && quest.splinter == 'death' && matchDetails.orgMana <= 24 ){
         console.log('Try to play for the quest with Teams size (V1):death',
             filteredTeamsForQuest.length);
         availableTeamsToPlay = filteredTeamsForQuest;
@@ -700,7 +713,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
       }
 
       // for water splinter
-      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 500  && quest.splinter == 'water'  && matchDetails.orgMana >= 27 && matchDetails.orgMana <= 30 ){
+      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 200  && quest.splinter == 'water'  && matchDetails.orgMana >= 25  ){
         console.log('Try to play for the quest with Teams size (V1):water',
             filteredTeamsForQuest.length);
         availableTeamsToPlay = filteredTeamsForQuest;
@@ -708,7 +721,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
       }
 
       // for fire splinter
-      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 1000  && quest.splinter == 'fire'  && matchDetails.orgMana >= 20 && matchDetails.orgMana <= 28 ){
+      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 1000  && quest.splinter == 'fire'  && matchDetails.orgMana >= 27 ){
         console.log('Try to play for the quest with Teams size (V1):fire',
             filteredTeamsForQuest.length);
         availableTeamsToPlay = filteredTeamsForQuest;
@@ -716,7 +729,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
       }
 
       // for life splinter
-      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 3000  && quest.splinter == 'life'  && (matchDetails.orgMana >= 40 || matchDetails.orgMana <= 20 )){
+      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 2000  && quest.splinter == 'life'  && (matchDetails.orgMana >= 40 || matchDetails.orgMana <= 20 )){
         console.log('Try to play for the quest with Teams size (V1):life',
             filteredTeamsForQuest.length);
         availableTeamsToPlay = filteredTeamsForQuest;
@@ -724,7 +737,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
       }
 
       // for earth splinter
-      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > limitTeamsCnt  && quest.splinter == 'earth'  && matchDetails.orgMana >= 44 ){
+      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 200  && quest.splinter == 'earth'  && matchDetails.orgMana >= 27 ){
         console.log('Try to play for the quest with Teams size (V1):earth',
             filteredTeamsForQuest.length);
         availableTeamsToPlay = filteredTeamsForQuest;
@@ -734,7 +747,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
       console.log("dragon length : ", availableTeamsToPlay.filter(
           team => team[7] === "dragon").length)
       // for dragon splinter
-      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 1000  && quest.splinter == 'dragon'  && matchDetails.orgMana >= 28 ){
+      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 500  && quest.splinter == 'dragon'  && matchDetails.orgMana >= 28 ){
         console.log('Try to play for the quest with Teams size (V1):dragon',
             filteredTeamsForQuest.length);
         availableTeamsToPlay = filteredTeamsForQuest;
@@ -821,15 +834,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
   //   console.log('No possible teams for splinter ', favouriteDeck, ' V1');
   // }
 
-  // do prefer summoners
-  if(matchDetails.rating && (matchDetails.rating <=1100)) {
-    const filteredTeamsForLowRatting = availableTeamsToPlay.filter(
-        team => team[0] === 259);
-    if(filteredTeamsForLowRatting.length >= 2) {
-      availableTeamsToPlay = filteredTeamsForLowRatting;
-      console.log('do prefer summoners for low rating', availableTeamsToPlay.length);
-    }
-  }
+
 
   const res = await mostWinningSummonerTankCombo(availableTeamsToPlay,
       matchDetails);
@@ -1051,6 +1056,8 @@ function getManaRange(matchDetails){
   let endMana = parseInt(matchDetails.mana) + parseInt(delta) ;
   return [fromMana,endMana]
 }
+
+//能够打败enemy 最近5组主要Summoner的cs组合
 async  function initCSTeams(possibleTeams, matchDetails,matchSplintersSummoners ) {
   const manaRange = getManaRange(matchDetails);
   let fromMana = manaRange[0];
@@ -1083,7 +1090,7 @@ async  function initCSTeams(possibleTeams, matchDetails,matchSplintersSummoners 
   } else {
     sql += " rule = '"+mustRules+"'  and "
   }
-  sql += "  startMana >="+ fromMana +" and startMana <= "+ endMana +"   GROUP BY cs  HAVING    tl >0.65   and sum(totalcnt - lostTotalCnt) >5  order by len asc ,  sum(teams -lostTeams ) desc , tl desc "
+  sql += "  startMana >="+ fromMana +" and startMana <= "+ endMana +"   GROUP BY cs  HAVING    tl >0.55   and sum(totalcnt - lostTotalCnt) >5  order by len asc ,  sum(teams -lostTeams ) desc , tl desc "
   const data = await dbUtils.sqlQuery(sql);
   const string = JSON.stringify(data);
   const rs = JSON.parse(string);
@@ -1137,9 +1144,10 @@ async  function initPerferCSTeams(possibleTeams, matchDetails,matchSplintersSumm
 
 async  function makeBestCombine(possibleTeams, matchDetails, mostSummoner = null) {
   let matchSplintersSummoners  = battles.matchedEnemyPossbileSummoners(matchDetails['enemyPossbileTeams'],true);
-  if(mostSummoner){
-    matchSplintersSummoners.push(mostSummoner)
-  }
+  // 基本同一种
+  // if(mostSummoner){
+  //   matchSplintersSummoners.push(mostSummoner)
+  // }
 
   let  rs = await initCSTeams(possibleTeams,matchDetails,matchSplintersSummoners)
   let  matchCS = matchCsTeam(rs,possibleTeams)
@@ -1250,9 +1258,42 @@ function sortByPreferCsOrder(rs) {
 }
 
 const skipIds = [-1,131,91,169,366,380,394,408,422,77,91,95,119,136,169,227,230,238,277,290,296,297,298,313,353,367,381,395,409,426]
+// 根据enemy 组合
 async  function makeBestCombineByCs(possibleTeams, matchDetails, limitCnt = 3) {
   let teamCs = []
-  const ept = matchDetails['enemyPossbileTeams']
+  let filterStart = 0;
+  let filterEnd = 99;
+  if(matchDetails.mana <=24){
+    filterEnd = 24;
+  } else if(matchDetails.mana <=38){
+    filterStart = 24;
+    filterEnd = 38;
+  } else {
+    filterStart = 38;
+    filterEnd = 99;
+  }
+
+  let maxEnemyMana = 0 ;
+  let minEnemyMana = 99;
+  let ept = matchDetails['enemyPossbileTeams'].filter( t=> {
+    if(t['mana_cap'] > maxEnemyMana) {
+      maxEnemyMana = t['mana_cap'];
+    }
+
+    if(t['mana_cap'] < minEnemyMana) {
+      minEnemyMana = t['mana_cap'];
+    }
+
+    return t['mana_cap'] >= filterStart && t['mana_cap'] <= filterEnd
+  })
+
+  console.log("maxEnemyMana:",maxEnemyMana,"minEnemyMana:",minEnemyMana)
+  if(ept.length == 0){
+    ept = matchDetails['enemyPossbileTeams'].filter( t=> {
+      return t['mana_cap'] >= filterStart - 10 && t['mana_cap'] <= filterEnd + 10
+    })
+  }
+  console.log("makeBestCombineByCs ept:",matchDetails.mana,ept)
   // console.log("ept:",ept)
   if(ept == null || ept.length == 0  ){
     return null;
@@ -1291,7 +1332,7 @@ async  function makeBestCombineByCs(possibleTeams, matchDetails, limitCnt = 3) {
           sIdMap[sId] = 0
         }
         if(cs.startsWith(sId.toString()) ){
-          if(sIdMap[sId] <=2){
+          if(sIdMap[sId] <=5){
             selectSortedCS.push(cs)
             sIdMap[sId]+=1
           }
@@ -1302,17 +1343,17 @@ async  function makeBestCombineByCs(possibleTeams, matchDetails, limitCnt = 3) {
 
   const len = selectSortedCS.length >= 10 ? 10 : selectSortedCS.length
   const topCs = selectSortedCS.slice(0,len).sort((a,b) => b.length - a.length )
-  console.log(topSummoners, topCs)
+  console.log("makeBestCombineByCs top enemy cs :", topSummoners, topCs)
   if(topCs && topCs.length == 0){
     return null
   }
 
   const matchSplintersSummoners = {}
   topCs.forEach(x => matchSplintersSummoners[x.split("-")[0]] = true )
-
   const manaRange = getManaRange(matchDetails);
   let fromMana = manaRange[0];
   let endMana = manaRange[1];
+
   let mustRules = battles.getMustRules(matchDetails.rules);
   let matchRule =  matchDetails.rules;
   if(mustRules  == "ALL") {
