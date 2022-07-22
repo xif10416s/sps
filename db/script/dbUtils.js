@@ -23,6 +23,11 @@ var insertTemplateRaw = 'INSERT  ignore  INTO battle_history_raw_v2(battle_queue
     ' battle_queue_id_lost ,summoner_id_lost,summoner_level_lost ,monster_1_id_lost ,monster_1_level_lost ,monster_1_abilities_lost ,monster_2_id_lost ,monster_2_level_lost ,monster_2_abilities_lost ,monster_3_id_lost ,monster_3_level_lost ,monster_3_abilities_lost ,monster_4_id_lost ,monster_4_level_lost ,monster_4_abilities_lost ,monster_5_id_lost ,monster_5_level_lost,monster_5_abilities_lost ,monster_6_id_lost,monster_6_level_lost ,monster_6_abilities_lost,player_rating_initial_lost ,player_rating_final_lost ,loser) '
     + 'VALUES ? ';
 
+
+var insertTemplateRawMorden = 'INSERT  ignore  INTO battle_history_raw_morden(battle_queue_id ,summoner_id,summoner_level ,monster_1_id ,monster_1_level ,monster_1_abilities ,monster_2_id ,monster_2_level ,monster_2_abilities ,monster_3_id ,monster_3_level ,monster_3_abilities ,monster_4_id ,monster_4_level ,monster_4_abilities ,monster_5_id ,monster_5_level,monster_5_abilities ,monster_6_id,monster_6_level ,monster_6_abilities ,created_date ,created_date_day,match_type ,mana_cap ,ruleset ,inactive ,player_rating_initial ,player_rating_final ,winner,' +
+    ' battle_queue_id_lost ,summoner_id_lost,summoner_level_lost ,monster_1_id_lost ,monster_1_level_lost ,monster_1_abilities_lost ,monster_2_id_lost ,monster_2_level_lost ,monster_2_abilities_lost ,monster_3_id_lost ,monster_3_level_lost ,monster_3_abilities_lost ,monster_4_id_lost ,monster_4_level_lost ,monster_4_abilities_lost ,monster_5_id_lost ,monster_5_level_lost,monster_5_abilities_lost ,monster_6_id_lost,monster_6_level_lost ,monster_6_abilities_lost,player_rating_initial_lost ,player_rating_final_lost ,loser) '
+    + 'VALUES ? ';
+
 const sqlQueryRaw = (sql, values) => {
   return new Promise((resolve, reject) => {
     pool.getConnection((err, connection) => {
@@ -32,6 +37,7 @@ const sqlQueryRaw = (sql, values) => {
         if (values) {
           connection.query(sql, values, (err, rows) => {
             if (err) {
+              console.log("sql error:",err)
               reject(err);
             } else {
               resolve(rows);
@@ -41,6 +47,7 @@ const sqlQueryRaw = (sql, values) => {
         } else {
           connection.query(sql, (err, rows) => {
             if (err) {
+              console.log("sql error:",err)
               reject(err);
             } else {
               resolve(rows);
@@ -160,6 +167,7 @@ function joinAbality(bt, field) {
 }
 
 async function batchInsertRaw(history, fromScore, batchSize, fromDay) {
+  // console.log(history[0])
   let values = history
       .filter(x => x['player_rating_initial'] >= fromScore)
       .filter(x => {
@@ -223,17 +231,36 @@ async function batchInsertRaw(history, fromScore, batchSize, fromDay) {
               bt['player_rating_final_lost'], bt['loser']
             ]
         ;
+        if(bt['format'] &&  bt['format'] == "modern"){
+          params=["M",params]
+        } else {
+          params=["W",params]
+        }
         return params;
       });
 
   let tmp = [];
+  let temM = []
   for (const [i, v] of values.entries()) {
-    tmp.push(v);
-    if (i % batchSize == 0) {
-      // console.log("batch insert start ..." + new Date(),tmp.length);
-      await sqlQuery(insertTemplateRaw, [tmp]);
-      tmp = [];
-      // console.log("batch insert end ..." + new Date());
+    if(v[0] == 'W'){
+      tmp.push(v[1]);
+      if (i % batchSize == 0) {
+        // console.log("batch insert start ..." + new Date(),tmp.length);
+        await sqlQuery(insertTemplateRaw, [tmp]);
+        tmp = [];
+        // console.log("batch insert end ..." + new Date());
+      }
+    }
+
+    if(v[0] == 'M'){
+      temM.push(v[1]);
+      if (i % batchSize == 0) {
+        // console.log("batch insert start ..." + new Date(),tmp.length);
+        // console.log("insertTemplateRawMorden----------------------------------" ,temM[0])
+        await sqlQuery(insertTemplateRawMorden, [temM]);
+        temM = [];
+        // console.log("batch insert end ..." + new Date());
+      }
     }
   }
 
@@ -241,6 +268,12 @@ async function batchInsertRaw(history, fromScore, batchSize, fromDay) {
     console.log('last batch insert start ...' + new Date() ,tmp.length);
     await sqlQuery(insertTemplateRaw, [tmp]);
     console.log('last batch insert end ...' + new Date());
+  }
+
+  if (temM.length > 0) {
+    console.log('last batch insert modern start ...' + new Date() ,temM.length);
+    await sqlQuery(insertTemplateRawMorden, [temM]);
+    console.log('last batch insert modern end ...' + new Date());
   }
 }
 

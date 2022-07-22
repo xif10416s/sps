@@ -9,7 +9,7 @@ const dbAnalysis = require('../../db/script/analysis');
 const mostUsefullMonster = require('../../db/data/mostUsefull');
 const splinters = ['fire', 'life', 'earth', 'water', 'death', 'dragon'];
 const dbUtils = require('../../db/script/dbUtils');
-
+const cardsDetail = require('../../data/cardsDetails');
 
 function calcTotalMana(team) {
   let totalMana = 0 ;
@@ -50,6 +50,10 @@ http.createServer(async function (request, response) {
       try {
         delete require.cache[require.resolve("../../data/playcards/" + player + "_cards")]
         myCards = require("../../data/playcards/" + player + "_cards")
+
+        // console.log(' MODEN CARD deck size: '+myCards.length, "min id :",Math.min.apply(null,myCards))
+        // myCards = cardsDetail.doModernFilter(myCards);
+        // console.log('filed MODEN CARD deck size: '+myCards.length, "min id :",Math.min.apply(null,myCards))
       } catch (e) {
         return {msg: "error"}
       }
@@ -63,6 +67,7 @@ http.createServer(async function (request, response) {
         splinters: sp,
         myCards: myCards,
         enemyRecent: enemyRecentTeams,
+        enemyPossbileTeams: enemyRecentTeams,
         logContent: {}
       }
 
@@ -70,6 +75,7 @@ http.createServer(async function (request, response) {
       let possibleTeams = await ptm.possibleTeams(matchDetails, player).catch(
           e => console.log('Error from possible team API call: ', e));
       console.timeLog("battle","1 possibleTeams finished")
+      console.log("possibleTeams-----------",possibleTeams.length)
       if (possibleTeams && possibleTeams.length) {
         console.log('1 Possible Teams based on your cards: ',
             possibleTeams.length);

@@ -9,6 +9,8 @@ const quests = require('./quests');
 const ask = require('./possibleTeams');
 const chalk = require('chalk');
 const fs = require('fs');
+const cardsDetail = require('./data/cardsDetails');
+
 
 let isMultiAccountMode = false;
 let account = '';
@@ -249,6 +251,8 @@ async function findCreateTeamButton(page, findOpponentDialogStatus=0, btnCreateT
         .catch(async ()=> {
             if (findOpponentDialogStatus === 2) console.log('Is this account timed out from battle?');
             console.log('btn--create-team not detected');
+            const summaryInfo = {time: new Date().toLocaleTimeString() ,  user: process.env.ACCOUNT , win: winTotal , lost: loseTotal , reason: "create-team not detected"};
+            summaryLogger.error(summaryInfo)
             return false;
         });
     console.log("findCreateTeamButton startFlag ",startFlag)
@@ -316,6 +320,8 @@ async function clickSummonerCard(page, teamToPlay) {
     .catch(()=>{
         clicked = false;
         console.log(chalk.bold.redBright('Summoner not clicked by selector.'))
+        const summaryInfo = {time: new Date().toLocaleTimeString() ,  user: process.env.ACCOUNT , win: winTotal , lost: loseTotal , reason: "Summoner not clicked by selector."};
+        summaryLogger.error(summaryInfo)
     });
     if(!clicked) {
         await page.waitForXPath(`//div[@card_detail_id="${teamToPlay.summoner}"]`, { timeout: 3000 })
@@ -372,7 +378,8 @@ async function clickWithCheck(page, teamToPlay,i){
     .catch(()=> {
         clicked = false;
         console.log(chalk.bold.redBright(teamToPlay.cards[i], 'not clicked'));
-        summaryLogger.error("may be rule escape:",teamToPlay.cards,teamToPlay.cards[i])
+        const summaryInfo = {time: new Date().toLocaleTimeString() ,  user: process.env.ACCOUNT , win: winTotal , lost: loseTotal , reason: "card not clicked" + teamToPlay.cards[i]};
+        summaryLogger.error(summaryInfo)
     });
 
     await page.waitForTimeout(1000);
@@ -440,6 +447,8 @@ async function clickCreateTeamButton(page) {
         .catch(()=>{
             clicked = false;
             console.log('Create team didnt work. Did the opponent surrender?');
+            const summaryInfo = {time: new Date().toLocaleTimeString() ,  user: process.env.ACCOUNT , win: winTotal , lost: loseTotal , reason: "clickCreateTeamButton not clicked"};
+            summaryLogger.error(summaryInfo)
         });
 
     return clicked
@@ -534,6 +543,27 @@ async function startBotPlayMatch(page, browser) {
         await closePopups(page);
         await closePopups(page);
 
+        let RANKED = "W"
+        // select model  #bh_wild_toggle  #bh_modern_toggle
+        if(process.env.RANKED == "M" ) {
+            await page.click('#bh_modern_toggle')
+            .then(() => {
+                page.waitForTimeout(5000);
+                RANKED = "M"
+                console.log('=====select Modern success ========')
+            })
+            .catch(e=>console.log('=====select Modern error ========'))
+        } else {
+            await page.click('#bh_wild_toggle')
+            .then(() => {
+                page.waitForTimeout(5000);
+                RANKED = "W"
+                console.log('=====select WILD success ========')
+            })
+            .catch(e=>console.log('=====select WILD error ========'))
+        }
+
+
         await uplevelLeage(page)
 
         const rating = await checkRating(page);
@@ -557,14 +587,14 @@ async function startBotPlayMatch(page, browser) {
 
         // do daily quest claim
         const isClaimDailyQuestMode = process.env.CLAIM_DAILY_QUEST_REWARD === 'false' ? false : true;
-        const isPowerAndRating =  parseInt(power) >= 15000  && parseInt(rating) >=1000 ;
+        // const isPowerAndRating =  parseInt(power) >= 15000  && parseInt(rating) >=1000 ;
         const isLeageBRONZE = league ? league.indexOf("BRONZE") != -1 : false;
         console.log("isLeageBRONZE ," , isLeageBRONZE)
         // TODO auto claim daily
         if (isClaimDailyQuestMode === true ) {
-            if(isPowerAndRating && !isLeageBRONZE) { // serviler I check
+            // if(isPowerAndRating && !isLeageBRONZE) { // serviler I check
                 await doDailyClaim(page);
-            }
+            // }
         }
         await page.waitForTimeout(5000*5);
 
@@ -605,21 +635,22 @@ async function startBotPlayMatch(page, browser) {
         const isWaitForBeginWithHighECR = ecr && process.env.ECR_RECOVER_TO &&  ecr <= parseFloat(process.env.ECR_RECOVER_TO) ;
         const isOverECR = ecr && ecr >=95 ;
             // && quest?.total == quest?.completed;
-        const checkRatingAndPower =  parseInt(power) >= 10000 && parseInt(rating) >=1050 ||  parseInt(power) < 10000
+        const checkRatingAndPower =   parseInt(rating) >=1050 ;
         // task finish analysis
-        let isNotEnoughtTimeFinish =  false//isDailyTaskWithoutEnoughTime(quest);
+        // let isNotEnoughtTimeFinish =  false
+        let dailyTaskAlmostFinished  =isDailyTaskAlmostFinished(quest);
         // fc == 0
-        if(isNotEnoughtTimeFinish && getNewDailyClaim == false && quest.fc == 0 && (quest?.splinter == "dragon" || quest?.splinter == "death" || quest?.splinter == "life" )) {
-            await newQuest(page,true);
-            if(getNewDailyClaim) {
-                console.log("isNotEnoughtTimeFinish but  not getNewDailyClaim ... do new Quest try , getNewDailyClaim:",getNewDailyClaim ,"quest.fc:",quest.fc)
-                isNotEnoughtTimeFinish = false;
-            }
-        }
+        // if(isNotEnoughtTimeFinish && getNewDailyClaim == false && quest.fc == 0 && (quest?.splinter == "dragon" || quest?.splinter == "death" || quest?.splinter == "life" )) {
+        //     await newQuest(page,true);
+        //     if(getNewDailyClaim) {
+        //         console.log("isNotEnoughtTimeFinish but  not getNewDailyClaim ... do new Quest try , getNewDailyClaim:",getNewDailyClaim ,"quest.fc:",quest.fc)
+        //         isNotEnoughtTimeFinish = false;
+        //     }
+        // }
 
-        console.log("isWaitForBeginWithHighECR:",isWaitForBeginWithHighECR  , "isNotEnoughtTimeFinish",isNotEnoughtTimeFinish ,"checkRatingAndPower:",checkRatingAndPower,"!isOverECR:",!isOverECR)
+        console.log("isWaitForBeginWithHighECR:",isWaitForBeginWithHighECR  , "dailyTaskAlmostFinished",dailyTaskAlmostFinished ,"checkRatingAndPower:",checkRatingAndPower,"!isOverECR:",!isOverECR)
         // do sleep
-        if ( (isWaitForBeginWithHighECR  || isNotEnoughtTimeFinish )&& !isOverECR && checkRatingAndPower && process.env.MAX_REWARDS == "false" ) {
+        if ( (isWaitForBeginWithHighECR  &&  !dailyTaskAlmostFinished  )&& !isOverECR && checkRatingAndPower && process.env.MAX_REWARDS == "false" ) {
             // if (ecr < parseFloat(process.env.ECR_STOP_LIMIT)) {
             //     console.log(chalk.bold.red(`ECR lower than limit ${process.env.ECR_STOP_LIMIT}%. reduce the limit in the env file config or wait until ECR will be at ${process.env.ECR_RECOVER_TO || '100'}%`));
             // } else if (ecr < parseFloat(process.env.ECR_RECOVER_TO)) {
@@ -629,7 +660,7 @@ async function startBotPlayMatch(page, browser) {
             // // calculating time needed for recovery
             // ecrNeededToRecover = parseFloat(process.env.ECR_RECOVER_TO) - parseFloat(ecr);
             // recoveryTimeInHours = Math.ceil(ecrNeededToRecover / ecrRecoveryRatePerHour);
-            const random =  Math.ceil(Math.random()*10)* 60000
+            const random =  Math.ceil(Math.random()*1)* 60000
             console.log(chalk.bold.white(`Time needed to recover ECR, approximately ${1 * 30 + random/60000 } minutes.ecr:`),ecr ,isWaitForBeginWithHighECR);
             // await closeBrowser(browser);
             console.log(chalk.bold.white(`Initiating sleep mode. The bot will awaken at ${new Date(Date.now() + 1 * 1800 * 1000 + random).toLocaleString()}`));
@@ -657,9 +688,15 @@ async function startBotPlayMatch(page, browser) {
 
         if(myCards) {
             console.log(account, ' deck size: '+myCards.length)
+            console.log("----------RANKED--------:",RANKED)
+            // if(RANKED == "M") {
+            //     myCards = cardsDetail.doModernFilter(myCards);
+            //     console.log(account, 'filed MODEN CARD deck size: '+myCards.length)
+            // }
         } else {
             console.log(account, ' playing only basic cards')
         }
+
 
         //check if season reward is available
         if (process.env.CLAIM_SEASON_REWARD === 'true') {
@@ -722,6 +759,7 @@ async function startBotPlayMatch(page, browser) {
             enemyRecent: enemyRecent,
             rating:rating,
             quest: quest.splinter,
+            ranked:RANKED,
             logContent:{account:account,isWin:'',mana:mana ,rules:rules,splinters:splinters.join("|")}
         }
         await page.waitForTimeout(2000*2);
@@ -811,9 +849,9 @@ async function startBotPlayMatch(page, browser) {
 
                     // ---------- check daily claim start TODO
                     if (isClaimDailyQuestMode === true ) {
-                        if(isPowerAndRating && !isLeageBRONZE) { // serviler I check
+                        // if(isPowerAndRating && !isLeageBRONZE) { // serviler I check
                             await doDailyClaim(page);
-                        }
+                        // }
                     }
                     // await page.waitForTimeout(5000*5);
                     // ---------- check daily claim end
@@ -948,6 +986,26 @@ async function newQuest(page , isNotEnoughtTime){
     } catch(e) {
         console.log('Error while skipping new quest')
     }
+}
+
+function isDailyTaskAlmostFinished(quest) {
+    if(quest == null ){
+        return false;
+    }
+
+    if(quest.nct == null  ||  quest.nct.trim().length  == 0  ){
+        return false;
+    }
+
+    let remainHours = parseInt(quest.nct.split(":")[0])
+
+    if(remainHours <= 2  &&
+        quest.completed /quest.total >= 0.6) {
+        console.log("*****isDailyTaskAlmostFinished*******: " , quest.completed , quest.total );
+        return true;
+    }
+
+    return false;
 }
 
 function isDailyTaskWithoutEnoughTime(quest) {
@@ -1167,10 +1225,12 @@ async function run() {
                 console.log(e);
                 start = false;
                 const summaryInfo = {time: new Date().toLocaleTimeString() ,  user: process.env.ACCOUNT , win: winTotal , lost: loseTotal , draw : undefinedTotal, dec: totalDec , reason: e};
-                summaryLogger.error(summaryInfo)
+
                 if(e instanceof  PageRestartException) {
                     needRestart = true;
                     console.log("1 PageRestartException .........")
+                } else {
+                    summaryLogger.error(summaryInfo)
                 }
             })
     }

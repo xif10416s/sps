@@ -2,31 +2,41 @@ const fetch = require('node-fetch');
 const fs = require('fs');
 
 const topBattleUser = require('./data/initUsers/topBattleUser');
-const newTopBattleUsers = require('./data/initUsers/topBattleUserJSON');
-const intUsers = require('./data/initUsers/init');
-let remainFile = `data/remain_raw.json`;
-const remainUsers = require(`./data/remain_raw`);
+const modern_newTopBattleUsers = require(
+    './data/initUsers/modern_topBattleUserJSON');
+const wild_newTopBattleUsers = require(
+    './data/initUsers/wild_topBattleUserJSON');
+const intUsers = [];
+let remainFileModern = `data/modern_remain_raw.json`;
+let remainFileWild = `data/wild_remain_raw.json`;
+const remainUsersModern = require(`./data/modern_remain_raw`);
+const remainUsersWild = require(`./data/wild_remain_raw`);
 const dbUtil = require('./db/script/dbUtils');
+const HttpsProxyAgent = require('https-proxy-agent');
+const proxyAgent = new HttpsProxyAgent('http://192.168.99.1:1081');
 
-
-async function getBattleHistoryRaw(player = '', data = {}) {
+async function getBattleHistoryRaw(player = '', format, data = {}) {
   try {
     const battleHistory = await fetch(
-        'https://api2.splinterlands.com/battle/history?player=' + player)
-        .then((response) => {
-          if (!response.ok) {
-            console.log('error');
-            return null;
-          }
-          return response;
-        })
-        .then((battleHistory) => {
-          return battleHistory.json();
-        })
-        .catch((error) => {
-          // console.error('There has been a problem with your fetch operation:',
-          //     error);
-        });
+        'https://api2.splinterlands.com/battle/history2?player='
+        + player.toLocaleLowerCase() + "&format=" + format
+        + "&v=1657932127908&token=O8WX6PK9KG&username=xgq123",
+        {agent: proxyAgent})
+    .then((response) => {
+      if (!response.ok) {
+        console.log('error');
+        return null;
+      }
+      return response;
+    })
+    .then((battleHistory) => {
+      return battleHistory.json();
+    })
+    .catch((error) => {
+      // console.error('There has been a problem with your fetch operation:',
+      //     error);
+    });
+    // console.log("get battles -----",player, battleHistory.battles.length)
     return battleHistory.battles;
   } catch (e) {
     return null;
@@ -76,7 +86,6 @@ const extractMonster = (team) => {
   };
 };
 
-
 const extractMonsterLost = (team) => {
   const monster1 = team.monsters[0];
   const monster2 = team.monsters[1];
@@ -113,15 +122,43 @@ let date = new Date();
 let dateStr = date.toISOString().split("T")[1];
 let isInit = false;
 
-if(dateStr && dateStr.startsWith("08:30:")){
+if (dateStr && dateStr.startsWith("08:30:")) {
   console.log("--------topBattleUser.saveBattlesHistory---------")
   topBattleUser.saveBattlesHistory();
 }
 
-if(dateStr && dateStr.startsWith("08:40:")){
+if (dateStr && dateStr.startsWith("08:40:")) {
   isInit = true;
 }
-console.log("get data isInit :", isInit , dateStr)
+
+if (dateStr && dateStr.startsWith("08:50:")) {
+  isInit = true;
+}
+
+console.log("get data isInit :", isInit, dateStr, dateStr.split(":")[1])
+
+let fromScore = 800;
+let newTopBattleUsers = []
+let format = "wild"
+let remainUsers = []
+let remainFile = null;
+
+format = "modern";
+newTopBattleUsers = modern_newTopBattleUsers;
+remainUsers = remainUsersModern;
+remainFile = remainFileModern;
+
+if (dateStr.split(":")[1].startsWith("0") || dateStr.split(":")[1].startsWith(
+    "2")
+    || dateStr.split(":")[1].startsWith("4")) {
+  format = "wild";
+  newTopBattleUsers = wild_newTopBattleUsers;
+  remainUsers = remainUsersWild;
+  remainFile = remainFileWild;
+  fromScore = 1200;
+}
+
+console.log("date ----:", dateStr,"format: " ,format, newTopBattleUsers.length)
 
 let battlesList = [];
 const usersToGrab = intUsers;
@@ -157,45 +194,66 @@ let extendArray = [];
 let count = 0;
 let delta = 100;
 let batchCount = 5;
-let fromScore = 1200;
 
 
 async function collectData(arr) {
-  console.log('batch count started : ',new Date(), ' arr:' + arr.length, 'battlesCnt:' ,battlesList.length);
-  let battles = arr.map(user =>
-      getBattleHistoryRaw(user)
-          .then(checkBattles => checkAndSave(checkBattles)).catch((error) =>{
-            console.log(error);
-      })
-  );
-  await battles;
+  console.log('batch count started : ', new Date().toLocaleTimeString(),
+      ' arr:' + arr.length, 'battlesCnt:', battlesList.length);
+
+  for (let i = 0; i <arr.length ; i++) {
+    await  getBattleHistoryRaw(arr[i],format)
+    .then(checkBattles => {
+      // console.log("----checkbattles---",checkBattles.length)
+      return checkAndSave(checkBattles)
+    }).catch((error) => {
+      console.log(error);
+    })
+  }
+  // let battles = arr.map(user =>
+  //     getBattleHistoryRaw(user,format)
+  //     .then(checkBattles => checkAndSave(checkBattles)).catch((error) => {
+  //       console.log(error);
+  //     })
+  // );
+  // await battles;
   count++;
   mergeArray = mergeArray.concat(extendArray);
-  console.log('batch count : ', count , 'battlesCnt:' ,battlesList.length , 'extendArray : ', extendArray.length,
+  console.log('batch count : ', count, 'battlesCnt:', battlesList.length,
+      'extendArray : ', extendArray.length,
       'remainArray :', mergeArray.length);
   extendArray = [];
-  console.log(new Date());
+  console.log(new Date().toLocaleTimeString());
   const cleanBattleList = battlesList.filter(x => x != undefined);
-  await saveDatas(cleanBattleList,mergeArray);
-  console.log('batch count : ', count , "finished............")
+  await saveDatas(cleanBattleList, mergeArray);
+  console.log('batch count : ', count, "finished............", "mergeArray:",mergeArray.length)
 
   if (mergeArray.length >= delta && count < batchCount) {
-    setTimeout(async () =>await collectData(mergeArray.splice(0, delta)), 1000 * (1 + Math.random() * 5));
-    console.log(new Date());
+    setTimeout(async () => await collectData(mergeArray.splice(0, delta)),
+        1000 * (1 + Math.random() * 5));
+    console.log(new Date().toLocaleTimeString());
   } else {
     dbUtil.pool.end(function (err) {
       // 所有的连接都已经被关闭
     });
-    return ;
+    dbUtil.pool.end(function (err) {
+      // 所有的连接都已经被关闭
+    });
+    console.log("*************finished***********", "mergeArray:",mergeArray.length)
+    throw new Error('************finished**********');
+    return;
   }
 }
 
 async function checkAndSave(battles) {
   if (battles) {
+    // console.log(battles[0])
+    // console.log(battles[0].is_surrender == false,"--",battles[0].details)
     let mapResult = battles.map(
         battle => {
-          const details = JSON.parse(battle.details);
-          if (details.type != 'Surrender') {
+          const details = battle.details;
+          // const details = JSON.parse(battle.details);
+
+          if (battle.is_surrender == false ) {
             if (battle.winner && battle.winner == battle.player_1) {
               const monstersDetails = extractMonster(details.team1);
               const lostMonstersDetails = extractMonsterLost(details.team2);
@@ -211,7 +269,8 @@ async function checkAndSave(battles) {
                 battle_queue_id_lost: battle.battle_queue_id_1,
                 player_rating_initial_lost: battle.player_1_rating_initial,
                 player_rating_final_lost: battle.player_1_rating_final,
-                loser: battle.player_2
+                loser: battle.player_2,
+                format: battle.format
               };
             } else if (battle.winner && battle.winner
                 == battle.player_2) {
@@ -229,18 +288,19 @@ async function checkAndSave(battles) {
                 battle_queue_id_lost: battle.battle_queue_id_1,
                 player_rating_initial_lost: battle.player_1_rating_initial,
                 player_rating_final_lost: battle.player_1_rating_final,
-                loser: battle.player_1
+                loser: battle.player_1,
+                format: battle.format
               };
             }
           }
 
-          if(battle.player_1_rating_initial >= fromScore){
+          if (battle.player_1_rating_initial >= fromScore) {
             if (!map.has(battle.player_1)) {
               map.set(battle.player_1, true);
               extendArray.push(battle.player_1.trim());
             }
           }
-          if(battle.player_2_rating_initial >= fromScore){
+          if (battle.player_2_rating_initial >= fromScore) {
             if (!map.has(battle.player_2)) {
               map.set(battle.player_2, true);
               extendArray.push(battle.player_2.trim());
@@ -248,10 +308,11 @@ async function checkAndSave(battles) {
           }
         });
     battlesList = [...battlesList, ...mapResult];
+    // console.log("--------11----------22------")
   } else {
     console.log('-------------------error---and save');
     const cleanBattleList = battlesList.filter(x => x != undefined);
-    await  saveDatas(cleanBattleList,mergeArray);
+    await saveDatas(cleanBattleList, mergeArray);
     dbUtil.pool.end(function (err) {
       // 所有的连接都已经被关闭
     });
@@ -259,19 +320,21 @@ async function checkAndSave(battles) {
   }
 }
 
-async function saveDatas(battlesList , mergeArray){
-  if(battlesList.length >0 ){
-    console.log('batchInsert---start---', battlesList.length,new Date());
+async function saveDatas(battlesList, mergeArray) {
+  if (battlesList.length > 0) {
+    console.log('batchInsert---start---', battlesList.length,
+        new Date().toLocaleTimeString(),"FORMAT:",format);
     try {
-      await dbUtil.batchInsertRaw(battlesList,fromScore,500,'2021-11-01');
+      await dbUtil.batchInsertRaw(battlesList, fromScore, 500, '2021-11-01');
     } catch (e) {
       console.log('batchInsert---error---');
     }
     battlesList = [];
-    console.log('batchInsert---end---', battlesList.length,new Date());
+    console.log('batchInsert---end---', battlesList.length,
+        new Date().toLocaleTimeString());
 
-    if(mergeArray.length >0){
-      fs.writeFileSync(remainFile, JSON.stringify(mergeArray), function(err) {
+    if (mergeArray.length > 0) {
+      fs.writeFileSync(remainFile, JSON.stringify(mergeArray), function (err) {
         if (err) {
           console.log(err);
         }
@@ -281,7 +344,6 @@ async function saveDatas(battlesList , mergeArray){
   }
 }
 
-
-(async ()=>{
+(async () => {
   await collectData(mergeArray.splice(0, delta));
 })()

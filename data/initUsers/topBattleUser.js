@@ -1,10 +1,13 @@
 const fetch = require("node-fetch");
 const fs = require('fs');
+const HttpsProxyAgent = require('https-proxy-agent');
+const proxyAgent = new HttpsProxyAgent('http://192.168.99.1:1081');
 
-async function getTopBattleHistory(leaderboard) {
+//https://api2.splinterlands.com/battle/history2?player=$top&leaderboard=1&format=wild&v=1657933584115&token=O8WX6PK9KG&username=xgq123
+async function getTopBattleHistory(leaderboard,format) {
   const battleHistory = await fetch(
-      'https://api2.splinterlands.com/battle/history2?player=%24top&leaderboard='
-      + leaderboard + '&v=1640391366759&token=AN01RUV8U8&username=sugelafei2')
+      'https://api2.splinterlands.com/battle/history2?player=$top&leaderboard='
+      + leaderboard + '&format='+format+'&v=1657933584115&token=O8WX6PK9KG&username=xgq123', { agent: proxyAgent})
   .then((response) => {
     if (!response.ok) {
       console.log('Network response was not ok');
@@ -31,10 +34,11 @@ async function getTopBattleHistory(leaderboard) {
   return rsArray;
 }
 
-async function getLeaderboardBattleHistory(leaderboard) {
+// https://api2.splinterlands.com/players/leaderboard_with_player?season=91&leaderboard=1&format=wild&v=1657932718267&token=O8WX6PK9KG&username=xgq123
+async function getLeaderboardBattleHistory(leaderboard,format) {
   const battleHistory = await fetch(
-      'https://cache-api.splinterlands.com/players/leaderboard_with_player?season=77&leaderboard='
-      + leaderboard + '&v=1640393129081&token=AN01RUV8U8&username=sugelafei2')
+      'https://api2.splinterlands.com/players/leaderboard_with_player?season=91&leaderboard='
+      + leaderboard + '&format='+format+'&v=1657932718267&token=O8WX6PK9KG&username=xgq123', { agent: proxyAgent})
   .then((response) => {
     if (!response.ok) {
       console.log('Network response was not ok');
@@ -57,40 +61,53 @@ async function getLeaderboardBattleHistory(leaderboard) {
   return rsArray;
 }
 
-async function getBattleHistory() {
-  var battleHistory1 = await getTopBattleHistory(0);
-  battleHistory1 = battleHistory1.concat(await getTopBattleHistory(1))
-  battleHistory1 = battleHistory1.concat(await getTopBattleHistory(2))
-  battleHistory1 = battleHistory1.concat(await getTopBattleHistory(3))
-  battleHistory1 = battleHistory1.concat(await getTopBattleHistory(4))
-  battleHistory1 = battleHistory1.concat(await getTopBattleHistory(5))
+async function getBattleHistory(format) {
+  var battleHistory1 = await getTopBattleHistory(0,format);
+  battleHistory1 = battleHistory1.concat(await getTopBattleHistory(1,format))
+  battleHistory1 = battleHistory1.concat(await getTopBattleHistory(2,format))
+  battleHistory1 = battleHistory1.concat(await getTopBattleHistory(3,format))
+  battleHistory1 = battleHistory1.concat(await getTopBattleHistory(4,format))
+  battleHistory1 = battleHistory1.concat(await getTopBattleHistory(5,format))
 
-  battleHistory1 = battleHistory1.concat(await getLeaderboardBattleHistory(0))
-  battleHistory1 = battleHistory1.concat(await getLeaderboardBattleHistory(1))
-  battleHistory1 = battleHistory1.concat(await getLeaderboardBattleHistory(2))
-  battleHistory1 = battleHistory1.concat(await getLeaderboardBattleHistory(3))
-  battleHistory1 = battleHistory1.concat(await getLeaderboardBattleHistory(4))
-  battleHistory1 = battleHistory1.concat(await getLeaderboardBattleHistory(5))
+
+  battleHistory1 = battleHistory1.concat(await getLeaderboardBattleHistory(0,format))
+  battleHistory1 = battleHistory1.concat(await getLeaderboardBattleHistory(1,format))
+  battleHistory1 = battleHistory1.concat(await getLeaderboardBattleHistory(2,format))
+  battleHistory1 = battleHistory1.concat(await getLeaderboardBattleHistory(3,format))
+  battleHistory1 = battleHistory1.concat(await getLeaderboardBattleHistory(4,format))
+
   console.log("getBattleHistory .........", battleHistory1.length)
   return battleHistory1;
 }
 
 async function saveBattlesHistory() {
   console.log("--------------saveBattlesHistory---------------")
-  await getBattleHistory().then(player => {
-    fs.writeFile(`data/initUsers/topBattleUserJSON.json`, JSON.stringify(player), function (err) {
+  await getBattleHistory('modern').then(player => {
+    fs.writeFile('data/initUsers/modern_topBattleUserJSON.json', JSON.stringify(player), function (err) {
       if (err) {
         console.log(err);
       }
     });
     // console.log(users.filter(distinct))
   })
+
+  await getBattleHistory('wild').then(player => {
+    fs.writeFile('data/initUsers/wild_topBattleUserJSON.json', JSON.stringify(player), function (err) {
+      if (err) {
+        console.log(err);
+      }
+    });
+    // console.log(users.filter(distinct))
+  })
+
 }
 
 module.exports.saveBattlesHistory = saveBattlesHistory;
 
 // (async ()=>{
-//   let l1 =  await getBattleHistory()
+//
+//   // wild modern
+//   await saveBattlesHistory()
 //   // console.log(JSON.stringify(l1))
 //
 //

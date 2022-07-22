@@ -11,7 +11,9 @@ const {  sleep } = require('./helper');
 
 async function getBattleHistory(player = '', data = {}) {
     // const battleHistory = await fetch('https://api.steemmonsters.io/battle/history?player=' + player.toLocaleLowerCase())
-    const battleHistory = await fetch('https://api2.splinterlands.com/battle/history?player=' + player.toLocaleLowerCase())
+    //https://api2.splinterlands.com/battle/history2?player=xqm123&leaderboard=0&format=wild&v=1657932027649&token=O8WX6PK9KG&username=xgq123
+    //https://api2.splinterlands.com/battle/history2?player=xqm123&leaderboard=0&format=modern&v=1657932127908&token=O8WX6PK9KG&username=xgq123
+    const battleHistory = await fetch('https://api2.splinterlands.com/battle/history2?player=' + player.toLocaleLowerCase()+"&format=modern&v=1657932127908&token=O8WX6PK9KG&username=xgq123")
         .then((response) => {
             if (!response.ok) {
                 console.log('Network response was not ok');
@@ -90,7 +92,8 @@ async function getBattleDetail(player = '') {
                     return {
                         ...monstersDetails,
                         ...info,
-                        isWin: x.winner == player ? true : false
+                        isWin: x.winner == player ? true : false,
+                        format: x.format
                     }
                 } else {
                     return []

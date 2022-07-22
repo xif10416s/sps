@@ -1,5 +1,6 @@
+//
 const cardsDetails = require("./cardsDetails.json");
-
+const mordenCard = require("./mordenCard.json");
 
 const cardsDetailsNameMap = {}
 const cardsDetailsIDMap = {}
@@ -137,6 +138,17 @@ function getEnemyTeamPerfer(input, mana) {
 }
 
 
+function doModernFilter(myCards){
+  return myCards.filter( cardId =>{
+    if(cardsDetailsIDMap[cardId]){
+      return mordenCard.indexOf( cardsDetailsIDMap[cardId]['name'])  != -1;
+    }
+    else {
+      console.log("---------miss--------",cardId)
+      return false;
+    }
+  })
+}
 
 
 function checkType(target,most, secondMost, perferSummonersInfo) {
@@ -153,7 +165,7 @@ module.exports.cardsDetailsNameMap = cardsDetailsNameMap;
 module.exports.cardsDetailsIDMap = cardsDetailsIDMap;
 module.exports.getEnemyBufferRecentInfo = getEnemyBufferRecentInfo;
 module.exports.getEnemyTeamPerfer = getEnemyTeamPerfer;
-
+module.exports.doModernFilter = doModernFilter
 
 
 let test = [["Kelya Frendul","1"],["Serpent of Eld","1"],["Elven Defender","1"],["Flying Squid","1"],["Mantoid","1"],["Deeplurker","1"],["Goblin Chariot","1"],["Kelya Frendul","1"],["Serpent of Eld","1"],["Merdaali Guardian","1"],["Deeplurker","1"],["Ice Pixie","1"],["Albatross","1"],["",""],["Thaddius Brood","1"],["Cursed Windeku","1"],["Carrion Shade","1"],["Death Elemental","1"],["",""],["",""],["",""],["Obsidian","1"],["Unicorn Mustang","1"],["Mycelic Slipspawn","1"],["Goblin Psychic","1"],["Khmer Princess","1"],["",""],["",""],["Kelya Frendul","1"],["Hardy Stonefish","1"],["Albatross","1"],["Ice Pixie","1"],["Deeplurker","1"],["",""],["",""]]
@@ -168,6 +180,18 @@ let test = [["Kelya Frendul","1"],["Serpent of Eld","1"],["Elven Defender","1"],
 
 // 131,366,380,394,408,422
 // 77,91,95,119,136,169,227,230,238,277,290,296,297,298,313,353,367,381,395,409,426
-console.log(Object.keys(cardsDetailsIDMap).filter(x => {
-  return parseInt(cardsDetailsIDMap[x]['statSum1']['mana']) == 2
-}).join(","))
+// console.log(Object.keys(cardsDetailsIDMap).filter(x => {
+//   return parseInt(cardsDetailsIDMap[x]['statSum1']['mana']) == 2
+// }).join(","))
+
+// ############### basiccardis ##############
+// const basicCards = require('./data/basicCards.json');
+// const ids = basicCards.map(x =>{
+//   return cardsDetail.cardsDetailsNameMap[x]['cardDetailId']
+// })
+// const fs = require('fs');
+// fs.writeFile(`tmp.json`, JSON.stringify(ids), function (err) {
+//   if (err) {
+//     console.log(err);
+//   }
+// });

@@ -24,6 +24,6 @@ module.exports.getPlayerCards = getPlayerCards;
 
 // (async ()=>{
 //   let a = []
-//   await getPlayerCards("sugelafei2").then(x => a.push(...x))
-//   console.log(JSON.stringify(a))
+//   await getPlayerCards("xgq123").then(x => a.push(...x))
+//   console.log(JSON.stringify(a.sort()))
 // })()
