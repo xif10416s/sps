@@ -92,7 +92,7 @@ async function getQuest(page) {
         const nct = await getElementText(page,"#complete_text")
         const fc = await getElementText(page,"#quest_chests_earned")
 
-        return {splinter: splinter.split(":")[1].trim().toLowerCase() ,total : parseInt(total.replaceAll(",","")) , completed: parseInt(completed.replaceAll(",","")) , nct:nct.replaceAll(" ","") , fc : parseInt(fc)}
+        return {splinter: splinter.trim().toLowerCase() ,total : parseInt(total.replaceAll(",","")) , completed: parseInt(completed.replaceAll(",","")) , nct:nct.replaceAll(" ","") , fc : parseInt(fc)}
     } catch (e) {
         console.log(e)
     }

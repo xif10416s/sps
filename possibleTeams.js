@@ -815,10 +815,10 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
     // }
 
     // sprinter snipe
-    availableTeamsToPlay = doSpecialQuest(matchDetails,quest,availableTeamsToPlay,"snipe",left , 1000)
+    //  availableTeamsToPlay = doSpecialQuest(matchDetails,quest,availableTeamsToPlay,"snipe",left , 1000)
 
     //  "sneak"
-    availableTeamsToPlay = doSpecialQuest(matchDetails,quest,availableTeamsToPlay,"sneak",left , 1000)
+    // availableTeamsToPlay = doSpecialQuest(matchDetails,quest,availableTeamsToPlay,"sneak",left , 1000)
 
   }
 
