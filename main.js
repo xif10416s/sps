@@ -7,7 +7,7 @@ config.doConfigInit(username)
 const { run, setupAccount , LostTooMatchException } = require('./index');
 const { sleep } = require('./helper');
 const chalk = require('chalk');
-
+const fs = require('fs');
 const isMultiAccountMode = (process.env.MULTI_ACCOUNT?.toLowerCase() === 'true') ? true : false;
 
 
@@ -68,6 +68,13 @@ async function startMulti() {
                 if(e instanceof  LostTooMatchException) {
                     console.log("LostTooMatchException : " , e.message)
                     next = false;
+                    let statusJson = require('./config/status')
+                    statusJson[process.env.ACCOUNT] = true
+                    fs.writeFile(`./config/status.json`, JSON.stringify(statusJson), function (err) {
+                        if (err) {
+                            console.log(err);
+                        }
+                    });
                 }
             }
                     
@@ -95,6 +102,12 @@ async function startSingle() {
 
 (async()=> {
     console.log(`isMultiAccountMode: ${isMultiAccountMode}`)
+    let statusJson = require('./config/status')
+    if(statusJson[process.env.ACCOUNT]){
+        console.log(`too many error stop !!!!================================`,statusJson)
+        return ;
+    }
+
     if (isMultiAccountMode) {
         console.log('Running mode: multi')
         await startMulti();

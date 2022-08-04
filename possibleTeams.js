@@ -110,7 +110,12 @@ let historyBackup = [];
 const basicCards = require('./data/basicCards.js');
 
 let availabilityCheck = (base, toCheck) => toCheck.slice(0, 7).every(
-    v => base.includes(v));
+    v => {
+      if(v == ""){
+        return true;
+      }
+      return base.includes(v)
+    });
 let account = '';
 
 const fs = require('fs');
@@ -132,7 +137,7 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule,ranked)
   let date = new Date();
   let endDate = new Date(date.setDate(date.getDate() + 2))
   let endDateStr = endDate.toISOString().split("T")[0];
-  let startDate = new Date(date.setDate(date.getDate() - 90 ))
+  let startDate = new Date(date.setDate(date.getDate() - 60 ))
   let startDateStr = startDate.toISOString().split("T")[0];
   if (keyRules.length > 1) {
     let sql = 'select * from '+ tableName + ' where  mana_cap = ?  and summoner_id in (?)  and (ruleset = ? or ruleset = ?) and created_date_day <= ? and created_date_day >= ?  limit 1000000';
@@ -358,8 +363,25 @@ const possibleTeams = async (matchDetails, acc) => {
   //   }
   //   matchDetails.mana--;
   // }
+
   console.log('check battles based on mana: ' + matchDetails.mana);
-  possibleTeams = await askFormation(matchDetails);
+  try {
+    possibleTeams = await askFormation(matchDetails);
+    console.log("askFormation  possibleTeams :", possibleTeams.length)
+  }catch (e) {
+    console.log("askFormation   possibleTeams == 0  && matchDetails.ranked == M , do Wild select")
+    matchDetails.ranked = "W"
+    possibleTeams = await askFormation(matchDetails);
+    console.log("askFormation  change Wild select possibleTeams :", possibleTeams.length)
+  }
+
+  // TODO for mordern combine
+  if( possibleTeams && possibleTeams.length <=100 && matchDetails.ranked == "M") {
+    console.log(" do Wild select merge")
+    matchDetails.ranked = "W"
+    possibleTeams = possibleTeams.concat(await askFormation(matchDetails));
+    console.log("askFormation  change Wild select possibleTeams :", possibleTeams.length)
+  }
   return possibleTeams;
 };
 
@@ -371,9 +393,13 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
 
   if(process.env.skip_cs && process.env.skip_cs == "false"){
     console.log("4-4-0 third step makeBestCombine  start ............",new Date())
-    const bcTeams = await  makeBestCombine(possibleTeams,matchDetails,bestCombination.bestSummoner);
+    let bcTeams = await  makeBestCombine(possibleTeams,matchDetails,bestCombination.bestSummoner);
     // && (matchDetails.rating <=1000 && bcTeams.length >= 100 ||  matchDetails.rating > 1000 && bcTeams.length >= 5 )
     if(bcTeams &&  matchDetails.rating && (matchDetails.rating <=1000 && bcTeams.length >= 10 ||  matchDetails.rating > 1000 && bcTeams.length >= 5 ) ){
+      let priorityToTheQuest = process.env.QUEST_PRIORITY === 'false' ? false : true;
+      if(priorityToTheQuest) {
+        bcTeams = doFocusFilter(bcTeams,matchDetails.quest,1)
+      }
       let bcCombine = await battles.mostWinningSummonerTank(bcTeams);
       const mostWinningBcTeam = await findBestTeam(bcCombine, bcTeams)
       console.log("4-4-0 third step makeBestCombine  used ............",new Date())
@@ -385,8 +411,13 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
     const byCsTeams = await  makeBestCombineByCs(possibleTeams,matchDetails,5);
     //&&  matchDetails.rating && (matchDetails.rating <=1000 && byCsTeams[1].length >= 100 ||  matchDetails.rating > 1000 && byCsTeams[1].length >= 5 )
     if(byCsTeams != null &&  byCsTeams[1] &&  matchDetails.rating && (matchDetails.rating <=1000 && byCsTeams[1].length >= 10 ||  matchDetails.rating > 1000 && byCsTeams[1].length >= 5 ) ) {
-      let byCsCombine = await battles.mostWinningSummonerTank(byCsTeams[1]);
-      const makeBestCombineByCsTeam = await findBestTeam(byCsCombine, byCsTeams[1])
+      let csTeams = byCsTeams[1];
+      let priorityToTheQuest = process.env.QUEST_PRIORITY === 'false' ? false : true;
+      if(priorityToTheQuest) {
+        csTeams = doFocusFilter(csTeams,matchDetails.quest,1)
+      }
+      let byCsCombine = await battles.mostWinningSummonerTank(csTeams);
+      const makeBestCombineByCsTeam = await findBestTeam(byCsCombine, csTeams)
       console.log("4-4-1 third step makeBestCombineByCsTeam  used ............",new Date())
       // logger.log("4-4-1 third step makeBestCombineByCsTeam  used ............",new Date())
       return makeBestCombineByCsTeam;
@@ -439,6 +470,79 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
   matchDetails['logContent']['stgLen'] = possibleTeams.length
   return mostWinningSummonerTankComboTeam;
 };
+
+const FOCUS_TYPE = {
+  "anti magic" : {type: "attack" , target: "magic"},
+  "anti melee" : {type: "attack" , target: "attack"},
+  "defend" : {type:"skill", target:["Shield","Repair"]},
+  "stealth" : {type:"skill", target:["Sneak","Snipe","Opportunity"]},
+  "reflect" : {type:"skill", target:["Backfire","Return Fire","Magic Reflect"]},
+  "buffs" : {type:"skill", target:["Swiftness","Inspire","Protect","Strengthen"]},
+  "disable" : {type:"skill", target:["Piercing","Stun"]},
+  "exploits" : {type:"skill", target:["Oppress","Giant Killer","Deathblow","Knock Out"]},
+  "fatalities" : {type:"skill", target:["Bloodlust","Life Leech","Redemption","Scavenger"]},
+  "healing" : {type:"skill", target:["Tank Heal","Heal","Cleanse","Triage"]},
+  "ailments " : {type:"skill", target:["Poison","Affliction","Weaken"]},
+  "impair" : {type:"skill", target:["Demoralize","Silence","Headwinds"]},
+  "nullify" : {type:"skill", target:["Shatter","Cripple","Dispel"]}
+
+}
+function doFocusFilter(bcTeams,focus,limitCnt){
+  const fcType =  FOCUS_TYPE[focus]
+  if(fcType == null ){
+    console.log("doFocusFilter not match type :",focus)
+    return bcTeams;
+  }
+  console.log("doFocusFilter match type :",focus , fcType , bcTeams.length)
+  const type = fcType['type']
+  const target = fcType['target']
+  const filterTeams = bcTeams.filter( t => {
+    if(type == 'attack') {
+       return checkAttackMatch(t,target)
+    } else {
+       return checkSkillMatch(t,target)
+    }
+  })
+  if(filterTeams.length >= limitCnt) {
+    console.log("doFocusFilter filtered:",filterTeams.length , bcTeams.length)
+    return filterTeams;
+  } else {
+    console.log("doFocusFilter no filter:", bcTeams.length)
+    return bcTeams;
+  }
+}
+
+function checkAttackMatch(team , target){
+  // console.log("checkAttackMatch : ",target)
+  for (let i = 1; i < team.length ; i++) {
+    const cardInfo =  cardsDetail.cardsDetailsIDMap[team[i]]
+    if(cardInfo == null ){
+      continue;
+    }
+    // console.log(cardInfo['statSum1'][target],cardInfo['name'])
+    if(cardInfo['statSum1'][target] > 0 ) {
+      console.log("checkAttackMatch :", cardInfo['name'], target)
+      return true;
+    }
+  }
+  return false;
+}
+
+function checkSkillMatch(team , target) {
+  // console.log("checkSkillMatch : ",target)
+  for (let i = 1; i < team.length ; i++) {
+    const cardInfo =  cardsDetail.cardsDetailsIDMap[team[i]]
+    if(cardInfo == null || cardInfo['abilities'] == null ){
+      continue;
+    }
+    let intersection = cardInfo['abilities'][0].filter(function (val) { return target.indexOf(val) > -1 })
+    if( intersection.length > 0 ) {
+      console.log("checkSkillMatch  abilities :", cardInfo['name'],intersection)
+      return true;
+    }
+  }
+  return false;
+}
 
 async function findBestTeam(bestCombination, possibleTeams) {
   const sortArr = []
@@ -706,7 +810,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
     const left = 1;
     const questCheck = matchDetails.splinters.includes(quest.splinter) && left
         > 0;
-    const limitTeamsCnt = 500;
+
     if(questCheck) {
       const filteredTeamsForQuest = availableTeamsToPlay.filter(
           team => team[7] === quest.splinter);
@@ -1284,6 +1388,9 @@ async  function makeBestCombineByCs(possibleTeams, matchDetails, limitCnt = 3) {
 
   let maxEnemyMana = 0 ;
   let minEnemyMana = 99;
+  if(matchDetails['enemyPossbileTeams'] == null ||  matchDetails['enemyPossbileTeams'].length ==0){
+    return null;
+  }
   let ept = matchDetails['enemyPossbileTeams'].filter( t=> {
     if(t['mana_cap'] > maxEnemyMana) {
       maxEnemyMana = t['mana_cap'];
@@ -1489,5 +1596,8 @@ module.exports.getSplintersSummoners=getSplintersSummoners;
 module.exports.teamSelectionForWeb = teamSelectionForWeb
 module.exports.logger = logger;
 module.exports.summoners = summoners;
+module.exports.doFocusFilter = doFocusFilter;
+module.exports.cardsIdsforSelectedBattles = cardsIdsforSelectedBattles;
+module.exports.askFormation = askFormation;
 
 // selectBattleDate(23,"Standard",

@@ -26,7 +26,7 @@ function calcTotalMana(team) {
 http.createServer(async function (request, response) {
   // 解析请求，包括文件名
   var pathname = url.parse(request.url).pathname;
-
+  let ranked = "W"
   if (pathname.startsWith("/api")) {
     console.log("获取到的请求参数的路径：" + request.url);
     var arg1 = url.parse(request.url, true).query;
@@ -50,10 +50,12 @@ http.createServer(async function (request, response) {
       try {
         delete require.cache[require.resolve("../../data/playcards/" + player + "_cards")]
         myCards = require("../../data/playcards/" + player + "_cards")
+        if(ranked == "M"){
+          console.log(' MODEN CARD deck size: '+myCards.length, "min id :",Math.min.apply(null,myCards))
+          myCards = cardsDetail.doModernFilter(myCards);
+          console.log('filed MODEN CARD deck size: '+myCards.length, "min id :",Math.min.apply(null,myCards))
+        }
 
-        // console.log(' MODEN CARD deck size: '+myCards.length, "min id :",Math.min.apply(null,myCards))
-        // myCards = cardsDetail.doModernFilter(myCards);
-        // console.log('filed MODEN CARD deck size: '+myCards.length, "min id :",Math.min.apply(null,myCards))
       } catch (e) {
         return {msg: "error"}
       }
@@ -67,6 +69,7 @@ http.createServer(async function (request, response) {
         splinters: sp,
         myCards: myCards,
         enemyRecent: enemyRecentTeams,
+        ranked: ranked,
         enemyPossbileTeams: enemyRecentTeams,
         logContent: {}
       }

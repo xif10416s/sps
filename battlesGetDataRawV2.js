@@ -20,8 +20,9 @@ async function getBattleHistoryRaw(player = '', format, data = {}) {
     const battleHistory = await fetch(
         'https://api2.splinterlands.com/battle/history2?player='
         + player.toLocaleLowerCase() + "&format=" + format
-        + "&v=1657932127908&token=O8WX6PK9KG&username=xgq123",
-        {agent: proxyAgent})
+        + "&v=1657932127908&token=O8WX6PK9KG&username=xgq123"
+        // ,{agent: proxyAgent}
+        )
     .then((response) => {
       if (!response.ok) {
         console.log('error');
@@ -327,7 +328,7 @@ async function saveDatas(battlesList, mergeArray) {
     try {
       await dbUtil.batchInsertRaw(battlesList, fromScore, 500, '2021-11-01');
     } catch (e) {
-      console.log('batchInsert---error---');
+      console.log('batchInsert---error---',e);
     }
     battlesList = [];
     console.log('batchInsert---end---', battlesList.length,

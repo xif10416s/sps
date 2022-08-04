@@ -1,13 +1,14 @@
 {
-  "name": "xifei123",
-  "password": "5JayvrytpFTiQjpHQcWntd9eXLmunuSGPid9TqvghmADww7T1LT",
-  "port": 3000,
+  "name": "xgq1234",
+  "password": "5JgWARm8sK5xysPnMHJetRQkKzE4QcNfqPiwZJMSw1GEzhcUwc5",
+  "port": 3009,
   "favourite_summoner": "",
   "skip_cs": "false",
   "max_cnt": "9999" ,
   "PREFER_CS": "true",
+  "MINUTES_BATTLES_INTERVAL": 2,
+  "RANKED": "M",
   "SKIP_QUEST": "dragon",
-  "MINUTES_BATTLES_INTERVAL": 7,
   "ECR_RECOVER_TO": 90,
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }
