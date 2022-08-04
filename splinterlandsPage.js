@@ -1,4 +1,3 @@
-const battlesGet = require('./battlesGet');
 const { getElementText } = require('./helper');
 const cardsDetail = require('./data/cardsDetails');
 
@@ -75,42 +74,6 @@ async function checkMatchActiveSplinters(page) {
             el => el.map(x => x.getAttribute("src")));
     return splinterUrls.map(splinter => splinterIsActive(splinter)).filter(x => x);
 }
-
-
-// 对手信息
-// async function checkMatchEnemy(page) {
-//     console.log("checkMatchEnemy .........")
-//     try {
-//         // const recent_team = await page.$$eval("div.recent-team > div.recent-team-tooltip >  ul.team__monsters > li.team__monster",
-//         //     el =>el.map(x => x.getAttribute("data-original-title")));
-//         //
-//         // let rs = recent_team.map(sm => {
-//         //     if(sm){
-//         //         let sp = sm.split('★')
-//         //         return [sp[0].trim(),sp[1].trim()]
-//         //     } else {
-//         //         return ['','']
-//         //     }
-//         // })
-//         //-------------
-//         const pName = await page.$$eval("div.bio__details > div.bio__name >  span.bio__name__display ",
-//             el =>el.map(x => x.innerText));
-//
-//         const enemyBattles = await battlesGet.getBattleDetail(pName[0]);
-//         console.log("Enemy name :" ,pName , "enemyBattles : ",enemyBattles.length)
-//         if(enemyBattles && enemyBattles.length >0){
-//             // const len = enemyBattles.length > 30 ? 30 :  enemyBattles.length;
-//             // let topBattles = enemyBattles.slice(0,len)
-//             // console.log("enemyBattles ---:",enemyBattles.length , JSON.stringify(enemyBattles))
-//             return enemyBattles;
-//         } else {
-//             return [];
-//         }
-//     } catch (e) {
-//         console.log(e)
-//     }
-//     return []
-// }
 
 async function checkMatchEnemy(page) {
     console.log("checkMatchEnemy v2 .........")

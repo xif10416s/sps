@@ -26,7 +26,7 @@ function calcTotalMana(team) {
 http.createServer(async function (request, response) {
   // 解析请求，包括文件名
   var pathname = url.parse(request.url).pathname;
-  let ranked = "W"
+  let ranked = "M"
   if (pathname.startsWith("/api")) {
     console.log("获取到的请求参数的路径：" + request.url);
     var arg1 = url.parse(request.url, true).query;

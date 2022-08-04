@@ -1,118 +1,40 @@
 require('dotenv').config();
 const config = require('./config/config');
-const username = process.argv[process.argv.indexOf('--username')+1]
-console.log("config username :",username)
+const username = process.argv[process.argv.indexOf('--username') + 1]
+console.log("config username :", username)
 config.doConfigInit(username)
 
-const { run, setupAccount , LostTooMatchException } = require('./index');
-const { sleep } = require('./helper');
-const chalk = require('chalk');
-const fs = require('fs');
-const isMultiAccountMode = (process.env.MULTI_ACCOUNT?.toLowerCase() === 'true') ? true : false;
-
-
-
-async function startMulti() {
-    const sleepingTimeInMinutes = process.env.MINUTES_BATTLES_INTERVAL || 30;
-    const sleepingTime = sleepingTimeInMinutes * 60000;
-    let missingValue = false;
-    let accounts = process.env.ACCOUNT.split(',');
-    let passwords = process.env.PASSWORD.split(',');
-    let count = 1;
-
-    // trim account and password
-    accounts = accounts.map(e => e.trim());
-    passwords = passwords.map(e => e.trim());
-    // split @ to prevent email use
-    accounts = accounts.map(e => e.split('@')[0]);
-    // accounts count
-    console.log(chalk.bold.redBright(`Accounts count: ${accounts.length}, passwords count: ${passwords.length}`))
-    if (accounts.length !== passwords.length) {
-        throw new Error('The number of accounts and passwords do not match. Too many commas?')
-    }
-
-    if (accounts.length < 2) {
-        throw new Error('MULTI_ACCOUNT set to true, but less than two accounts detected.')
-    }
-
-    console.log(chalk.bold.white('List of accounts to run:'))
-    for (let i = 0; i < accounts.length; i++) {
-        let msg = 'This account';
-        console.log(chalk.bold.whiteBright(`${i+1}. ${accounts[i]}`));
-
-        if (accounts[i].length === 0 && passwords[i].length === 0) {
-            missingValue = true;
-            msg += ' is missing account and password value.';
-        } else if (accounts[i].length === 0) {
-            missingValue = true;
-            msg += ' is missing account value.';
-        } else if (passwords[i].length === 0) {
-            missingValue = true;
-            msg += ' is missing password value.';
-        } else {
-            msg += ' has all the required value.'
-        }
-        console.log(msg);
-    }
-
-    if (missingValue) throw new Error('Fix your ACCOUNT and/or PASSWORD value in .env file.')
-    let next =true;
-    while(next) {
-        console.log(chalk.bold.whiteBright.bgGreen(`Running bot iter-[${count}]`))
-        for (let i = 0; i < accounts.length; i++) {
-            setupAccount(accounts[i], passwords[i], isMultiAccountMode);
-            try {
-                await run();
-            } catch (e) {
-                console.log('Error on main:', e)
-                if(e instanceof  LostTooMatchException) {
-                    console.log("LostTooMatchException : " , e.message)
-                    next = false;
-                    let statusJson = require('./config/status')
-                    statusJson[process.env.ACCOUNT] = true
-                    fs.writeFile(`./config/status.json`, JSON.stringify(statusJson), function (err) {
-                        if (err) {
-                            console.log(err);
-                        }
-                    });
-                }
-            }
-                    
-            console.log(`Finished running ${accounts[i]} account...\n`);
-        }
-        await console.log('waiting for the next battle in', sleepingTime / 1000 / 60 , 'minutes at', new Date(Date.now() + sleepingTime).toLocaleString(), '\n');
-        await sleep(sleepingTime);
-    }
-    console.log("--------------------------stop--------------------------")
-}
+const {run, setupAccount} = require('./index');
 
 async function startSingle() {
-    let account = process.env.ACCOUNT.split('@')[0]; // split @ to prevent email use
-    let password = process.env.PASSWORD;
+  let account = process.env.ACCOUNT.split('@')[0]; // split @ to prevent email use
+  let password = process.env.PASSWORD;
 
-    if (account.includes(',')) {
-        console.error('There is a comma in your account name. Are you trying to run multiple account?')
-        console.error('If yes, then you need to set MULTI_ACCOUNT=true in the .env file.')
-        throw new Error('Invalid account value.')
-    }
+  if (account.includes(',')) {
+    console.error(
+        'There is a comma in your account name. Are you trying to run multiple account?')
+    console.error(
+        'If yes, then you need to set MULTI_ACCOUNT=true in the .env file.')
+    throw new Error('Invalid account value.')
+  }
 
-    setupAccount(account, password, isMultiAccountMode);
-    await run();
+  setupAccount(account, password);
+  await run();
 }
 
-(async()=> {
-    console.log(`isMultiAccountMode: ${isMultiAccountMode}`)
-    let statusJson = require('./config/status')
-    if(statusJson[process.env.ACCOUNT]){
-        console.log(`too many error stop !!!!================================`,statusJson)
-        return ;
-    }
+//  main enter start
+(async () => {
 
-    if (isMultiAccountMode) {
-        console.log('Running mode: multi')
-        await startMulti();
-    } else {
-        console.log('Running mode: single')
-        await startSingle();
-    }
+  //  check if error status
+  let statusJson = require('./config/status')
+  if (statusJson[process.env.ACCOUNT]) {
+    console.log(`too many error stop !!!!================================`,
+        statusJson)
+    return;
+  }
+
+  //  start running
+  console.log('Running mode: single')
+  await startSingle();
+
 })()
