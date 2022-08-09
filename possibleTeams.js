@@ -1080,7 +1080,7 @@ async function initCSTeams(possibleTeams, matchDetails,
   // logger.log("makeBestCombine select  : " , matchSplintersSummoners)
   const myAviableSummoners = getSummoners(matchDetails.myCards,
       matchDetails.splinters)
-  let sql = "select cs , sum(teams)/sum(teams+lostTeams) as tl   from   battle_stat_v5 where ( ";
+  let sql = "select cs , sum(teams)/sum(teams+lostTeams) as tl   from   battle_stat_v1 where ( ";
   let csLike = "";
   for (var i = 0; i < myAviableSummoners.length; i++) {
     if (i != 0) {
@@ -1124,7 +1124,7 @@ async function initPerferCSTeams(possibleTeams, matchDetails,
   // logger.log("initPerferCSTeams select  : " , matchSplintersSummoners)
   const myAviableSummoners = getSummoners(matchDetails.myCards,
       matchDetails.splinters)
-  let sql = "select cs , sum(teams)/sum(teams+lostTeams) as tl   from   battle_stat_v5 where ( ";
+  let sql = "select cs , sum(teams)/sum(teams+lostTeams) as tl   from   battle_stat_v1 where ( ";
   let csLike = "";
   for (var i = 0; i < myAviableSummoners.length; i++) {
     if (i != 0) {
@@ -1409,7 +1409,7 @@ async function makeBestCombineByCs(possibleTeams, matchDetails, limitCnt = 3) {
 
   console.log("topCsLikeSql:", topCsLikeSql)
 
-  let sql = " select  wcs as cs ,count(*) as cnt  from battle_stat_cs_ls_v5 where startMana >= ? and startMana <= ? and rule = ? and ("
+  let sql = " select  wcs as cs ,count(*) as cnt  from battle_stat_cs_ls_v1 where startMana >= ? and startMana <= ? and rule = ? and ("
       + topCsLikeSql + ") and count >=" + limitCnt
       + "  group by wcs order by   cnt desc , count asc    limit 5000";
   let rs = await selectCsLs(sql, params)
@@ -1475,7 +1475,7 @@ async function extendsCombineSearch(cs, matchTeams, matchDetails,
   const manaRange = getManaRange(matchDetails);
   let fromMana = manaRange[0];
   let endMana = manaRange[1];
-  let sql = "select cs , sum(teams)/sum(teams+lostTeams) as tl   from   battle_stat_v5 where  ";
+  let sql = "select cs , sum(teams)/sum(teams+lostTeams) as tl   from   battle_stat_v1 where  ";
   let csLike = "cs like '";
   let spCs = cs.split("-")
   spCs.slice(2, spCs.length).forEach(itemCs => {

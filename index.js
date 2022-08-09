@@ -26,8 +26,7 @@ let errorCnt = 0;
 let runStat = false;
 let preOwnDec = 0;
 let preDeltaDec = 0;
-let preOwnPower = 0;
-let preDeltaPower = 0;
+
 
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 let statFile = './logs/stat.csv';
@@ -472,6 +471,7 @@ async function clickWithCheck(page, teamToPlay, i) {
     clicked = false;
     console.log(chalk.bold.redBright(teamToPlay.cards[i],
         'xpath  contains not clicked'));
+    errorCnt ++;
     doSummaryErrorLog({time:new Date().toLocaleTimeString() , account: process.env.ACCOUNT ,errorCnt:errorCnt,reason: "card not clicked " + teamToPlay.cards[i] })
     summaryLogger.error(
         new Date().toLocaleTimeString() + ":" + process.env.ACCOUNT + ":"
@@ -635,7 +635,7 @@ async function startBotPlayMatch(page, browser) {
     await closePopups(page);
     await closePopups(page);
 
-
+    let RANKED = process.env.RANKED == null ? "W" : process.env.RANKED;
     await setRankedMode(page)
     await uplevelLeage(page)
 
@@ -650,10 +650,8 @@ async function startBotPlayMatch(page, browser) {
         : preDeltaDec;
     preOwnDec = dec;
     preDeltaDec = deltaDec;
-    const deltaPower = preOwnPower > 0 && preOwnPower != power ? power
-        - preOwnPower : preDeltaPower;
-    preOwnPower = power;
-    preDeltaPower = deltaPower;
+    const deltaPower = checkPowerUpgrade(rating,power,RANKED);
+
     // if (ecr === undefined) throw new Error('Fail to get ECR.')
     console.log('getting user quest info from splinterlands API...')
     // check focus new quest , current focus quest  end
@@ -703,7 +701,7 @@ async function startBotPlayMatch(page, browser) {
         "dailyTaskAlmostFinished", dailyTaskAlmostFinished,
         "checkRatingAndPower:", checkRatingAndPower, "!isOverECR:", !isOverECR)
     // do sleep
-    let RANKED = process.env.RANKED == null ? "W" : process.env.RANKED;
+
     if ((isWaitForBeginWithHighECR && !dailyTaskAlmostFinished) && !isOverECR
         && checkRatingAndPower && process.env.MAX_REWARDS == "false"
         || isLowEcr) {
@@ -751,8 +749,7 @@ async function startBotPlayMatch(page, browser) {
 
     console.log('getting user cards collection from splinterlands API...')
 
-    let myCards = []
-    await doPlayerCardsInit(myCards,RANKED)
+    let myCards = await doPlayerCardsInit(RANKED)
     console.log("doPlayerCardsInit:",myCards.length)
     //check if season reward is available
     await doSeasonClaim(page);
@@ -1005,7 +1002,8 @@ async function startBotPlayMatch(page, browser) {
     runStat = false;
   }
 }
-async function doPlayerCardsInit(myCards,RANKED) {
+async function doPlayerCardsInit(RANKED) {
+  let myCards = []
   await user.getPlayerCards(account.toLowerCase()).then(
       x => myCards.push(...x))
   if (myCards) {
@@ -1017,6 +1015,136 @@ async function doPlayerCardsInit(myCards,RANKED) {
     }
   } else {
     console.log(account, ' playing only basic cards')
+  }
+  return myCards;
+}
+
+function checkPowerUpgrade(rating ,power,ranked){
+    if(rating >= 3400 ){
+      let targetPower = 200000 ;
+      let targetNextPower = 300000;
+      if(ranked == 'W') {
+        targetPower = targetPower * 2;
+        targetNextPower = targetNextPower * 2;
+      }
+       return getPowerMarker(power,targetPower,targetNextPower)
+    }
+
+  if(rating >= 3100 ){
+    let targetPower = 162500 ;
+    let targetNextPower = 200000;
+    if(ranked == 'W') {
+      targetPower = targetPower * 2;
+      targetNextPower = targetNextPower * 2;
+    }
+    return getPowerMarker(power,targetPower,targetNextPower)
+  }
+
+  if(rating >= 2800 ){
+    let targetPower = 125000 ;
+    let targetNextPower = 162500;
+    if(ranked == 'W') {
+      targetPower = targetPower * 2;
+      targetNextPower = targetNextPower * 2;
+    }
+    return getPowerMarker(power,targetPower,targetNextPower)
+  }
+
+  if(rating >= 2500 ){
+    let targetPower = 100000 ;
+    let targetNextPower = 125000;
+    if(ranked == 'W') {
+      targetPower = targetPower * 2;
+      targetNextPower = targetNextPower * 2;
+    }
+    return getPowerMarker(power,targetPower,targetNextPower)
+  }
+
+  if(rating >= 2200 ){
+    let targetPower = 75000 ;
+    let targetNextPower = 100000;
+    if(ranked == 'W') {
+      targetPower = targetPower * 2;
+      targetNextPower = targetNextPower * 2;
+    }
+    return getPowerMarker(power,targetPower,targetNextPower)
+  }
+
+  if(rating >= 1900 ){
+    let targetPower = 50000 ;
+    let targetNextPower = 75000;
+    if(ranked == 'W') {
+      targetPower = targetPower * 2;
+      targetNextPower = targetNextPower * 2;
+    }
+    return getPowerMarker(power,targetPower,targetNextPower)
+  }
+
+  if(rating >= 1600 ){
+    let targetPower = 35000 ;
+    let targetNextPower = 50000;
+    if(ranked == 'W') {
+      targetPower = targetPower * 2;
+      targetNextPower = targetNextPower * 2;
+    }
+    return getPowerMarker(power,targetPower,targetNextPower)
+  }
+
+  if(rating >= 1300 ){
+    let targetPower = 20000 ;
+    let targetNextPower = 35000;
+    if(ranked == 'W') {
+      targetPower = targetPower * 2;
+      targetNextPower = targetNextPower * 2;
+    }
+    return getPowerMarker(power,targetPower,targetNextPower)
+  }
+
+  if(rating >= 1000 ){
+    let targetPower = 7500 ;
+    let targetNextPower = 20000;
+    if(ranked == 'W') {
+      targetPower = targetPower * 2;
+      targetNextPower = targetNextPower * 2;
+    }
+    return getPowerMarker(power,targetPower,targetNextPower)
+  }
+
+  if(rating >= 700 ){
+    let targetPower = 2500 ;
+    let targetNextPower = 7500;
+    if(ranked == 'W') {
+      targetPower = targetPower * 2;
+      targetNextPower = targetNextPower * 2;
+    }
+    return getPowerMarker(power,targetPower,targetNextPower)
+  }
+
+  if(rating >= 400 ){
+    let targetPower = 500 ;
+    let targetNextPower = 2500;
+    if(ranked == 'W') {
+      targetPower = targetPower * 2;
+      targetNextPower = targetNextPower * 2;
+    }
+    return getPowerMarker(power,targetPower,targetNextPower)
+  }
+
+  return "-" ;
+
+}
+
+function getPowerMarker (current,targetPower , nextTargetPower){
+  const delterTarget = targetPower/1000 - current/1000
+  const delterNextTarget = nextTargetPower/1000 - current/1000
+  if(delterTarget > 0 ){
+    return -delterTarget.toFixed(1) + "k↓";
+  } else {
+    if(delterNextTarget >0 ){
+      return -delterTarget.toFixed(1) + "k-";
+    } else {
+      return -delterNextTarget.toFixed(1) + "k↑";
+    }
   }
 }
 

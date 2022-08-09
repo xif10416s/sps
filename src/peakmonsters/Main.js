@@ -8,6 +8,7 @@ const HOURS = "HRS";
 const DAYS = "DAYS"
 let isClosedModel = false;
 
+
 let puppeteer_options = {
   browserWSEndpoint: 'ws://192.168.99.100:13000',
   headless: true, // default is true

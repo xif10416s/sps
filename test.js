@@ -1,11 +1,17 @@
-// const fs = require('fs');
-// let statusJson = require('./config/status')
-// statusJson['xx'] = true
-// fs.writeFile(`./config/status.json`, JSON.stringify(statusJson), function (err) {
-//   if (err) {
-//     console.log(err);
-//   }
-// });
+function getPowerMarker (current,targetPower , nextTargetPower){
+  const delterTarget = targetPower/1000 - current/1000
+  const delterNextTarget = nextTargetPower/1000 - current/1000
+  if(delterTarget > 0 ){
+    return -delterTarget + "k↓";
+  } else {
+    if(delterNextTarget >0 ){
+      return -delterTarget + "k-";
+    } else {
+      return -delterNextTarget + "k↑";
+    }
+  }
+}
 
-let statusJson = require('./config/status')
-console.log(statusJson['xx'] )
+console.log(getPowerMarker(500,1000,1500))
+console.log(getPowerMarker(9000,7500,15000))
+console.log(getPowerMarker(30000,7500,15000))

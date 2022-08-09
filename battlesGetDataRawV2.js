@@ -138,7 +138,7 @@ if (dateStr && dateStr.startsWith("08:50:")) {
 
 console.log("get data isInit :", isInit, dateStr, dateStr.split(":")[1])
 
-let fromScore = 800;
+let fromScore = 1000;
 let newTopBattleUsers = []
 let format = "wild"
 let remainUsers = []
@@ -149,15 +149,15 @@ newTopBattleUsers = modern_newTopBattleUsers;
 remainUsers = remainUsersModern;
 remainFile = remainFileModern;
 
-if (dateStr.split(":")[1].startsWith("0") || dateStr.split(":")[1].startsWith(
-    "2")
-    || dateStr.split(":")[1].startsWith("4")) {
-  format = "wild";
-  newTopBattleUsers = wild_newTopBattleUsers;
-  remainUsers = remainUsersWild;
-  remainFile = remainFileWild;
-  fromScore = 1200;
-}
+// if (dateStr.split(":")[1].startsWith("0") || dateStr.split(":")[1].startsWith(
+//     "2")
+//     || dateStr.split(":")[1].startsWith("4")) {
+//   format = "wild";
+//   newTopBattleUsers = wild_newTopBattleUsers;
+//   remainUsers = remainUsersWild;
+//   remainFile = remainFileWild;
+//   fromScore = 1200;
+// }
 
 console.log("date ----:", dateStr,"format: " ,format, newTopBattleUsers.length)
 
