@@ -235,16 +235,16 @@ async function doPKCheck(account, passward, page) {
         }
 
 
-        // if(name.indexOf("Mylor Crowling") != -1) {
-        //   rsArr.push({
-        //     "account": "["+account+"]",
-        //     "card":name.split("\n          ")[1],
-        //     "maxPower": "Mylor",
-        //     "cp/dec" : d1,
-        //     "minHours": h1,
-        //     "time": new Date().toLocaleTimeString()
-        //   })
-        // }
+        if(name.indexOf("Mylor Crowling") != -1) {
+          rsArr.push({
+            "account": "["+account+"]",
+            "card":name.split("\n          ")[1],
+            "maxPower": "Mylor",
+            "cp/dec" : d1,
+            "minHours": h1,
+            "time": new Date().toLocaleTimeString()
+          })
+        }
       } catch (e) {
         console.log(index,e)
         return false

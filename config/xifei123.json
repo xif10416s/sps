@@ -8,6 +8,7 @@
   "PREFER_CS": "true",
   "SKIP_QUEST": "dragon",
   "MINUTES_BATTLES_INTERVAL": 7,
-  "ECR_RECOVER_TO": 90,
+  "ECR_RECOVER_TO": 65,
+  "RANKED": "M",
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }

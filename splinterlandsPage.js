@@ -3,25 +3,41 @@ const cardsDetail = require('./data/cardsDetails');
 
 async function login(page, account, password) {
     try {
-        await page.waitForSelector('#log_in_button > button').then(() => page.waitForTimeout(3000 * 3)).then(() => page.click('#log_in_button > button'))
-        console.log("login in button clicked : " , account + " " + password )
+        await page.waitForSelector('#log_in_button > button').then(() => page.waitForTimeout(3000 * 3))
+        .then(() => page.click('#log_in_button > button')).then(() => console.log("login in button clicked : " , account + " " + password ))
+        .catch((e)=> console.log("login in button click error......",e))
+
+        // await page.waitForSelector('#login_dialog_v2 > div > div > div.modal-body > div > div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > div > a',{timeout: 3000})
+        // .then(() => page.click('#login_dialog_v2 > div > div > div.modal-body > div > div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > div > a'))
+        // .then(() => console.log("login_dialog_v2  use email clicked ......"))
+        // .then(() => page.waitForTimeout(1000)) .catch((e)=> console.log("login_dialog_v2  error......",e))
+
         await page.waitForSelector('#email')
-            .then(() => page.waitForTimeout(3000))
+            .then(() => console.log("email  visable ......"))
+            .then(() => page.waitForTimeout(1000))
             .then(() => page.focus('#email'))
             .then(() => page.type('#email', account))
+            .then(() => console.log("email  input finished ......"))
              .then(() => page.waitForTimeout(3000))
+
+        await page.waitForSelector('#password')
+            .then(() => console.log("password  visable ......"))
             .then(() => page.focus('#password'))
             .then(() => page.type('#password', password))
-            .then(() => page.waitForTimeout(30000))
+            .then(() => console.log("password  input finished ......"))
+            .then(() => page.waitForTimeout(3000))
             // .then(() => page.waitForSelector('#login_dialog_v2 > div > div > div.modal-body > div > div > form > div > div.col-sm-offset-1 > button', { visible: true }).then(() => page.click('#login_dialog_v2 > div > div > div.modal-body > div > div > form > div > div.col-sm-offset-1 > button')))
-            .then(() => page.click('#loginBtn'))
+
+        await page.waitForSelector('#loginBtn')
+           .then(() => console.log("loginBtn  visable ......"))
+           .then(() => page.click('#loginBtn'))
             .then(() => page.waitForTimeout(15000))
             // .then(() => page.click('#loginBtn'))
             .then(() => console.log("loginBtn clicked........."))
             // .then(() => page.reload())
             .then(() => console.log("loginBtn reload........."))
-            .then(() => page.waitForTimeout(30000))
-            .then(() => page.click('#loginBtn'))
+            // .then(() => page.waitForTimeout(3000))
+            // .then(() => page.click('#loginBtn'))
             // .then(() => page.reload())
             .then(() => page.waitForTimeout(10000))
             .then(async () => {
@@ -37,10 +53,11 @@ async function login(page, account, password) {
                         throw new Error('Didnt login');
                     })
                 })
-            .then(() => page.waitForTimeout(20000))
+            .then(() => page.waitForTimeout(10000))
             .then(() => page.reload())
 
     } catch (e) {
+        console.log(e)
         throw new Error('Check that you used correctly username and posting key. (dont use email and password)');
     }
 }

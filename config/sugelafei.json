@@ -7,7 +7,7 @@
   "max_cnt": "9999" ,
   "PREFER_CS": "true",
   "MINUTES_BATTLES_INTERVAL": 5,
-  "ECR_RECOVER_TO": 90,
+  "ECR_RECOVER_TO": 65,
   "TARGET_FP": 18000,
   "RANKED": "M",
   "SKIP_QUEST": "dragon",

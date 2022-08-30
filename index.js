@@ -18,7 +18,6 @@ let totalDec = 0;
 let winTotal = 0;
 let loseTotal = 0;
 let undefinedTotal = 0;
-let unSubmit = 0;
 let dailyClaim = false;
 let claimTime = "-"
 let runFlgCnt = 0;
@@ -119,7 +118,7 @@ async function checkSeasonRewards(page) {
 async function checkEcr(page) {
   try {
     const ecr = await getElementTextByXpath(page,
-        "//div[@class='dec-options'][1]/div[@class='value'][2]/div", 3000);
+        '//*[@id="bs-example-navbar-collapse-1"]/ul[2]/li[3]/div[1]/div[3]/div[3]/div', 3000);
     if (ecr) {
       console.log(chalk.bold.whiteBright.bgMagenta(
           'Your current Energy Capture Rate is ' + ecr.split('.')[0] + "%"));
@@ -134,7 +133,7 @@ async function checkEcr(page) {
 async function checkDec(page) {
   try {
     const dec = await getElementText(page,
-        "#bs-example-navbar-collapse-1 > ul.nav.navbar-nav.navbar-right > li:nth-child(2) > div.dec-container > div.balance",
+        "#bs-example-navbar-collapse-1 > ul.nav.navbar-nav.navbar-right > li:nth-child(3) > div.sps-container > div.balance",
         3000);
     if (dec) {
       console.log(chalk.bold.whiteBright.bgMagenta('Your current Dec ' + dec));
@@ -380,14 +379,6 @@ async function launchBattle(page) {
 
 async function clickSummonerCard(page, teamToPlay) {
   let clicked = true;
-  // await  page.click("#page_container > div > div.deck-builder-page2__cards > div[card_detail_id='"+teamToPlay.summoner+"']")
-  // .then(() => console.log(chalk.bold.greenBright(teamToPlay.summoner, 'summoner clicked by selector')))
-  // .catch(()=>{
-  //     clicked = false;
-  //     console.log(chalk.bold.redBright('Summoner not clicked by selector.'))
-  //     const summaryInfo = {time: new Date().toLocaleTimeString() ,  user: process.env.ACCOUNT , win: winTotal , lost: loseTotal , reason: "Summoner not clicked by selector."};
-  //     summaryLogger.error(summaryInfo)
-  // });
   ////*[contains(@id, '-259-')]/img
   await page.waitForXPath(`//*[contains(@id, "-${teamToPlay.summoner}-")]/img`,
       {timeout: 3000})
@@ -472,9 +463,9 @@ async function clickWithCheck(page, teamToPlay, i) {
     console.log(chalk.bold.redBright(teamToPlay.cards[i],
         'xpath  contains not clicked'));
     errorCnt ++;
-    doSummaryErrorLog({time:new Date().toLocaleTimeString() , account: process.env.ACCOUNT ,errorCnt:errorCnt,reason: "card not clicked " + teamToPlay.cards[i] })
-    summaryLogger.error(
-        new Date().toLocaleTimeString() + ":" + process.env.ACCOUNT + ":"
+    doSummaryErrorLog({time:new Date().toLocaleString() , account: process.env.ACCOUNT ,errorCnt:errorCnt,reason: "card not clicked " + teamToPlay.cards[i] })
+    console.log(
+        new Date().toLocaleString() + ":" + process.env.ACCOUNT + ":"
         + errorCnt + ":" + "card not clicked " + teamToPlay.cards[i])
   });
 
@@ -534,10 +525,10 @@ async function clickCreateTeamButton(page) {
   .catch(() => {
     clicked = false;
     console.log('Create team didnt work. Did the opponent surrender?');
-    summaryLogger.error(
-        new Date().toLocaleTimeString() + ":" + process.env.ACCOUNT + ":"
+    console.log(
+        new Date().toLocaleString() + ":" + process.env.ACCOUNT + ":"
         + errorCnt + ":" + "clickCreateTeamButton not clicked")
-    doSummaryErrorLog({time:new Date().toLocaleTimeString() , account: process.env.ACCOUNT ,errorCnt:errorCnt,reason: "TeamButton not clicked" })
+    doSummaryErrorLog({time:new Date().toLocaleString() , account: process.env.ACCOUNT ,errorCnt:errorCnt,reason: "TeamButton not clicked" })
   });
 
   return clicked
@@ -611,27 +602,32 @@ async function startBotPlayMatch(page, browser) {
     }
   }
   try {
-    await page.waitForTimeout(8000 * 3);
+    await page.waitForTimeout(8000 * 4);
 
-    let item = await page.waitForSelector('#log_in_button > button', {
-      visible: true,
-    })
-    .then(res => res)
-    .catch(() => console.log('Already logged in'))
+    // let item = await page.waitForSelector('#log_in_button > button', {
+    //   visible: true,
+    // })
+    // .then(res => res)
+    // .catch(() => console.log('Already logged in'))
 
-    if (item != undefined) {
+   const loginAccount =  await getElementText(page,"#log_in_text > a > div > div.bio__details > span > span")
+    console.log("loginAccount:" + loginAccount)
+
+    if (loginAccount == "") {
       console.log('Login attempt...')
       await splinterlandsPage.login(page, account, password).catch(e => {
         console.log(e);
         runStat = true;
         throw new Error('Login Error');
       });
+    } else {
+      console.log("already logined --------------------------:" + loginAccount)
     }
 
     await page.goto('https://splinterlands.io/?p=battle_history');//https://splinterlands.com/
-    await page.waitForTimeout(8000);
-    await page.reload();
-    await page.waitForTimeout(8000 * 3);
+    // await page.waitForTimeout(8000);
+    // await page.reload();
+    await page.waitForTimeout(8000 * 4);
     await closePopups(page);
     await closePopups(page);
 
@@ -642,14 +638,14 @@ async function startBotPlayMatch(page, browser) {
     const rating = await checkRating(page);
     const power = await checkPower(page);
     const ecr = await checkEcr(page);
-    const dec = await checkDec(page)
+    // const dec = await checkDec(page)
     const league = await checkLeague(page)
     const seasonRewardCnt = await checkSeasonRewards(page)
     // const nextQuestTime = await  checkNextQuest(page)
-    const deltaDec = preOwnDec > 0 && preOwnDec != dec ? dec - preOwnDec
-        : preDeltaDec;
-    preOwnDec = dec;
-    preDeltaDec = deltaDec;
+    // const deltaDec = preOwnDec > 0 && preOwnDec != dec ? dec - preOwnDec
+    //     : preDeltaDec;
+    // preOwnDec = dec;
+    // preDeltaDec = deltaDec;
     const deltaPower = checkPowerUpgrade(rating,power,RANKED);
 
     // if (ecr === undefined) throw new Error('Fail to get ECR.')
@@ -705,19 +701,18 @@ async function startBotPlayMatch(page, browser) {
     if ((isWaitForBeginWithHighECR && !dailyTaskAlmostFinished) && !isOverECR
         && checkRatingAndPower && process.env.MAX_REWARDS == "false"
         || isLowEcr) {
-      const random = Math.ceil(Math.random() * 1) * 60000
+      // const random = Math.ceil(Math.random() * 1) * 60000
       console.log(chalk.bold.white(
-          `Time needed to recover ECR, approximately ${1 * 30 + random
-          / 60000} minutes.ecr:`), ecr, isWaitForBeginWithHighECR);
-
+          `Time needed to recover ECR, approximately ${ 30 } minutes.ecr:`), ecr, isWaitForBeginWithHighECR);
+      const halfAnHoursMs = 1*1000*3600 / 2;
       console.log(chalk.bold.white(
           `Initiating sleep mode. The bot will awaken at ${new Date(
-              Date.now() + 1 * 1800 * 1000 + random).toLocaleString()}`));
+              Date.now() + halfAnHoursMs ).toLocaleString()}`));
       // logsummsary
 
       const summaryInfo = {
         time: new Date(
-            Date.now() + 1 * 1800 * 1000 + random).toLocaleTimeString(),
+            Date.now() + halfAnHoursMs ).toLocaleTimeString(),
         NQT: nextQuestTime,
         CT: claimTime,
         user: process.env.ACCOUNT,
@@ -728,7 +723,7 @@ async function startBotPlayMatch(page, browser) {
         FC: quest.fc
         ,
         WR: (winTotal / (winTotal + loseTotal)).toFixed(2),
-        dec: seasonRewardCnt  //totalDec.toFixed(2)
+        SRC: seasonRewardCnt  //totalDec.toFixed(2)
         ,
         quest: quest != null ? quest?.splinter : "-",
         LW: "-",
@@ -736,13 +731,12 @@ async function startBotPlayMatch(page, browser) {
         qc: quest != null ? quest?.completed : "-",
         rating: rating,
         power: power + "(" + deltaPower + ")",
-        tDEC: dec + "(" + deltaDec + ")",
-        league: league,
-        U: unSubmit
+        sps: totalDec.toFixed(2),
+        league: league
       };
 
       doSummaryLog(summaryInfo)
-      await sleep(1 * 3600 * 1000 + random);
+      await sleep(halfAnHoursMs);
       runStat = true;
       throw new Error(`Restart needed.`);
     }
@@ -875,26 +869,25 @@ async function startBotPlayMatch(page, browser) {
     let surrenderBtnVisible = false;
     await page.waitForSelector('#btn_surrender', {visible: true, timeout: 5000})
     .then(() => {
-      console.log('btn_surrender visible', new Date().toLocaleTimeString());
+      console.log('btn_surrender visible', new Date().toLocaleString());
       surrenderBtnVisible = true;
     })
     .catch(() => {
-      console.log('btn_surrender not visible', new Date().toLocaleTimeString());
+      console.log('btn_surrender not visible', new Date().toLocaleString());
     })
 
     // await page.waitForTimeout(5000);
     let isRumbleVisable = true;
     await page.waitForSelector('#btnRumble', {timeout: 30000}).then(
         () => console.log('btnRumble visible',
-            new Date().toLocaleTimeString())).catch(() => {
-      console.log('btnRumble not visible', new Date().toLocaleTimeString());
+            new Date().toLocaleString())).catch(() => {
+      console.log('btnRumble not visible', new Date().toLocaleString());
       isRumbleVisable = false;
     });
     if (!surrenderBtnVisible && !isRumbleVisable) {
       console.log('**********************isRumbleVisable: false ');
       if (!await clickCards(page, teamToPlay, matchDetails, 2)) {
         loseTotal += 1;
-        unSubmit += 1;
         errorCnt++;
         return;
       }
@@ -904,8 +897,8 @@ async function startBotPlayMatch(page, browser) {
       }
       await page.waitForSelector('#btnRumble', {timeout: 30000}).then(
           () => console.log('btnRumble visible',
-              new Date().toLocaleTimeString())).catch(() => {
-        console.log('btnRumble not visible', new Date().toLocaleTimeString());
+              new Date().toLocaleString())).catch(() => {
+        console.log('btnRumble not visible', new Date().toLocaleString());
         isRumbleVisable = false;
       });
     }
@@ -913,7 +906,6 @@ async function startBotPlayMatch(page, browser) {
         () => console.log('btnRumble clicked')).catch(() => {
       console.log('btnRumble didnt click');
       loseTotal += 1;
-      unSubmit += 1;
       errorCnt++;
     }); //start rumble
     await page.waitForSelector('#btnSkip', {timeout: 10000}).then(
@@ -924,13 +916,23 @@ async function startBotPlayMatch(page, browser) {
         () => console.log('btnSkip not visible')); //skip rumble
     await page.waitForTimeout(5000);
     try {
+      const enemy = await getElementText(page,
+          '#dialog_container > div > div > div > div.modal-body > div:nth-child(1) > div > section > div.bio > div.bio__details > div.bio__name > span.bio__name__display', 15000);
+
       const winner = await getElementText(page,
-          'section.player.winner .bio__name__display', 15000);
-      console.log("result win : ", winner.trim(), ':', account.toLowerCase())
-      if (winner.trim() == account.toLowerCase()) {
+          '#dialog_container > div > div > div > div.modal-body > div:nth-child(2) > div > section > div.bio > div.bio__details > div.bio__name > span.bio__name__display', 15000);
+      // const winFlag = await getElementText(page,
+      //     '#dialog_container > div > div > div > div.modal-body > div:nth-child(2) > div > section > h2').trim()
+
+      console.log("result  : " , enemy.trim(), ':', winner.trim())
+      const winFlag = await getElementTextByXpath(page,
+          '//*[@id="dialog_container"]/div/div/div/div[2]/div[2]/div/section/h2/text()', 15000);
+
+      console.log("result  winFlag: " ,winFlag.trim() )
+      if (winFlag.trim() == "winner"  ) {
         isWin = "T";
         const decWon = await getElementText(page,
-            '.player.winner span.dec-reward span', 1000);
+            '#dialog_container > div > div > div > div.modal-body > div:nth-child(2) > div > section > div.footer > span.sps-reward.footer-text > span', 1000);
         console.log(chalk.green('You won! Reward: ' + decWon + ' DEC'));
         totalDec += !isNaN(parseFloat(decWon)) ? parseFloat(decWon) : 0;
         winTotal += 1;
@@ -971,7 +973,7 @@ async function startBotPlayMatch(page, browser) {
       FC: quest.fc
       ,
       WR: (winTotal / (winTotal + loseTotal)).toFixed(2),
-      dec: seasonRewardCnt// totalDec.toFixed(2)
+      SRC: seasonRewardCnt// totalDec.toFixed(2)
       ,
       quest: quest?.splinter + ":" + teamToPlay.cards[7],
       LW: isWin,
@@ -979,9 +981,8 @@ async function startBotPlayMatch(page, browser) {
       qc: quest?.completed,
       rating: rating,
       power: power + "(" + deltaPower + ")",
-      tDEC: dec + "(" + deltaDec + ")",
-      league: league,
-      U: unSubmit
+      sps: totalDec.toFixed(2),
+      league: league
     };
 
     doSummaryLog(summaryInfo)
@@ -1000,6 +1001,10 @@ async function startBotPlayMatch(page, browser) {
       runFlgCnt++;
     }
     runStat = false;
+    doSummaryErrorLog({time:new Date().toLocaleString() , account: process.env.ACCOUNT ,errorCnt:errorCnt,reason: e.message })
+    console.log(
+        new Date().toLocaleString() + ":" + process.env.ACCOUNT + ":"
+        + errorCnt + ":" + e.message)
   }
 }
 async function doPlayerCardsInit(RANKED) {
@@ -1156,9 +1161,9 @@ async function doGreenBtnStart(page) {
   const leftTime = await getElementText(page,
       "#create-team-timer > div > div.countdown-time > div.countdown-time-container")
   console.log("----------------leftTime--------",
-      new Date().toLocaleTimeString(), leftTime)
+      new Date().toLocaleString(), leftTime)
   await page.$eval('.btn-green', elem => elem.click())
-  .then(() => console.log('btn-green clicked', new Date().toLocaleTimeString()))
+  .then(() => console.log('btn-green clicked', new Date().toLocaleString()))
   .catch(async () => {
     console.log('Start Fight didnt work, waiting 5 sec and retry');
     await page.waitForTimeout(5000);
@@ -1208,7 +1213,7 @@ function resetDailyStat() {
   undefinedTotal = 1;
   loseTotal = 0;
   totalDec = 0;
-  unSubmit = 0;
+  errorCnt = 0;
 }
 
 async function doDailyClaim(page) {
@@ -1311,8 +1316,14 @@ function doSummaryLog(summaryInfo) {
 function doSummaryErrorLog(summaryInfo) {
   delete require.cache[require.resolve("./data/log/errorStat.json")]
   let statJson = require('./data/log/errorStat')
+  const reasonSize= summaryInfo.reason.length
+  summaryInfo.reason = summaryInfo.reason.slice(0,reasonSize >= 21 ? 20 : reasonSize)
   statJson[process.env.ACCOUNT] = summaryInfo
-  fs.writeFile(`./data/log/errorStat.json`, JSON.stringify(statJson),
+  const statJsonStr = JSON.stringify(statJson)
+  if(statJsonStr ==null || statJsonStr.trim() == "" ) {
+    return;
+  }
+  fs.writeFile(`./data/log/errorStat.json`, statJsonStr,
       function (err) {
         if (err) {
           console.log(err);
@@ -1402,10 +1413,10 @@ async function run() {
     config.doConfigInit(process.env.ACCOUNT)
     if (runFlgCnt >= 3) {
       console.log("too many error")
-      summaryLogger.error(
-          new Date().toLocaleTimeString() + ":" + process.env.ACCOUNT + ":"
+      console.log(
+          new Date().toLocaleString() + ":" + process.env.ACCOUNT + ":"
           + errorCnt + ":" + "TOO MANY ERRORS!!!!")
-      doSummaryErrorLog({time:new Date().toLocaleTimeString() , account: process.env.ACCOUNT ,errorCnt:errorCnt,reason: "TOO MANY ERRORS!!!!" })
+      doSummaryErrorLog({time:new Date().toLocaleString() , account: process.env.ACCOUNT ,errorCnt:errorCnt,reason: "TOO MANY ERRORS!!!!" })
       throw new LostTooMatchException("win : " + winTotal,
           " lost :" + loseTotal)
     }
@@ -1413,10 +1424,10 @@ async function run() {
     if ((winTotal + loseTotal + undefinedTotal) >= parseInt(
         process.env.max_cnt)) {
       console.log('process.env.max_cnt matched stop: ', process.env.max_cnt)
-      summaryLogger.error(
-          new Date().toLocaleTimeString() + ":" + process.env.ACCOUNT + ":"
+      console.log(
+          new Date().toLocaleString() + ":" + process.env.ACCOUNT + ":"
           + errorCnt + ":" + "process.env.max_cnt matched stop")
-      doSummaryErrorLog({time:new Date().toLocaleTimeString() , account: process.env.ACCOUNT ,errorCnt:errorCnt,reason: "RUN MAX CNT" })
+      doSummaryErrorLog({time:new Date().toLocaleString() , account: process.env.ACCOUNT ,errorCnt:errorCnt,reason: "RUN MAX CNT" })
       throw new LostTooMatchException(
           "process.env.max_cnt matched stop : " + process.env.max_cnt)
     }
@@ -1439,10 +1450,10 @@ async function run() {
         needRestart = true;
         console.log("1 PageRestartException .........")
       } else {
-        summaryLogger.error(
-            new Date().toLocaleTimeString() + ":" + process.env.ACCOUNT + ":"
+        console.log(
+            new Date().toLocaleString() + ":" + process.env.ACCOUNT + ":"
             + errorCnt + ":" + e.message)
-        doSummaryErrorLog({time:new Date().toLocaleTimeString() , account: process.env.ACCOUNT ,errorCnt:errorCnt,reason: "Process Error!!!" })
+        doSummaryErrorLog({time:new Date().toLocaleString() , account: process.env.ACCOUNT ,errorCnt:errorCnt,reason: "Process Error!!!" })
       }
     })
   }
@@ -1464,7 +1475,7 @@ async function run() {
       })
     }
 
-    await sleep(10000);
+    await sleep(20000);
 
     console.log("2.2 browser process kill .........")
     if (browser && browser.process() != null) {

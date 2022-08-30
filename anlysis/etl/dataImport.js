@@ -4,8 +4,8 @@ const fs = require('fs');
 const battStBasePath = "F:\\battleDataStat\\battle\\battleSt\\"
 const csStBasePath = "F:\\battleDataStat\\battle\\CsSt\\"
 
-const battStSqlTmp = "load data infile '{p}' into table battle_stat_v1 Fields TERMINATED by ','  (startMana,endMana,cs,len,rule,summonerId,teams,totalCnt,lostTeams,lostTotalCnt)"
-const csStSqlTmp = "load data infile '{p}' into table battle_stat_cs_ls_v1 Fields TERMINATED by ','  (startMana,endMana,rule, wcs,wlen, lcs,llen,count)"
+const battStSqlTmp = "load data infile '{p}' into table battle_stat_v5 Fields TERMINATED by ','  (startMana,endMana,cs,len,rule,summonerId,teams,totalCnt,lostTeams,lostTotalCnt)"
+const csStSqlTmp = "load data infile '{p}' into table battle_stat_cs_ls_v5 Fields TERMINATED by ','  (startMana,endMana,rule, wcs,wlen, lcs,llen,count)"
 // ALTER TABLE battle_stat_v5 TRUNCATE PARTITION P17;
 async function doMove(type) {
   let path = battStBasePath;

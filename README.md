@@ -216,10 +216,10 @@ docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CO
 docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3007:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3007 browserless/chrome
 
 // proxy --
-docker run  --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3000:3000 -m 4g --memory-swap -1 --restart always -d --name browserless browserless/chrome
-docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3001:3000 -m 5g --memory-swap -1 --restart always -d --name browserless3001 browserless/chrome
-docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3002:3000 -m 4g --memory-swap -1 --restart always -d --name browserless3002 browserless/chrome
-docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3003:3000 -m 4g --memory-swap -1 --restart always -d --name browserless3003 browserless/chrome
+docker run  --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3000:3000 -m 1g --memory-swap -1 --restart always -d --name browserless browserless/chrome
+docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3001:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3001 browserless/chrome
+docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3002:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3002 browserless/chrome
+docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3003:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3003 browserless/chrome
 docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3004:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3004 browserless/chrome
 docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3005:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3005 browserless/chrome
 docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3006:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3006 browserless/chrome
@@ -277,7 +277,7 @@ https://api2.splinterlands.com/cards/get_details
 ## docker start
 sudo swapon -p 5 /mnt/sda1/swap/swapfile
 
-
+docker stats
 
 node --max-old-space-size=5192 src/server/WebServer.js
 
@@ -310,12 +310,13 @@ load data infile 'F:12.csv' into table battle_stat_cs_ls_v5 Fields TERMINATED by
 
 一，跑模型
 1. 导出
-node anlysis/etl/dataExport.js
+1.1  node anlysis/etl/dataExport_morden.js
+1.2  移动文件到：dataDir = "/mnt/f/battleData"
 2. 分析
 /mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --conf spark.local.dir=/mnt/h/temp  --master local[6] --driver-memory 10g  --name test
 2.1 batSt_csc
 3  导入
-重建表
+3.1  重建表 &  关闭索引
 SET SESSION BULK_INSERT_BUFFER_SIZE=256217728;
 SET SESSION MYISAM_SORT_BUFFER_SIZE=256217728;
 set global KEY_BUFFER_SIZE = 256217728 ;
@@ -325,6 +326,8 @@ node anlysis/etl/dataImport.js
 4. 恢复所有
 alter table battle_stat_v5 ENABLE keys
 alter table battle_stat_cs_ls_v5 ENABLE keys
+
+----------------
 docker-machine ssh default 
 
 win restart:

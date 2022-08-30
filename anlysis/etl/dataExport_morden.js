@@ -1,7 +1,7 @@
 const dbUtils = require('../../db/script/dbUtils');
 const delta = 60;
 const sqlTmp = "select mana_cap,ruleset , summoner_id,monster_1_id,monster_2_id,monster_3_id,monster_4_id,monster_5_id,monster_6_id , summoner_id_lost ,monster_1_id_lost ,monster_2_id_lost ,monster_3_id_lost ,monster_4_id_lost ,monster_5_id_lost ,monster_6_id_lost into outfile 'F:p{p}.txt' Fields TERMINATED by ','  From  battle_history_raw_morden where created_date_day = '{p}';"
-let today = new Date("2022-08-09");
+let today = new Date("2022-08-27");
 
 async function doExport() {
   for (let i = 0; i <= delta; i++) {

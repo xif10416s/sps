@@ -507,7 +507,7 @@ function checkAttackMatch(team, target) {
     }
     // console.log(cardInfo['statSum1'][target],cardInfo['name'])
     if (cardInfo['statSum1'][target] > 0) {
-      console.log("checkAttackMatch :", cardInfo['name'], target)
+      // console.log("checkAttackMatch :", cardInfo['name'], target)
       return true;
     }
   }
@@ -1124,7 +1124,7 @@ async function initPerferCSTeams(possibleTeams, matchDetails,
   // logger.log("initPerferCSTeams select  : " , matchSplintersSummoners)
   const myAviableSummoners = getSummoners(matchDetails.myCards,
       matchDetails.splinters)
-  let sql = "select cs , sum(teams)/sum(teams+lostTeams) as tl   from   battle_stat_v1 where ( ";
+  let sql = "select cs , sum(teams)/sum(teams+lostTeams) as tl   from   ByEnemyCs where ( ";
   let csLike = "";
   for (var i = 0; i < myAviableSummoners.length; i++) {
     if (i != 0) {
