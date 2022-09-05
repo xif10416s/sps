@@ -245,7 +245,7 @@ async function findSeekingEnemyModal(page, visibleTimeout = 15000) {
   findOpponentDialogStatus = await page.waitForSelector('#find_opponent_dialog',
       {timeout: visibleTimeout, visible: true})
   .then(() => {
-    console.log('find_opponent_dialog visible');
+    console.log('#########3#########find_opponent_dialog visible');
     return 1;
   })
   .catch((e) => {
@@ -256,9 +256,9 @@ async function findSeekingEnemyModal(page, visibleTimeout = 15000) {
   if (findOpponentDialogStatus === 1) {
     console.log('waiting for an opponent...');
     findOpponentDialogStatus = await page.waitForSelector(
-        '#find_opponent_dialog', {timeout: 50000, hidden: true})
+        '#find_opponent_dialog', {timeout: 90000, hidden: true})
     .then(() => {
-      console.log('find_opponent_dialog has closed');
+      console.log('#########4##########find_opponent_dialog has closed');
       return 2;
     })
     .catch((e) => {
@@ -282,7 +282,7 @@ async function findCreateTeamButton(page, findOpponentDialogStatus = 0,
   let startFlag = await page.waitForSelector(createTeamSelecotr,
       {timeout: btnCreateTeamTimeout, visible: true})
   .then(() => {
-    console.log('start the match Selector:',
+    console.log('############6##########start the match Selector:',
         (new Date().getTime() - startDate.getTime()) / 1000);
     return true;
   })
@@ -300,7 +300,7 @@ async function findCreateTeamButton(page, findOpponentDialogStatus = 0,
     return await page.waitForXPath(createTeamXpath,
         {timeout: btnCreateTeamTimeout * 2, visible: true})
     .then(() => {
-      console.log('start the match again :',
+      console.log('########6_1########start the match again :',
           (new Date().getTime() - startDate.getTime()) / 1000);
       return true;
     })
@@ -325,19 +325,21 @@ async function launchBattle(page) {
   // 1  pre battle:  check is already start a battle and search enemy
   let findOpponentDialogStatus = await findSeekingEnemyModal(page);
   // 1.1  pre battle: create team
+  console.log('####for pre start battles start .................findCreateTeamButton')
   let isStartBattleSuccess = await findCreateTeamButton(page,
       findOpponentDialogStatus);
 
+  console.log('###1####new battle start ..........................')
   while (!isStartBattleSuccess && retriesNum <= maxRetries) {
     console.log(`Launch battle iter-[${retriesNum}]`)
     if (findOpponentDialogStatus === 0) {
       console.log('waiting for battle button')
       // 2  wait BATTLE btn and click start battle , new battle
       isStartBattleSuccess = await page.waitForXPath(
-          "//*[@id='battle_category_btn']", {timeout: 20000})
+          "//*[@id='battle_category_btn']", {timeout: 30000,visible: true})
       .then(button => {
         button.click();
-        console.log('Battle button clicked');
+        console.log('#########2#########Battle button clicked');
         return true
       })
       .catch(() => {
@@ -689,8 +691,8 @@ async function startBotPlayMatch(page, browser) {
     const isWaitForBeginWithHighECR = ecr && process.env.ECR_RECOVER_TO && ecr
         <= parseFloat(process.env.ECR_RECOVER_TO);
     const isOverECR = ecr && ecr >= 95;
-    const isLowEcr = ecr && ecr <= 65
-    const checkRatingAndPower = parseInt(rating) >= 1050;
+    const isLowEcr = ecr && ecr <= 70
+    const checkRatingAndPower = parseInt(rating) >= 1030;
     let dailyTaskAlmostFinished = isDailyTaskAlmostFinished(quest);
 
     console.log("isWaitForBeginWithHighECR:", isWaitForBeginWithHighECR,
@@ -838,7 +840,7 @@ async function startBotPlayMatch(page, browser) {
         await page.reload();
         await page.waitForTimeout(5000 * 2);
         await page.$eval('.btn--create-team', elem => elem.click())
-        .then(() => console.log('btn--create-team clicked'))
+        .then(() => console.log('###############7################btn--create-team clicked'))
         .catch(() => {
           startFightFail = true;
           errorCnt++;
@@ -916,20 +918,20 @@ async function startBotPlayMatch(page, browser) {
         () => console.log('btnSkip not visible')); //skip rumble
     await page.waitForTimeout(5000);
     try {
-      const enemy = await getElementText(page,
+      const upper = await getElementText(page,
           '#dialog_container > div > div > div > div.modal-body > div:nth-child(1) > div > section > div.bio > div.bio__details > div.bio__name > span.bio__name__display', 15000);
 
-      const winner = await getElementText(page,
+      const downer = await getElementText(page,
           '#dialog_container > div > div > div > div.modal-body > div:nth-child(2) > div > section > div.bio > div.bio__details > div.bio__name > span.bio__name__display', 15000);
       // const winFlag = await getElementText(page,
       //     '#dialog_container > div > div > div > div.modal-body > div:nth-child(2) > div > section > h2').trim()
 
-      console.log("result  : " , enemy.trim(), ':', winner.trim())
-      const winFlag = await getElementTextByXpath(page,
+      console.log("result  : " , upper.trim(), ':', downer.trim())
+      const downWinFlag = await getElementTextByXpath(page,
           '//*[@id="dialog_container"]/div/div/div/div[2]/div[2]/div/section/h2/text()', 15000);
 
-      console.log("result  winFlag: " ,winFlag.trim() )
-      if (winFlag.trim() == "winner"  ) {
+      console.log("result  downWinFlag: " ,downWinFlag.trim() )
+      if (downWinFlag.trim() == "winner"  && downer.trim() == process.env.ACCOUNT  ) {
         isWin = "T";
         const decWon = await getElementText(page,
             '#dialog_container > div > div > div > div.modal-body > div:nth-child(2) > div > section > div.footer > span.sps-reward.footer-text > span', 1000);
@@ -942,6 +944,18 @@ async function startBotPlayMatch(page, browser) {
           await doDailyClaim(page);
         }
 
+      } else if (downWinFlag.trim() == "loser"  && downer.trim()!= process.env.ACCOUNT  ) {
+        isWin = "T";
+        const decWon = await getElementText(page,
+            '#dialog_container > div > div > div > div.modal-body > div:nth-child(1) > div > section > div.footer > span.sps-reward.footer-text > span', 1000);
+        console.log(chalk.green('You won! Reward: ' + decWon + ' DEC'));
+        totalDec += !isNaN(parseFloat(decWon)) ? parseFloat(decWon) : 0;
+        winTotal += 1;
+
+        // ---------- check daily claim start TODO
+        if (isClaimDailyQuestMode === true) {
+          await doDailyClaim(page);
+        }
       } else {
         console.log(chalk.red('You lost'));
         loseTotal += 1;
@@ -1315,7 +1329,16 @@ function doSummaryLog(summaryInfo) {
 
 function doSummaryErrorLog(summaryInfo) {
   delete require.cache[require.resolve("./data/log/errorStat.json")]
-  let statJson = require('./data/log/errorStat')
+  let statJson = {"users":["xqm123","xqm1234","hkd123","hkd1234","xifei123","xifei1234","sugelafei2","sugelafei","xgq123","xgq1234"]}
+  try{
+    let statJsonLoad =  require('./data/log/errorStat')
+    if(statJsonLoad != null) {
+      statJson = statJsonLoad;
+    }
+  } catch (e) {
+
+  }
+
   const reasonSize= summaryInfo.reason.length
   summaryInfo.reason = summaryInfo.reason.slice(0,reasonSize >= 21 ? 20 : reasonSize)
   statJson[process.env.ACCOUNT] = summaryInfo

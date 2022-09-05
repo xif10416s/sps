@@ -206,14 +206,16 @@ sudo service cron restart
 node battlesGetDataRawV1.js
 
 // -e "MAX_QUEUE_LENGTH=300"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=200"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"
-docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3000:3000 -m 5g --memory-swap -1 --restart always -d --name browserless browserless/chrome
-docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3001:3000 -m 5g --memory-swap -1 --restart always -d --name browserless3001 browserless/chrome
-docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3002:3000 -m 6g --memory-swap -1 --restart always -d --name browserless3002 browserless/chrome
-docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3003:3000 -m 6g --memory-swap -1 --restart always -d --name browserless3003 browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3000:3000 -m 1g --memory-swap -1 --restart always -d --name browserless browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3001:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3001 browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3002:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3002 browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3003:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3003 browserless/chrome
 docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3004:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3004 browserless/chrome
 docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3005:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3005 browserless/chrome
 docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3006:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3006 browserless/chrome
 docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3007:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3007 browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3008:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3008 browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3009:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3009 browserless/chrome
 
 // proxy --
 docker run  --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3000:3000 -m 1g --memory-swap -1 --restart always -d --name browserless browserless/chrome
@@ -330,10 +332,7 @@ alter table battle_stat_cs_ls_v5 ENABLE keys
 ----------------
 docker-machine ssh default 
 
-win restart:
-一、wsl
-sudo service ssh --full-restart
-sudo service cron restart 
+
 
 二、supervisord
 sudo supervisord -c /etc/supervisor/supervisord.conf
@@ -356,3 +355,13 @@ cd /mnt/d/source/python/spsAuto/splinterlands-bot/ &&  tail -f ---disable-inotif
  
  cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs && watch -n 5  tail -n12  ---disable-inotify  Summary.txt
  cd /mnt/d/source/python/spsAuto/splinterlands-bot/logs && watch -n 5  tail -n20  ---disable-inotify  rentStat.txt
+
+# 重启
+win restart:
+一、启动docker  vitural
+二、wsl
+sudo service ssh --full-restart
+sudo service cron restart 
+sudo supervisord -c /etc/supervisor/supervisord.conf
+sudo supervisorctl
+三、监控窗口

@@ -40,22 +40,25 @@ async function login(page, account, password) {
             // .then(() => page.click('#loginBtn'))
             // .then(() => page.reload())
             .then(() => page.waitForTimeout(10000))
-            .then(async () => {
-                console.log("waitForSelector--------log_in_text ")
-                await page.waitForSelector('#log_in_text', {
-                        visible: true, timeout: 10000
-                    })
-                    .then(()=>{
-                        console.log('logged in!')
-                    })
-                    .catch(()=>{
-                        console.log('didnt login');
-                        throw new Error('Didnt login');
-                    })
-                })
-            .then(() => page.waitForTimeout(10000))
-            .then(() => page.reload())
 
+        await page.waitForSelector('#log_in_text', {
+            visible: true, timeout: 10000
+        }).then(() => console.log("log_in_text visible........."))
+
+        const loginAccount =  await getElementText(page,"#log_in_text > a > div > div.bio__details > span > span")
+        console.log("loginAccount:",loginAccount , process.env.ACCOUNT)
+
+        if(loginAccount != null && loginAccount == process.env.ACCOUNT) {
+            console.log('logged in!');
+        } else {
+            console.log('didnt login');
+            throw new Error('Didnt login');
+        }
+
+        console.log('start login reload',new Date().toLocaleTimeString());
+        await page.reload();
+        await page.waitForTimeout(20000)
+        console.log('end login reload',new Date().toLocaleTimeString());
     } catch (e) {
         console.log(e)
         throw new Error('Check that you used correctly username and posting key. (dont use email and password)');
