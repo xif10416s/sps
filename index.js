@@ -23,8 +23,7 @@ let claimTime = "-"
 let runFlgCnt = 0;
 let errorCnt = 0;
 let runStat = false;
-let preOwnDec = 0;
-let preDeltaDec = 0;
+let cardNoClickCnt = 0;
 
 
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
@@ -385,28 +384,59 @@ async function clickSummonerCard(page, teamToPlay) {
   await page.waitForXPath(`//*[contains(@id, "-${teamToPlay.summoner}-")]/img`,
       {timeout: 3000})
   .then(card => {
-    card.click();
-    console.log(chalk.bold.greenBright(teamToPlay.summoner,
-        'summoner clicked xpath contaions.'));
+    card.focus();
+    page.waitForTimeout(500)
+    console.log("summoner card visable....")
+    card.click()
+    .then(() =>console.log(chalk.bold.greenBright(teamToPlay.summoner,
+        'summoner clicked xpath contaions.')))
+    .catch(e =>{
+      clicked = false;
+      console.log(chalk.bold.redBright('Summoner not clicked contains.',e))
+    })
   })
-  .catch(() => {
+  .catch((e) => {
     clicked = false;
-    console.log(chalk.bold.redBright('Summoner not clicked contains.'))
+    console.log(chalk.bold.redBright('Summoner not clicked contains.',e))
   });
   if (!clicked) {
     clicked = true;
-    await page.waitForXPath(`//div[@card_detail_id="${teamToPlay.summoner}"]`,
+    await page.waitForXPath(`//*[contains(@id, "-${teamToPlay.summoner}-")]/img`,
         {timeout: 3000})
     .then(card => {
-      card.click();
-      console.log(
-          chalk.bold.greenBright(teamToPlay.summoner, 'summoner clicked'));
+      card.focus();
+      page.waitForTimeout(500)
+      console.log("summoner card visable....")
+      card.click()
+      .then(() =>console.log(chalk.bold.greenBright(teamToPlay.summoner,
+          'summoner clicked xpath contaions.')))
+      .catch(e =>{
+        clicked = false;
+        console.log(chalk.bold.redBright('Summoner not clicked contains.',e))
+      })
+      console.log(chalk.bold.greenBright(teamToPlay.summoner,
+          'summoner clicked xpath contaions.'));
     })
-    .catch(() => {
+    .catch((e) => {
       clicked = false;
-      console.log(chalk.bold.redBright('Summoner not clicked.'))
+      console.log(chalk.bold.redBright('Summoner not clicked contains.',e))
     });
   }
+
+  if(!clicked){
+    const selector = "div[card_detail_id='" + teamToPlay.summoner
+        + "'] > img"
+    await page.evaluate((selector) => {
+      clicked = true
+      console.log("summoner  card selector clicked........:", selector)
+      return document.querySelector(selector).click()
+    }, selector)
+    .catch((e) =>{
+      clicked = false
+      console.log("card click selector error......",e)
+    });
+  }
+
   return clicked
 }
 
@@ -449,41 +479,29 @@ async function clickMembersCard(page, teamToPlay) {
 }
 
 async function clickWithCheck(page, teamToPlay, i) {
-  let clicked = true;
-  // `//div[@card_detail_id="${teamToPlay.cards[i].toString()}"]/img`
-  await page.waitForXPath(
-      `//*[contains(@id, "-${teamToPlay.cards[i].toString()}-")]/img`,
-      {timeout: 20000, visible: true})
-  .then(card => {
-    card.focus();
-    card.click();
-    console.log(
-        chalk.bold.greenBright(teamToPlay.cards[i], 'xpath  contains clicked'));
-  })
-  .catch(() => {
-    clicked = false;
-    console.log(chalk.bold.redBright(teamToPlay.cards[i],
-        'xpath  contains not clicked'));
+  await  doCardSelect(page,teamToPlay,i)
+  if(! await checkCardSelected(page,teamToPlay,i)){
+    console.log("2  doCardSelect again.....",teamToPlay.cards[i])
+    await  doCardSelectAgain(page,teamToPlay,i)
+  }
+
+  await page.waitForTimeout(1000);
+
+  console.log("3  finally  check card selected  .....",teamToPlay.cards[i])
+  if(!await checkCardSelected(page,teamToPlay,i)) {
+    cardNoClickCnt ++;
     errorCnt ++;
     doSummaryErrorLog({time:new Date().toLocaleString() , account: process.env.ACCOUNT ,errorCnt:errorCnt,reason: "card not clicked " + teamToPlay.cards[i] })
     console.log(
-        new Date().toLocaleString() + ":" + process.env.ACCOUNT + ":"
-        + errorCnt + ":" + "card not clicked " + teamToPlay.cards[i])
-  });
+          new Date().toLocaleString() + ":" + process.env.ACCOUNT + ":"
+          + errorCnt + ":" + "card not clicked finally" + teamToPlay.cards[i])
+  }
 
-  await page.waitForTimeout(1000);
+  return true;
+}
 
-  const selector = "div[card_detail_id='" + teamToPlay.cards[i].toString()
-      + "'] > img"
-  await page.evaluate((selector) => {
-    clicked = true
-    console.log("selector:", selector)
-    return document.querySelector(selector).click()
-  }, selector);
-
-  await page.waitForTimeout(1000);
-
-  // check
+async function checkCardSelected(page,teamToPlay,i) {
+  let  selected = true;
   await page.waitForXPath(
       `//div[@card_detail_id="${teamToPlay.cards[i].toString()}"]`,
       {timeout: 20000})
@@ -492,18 +510,107 @@ async function clickWithCheck(page, teamToPlay, i) {
   .then(className => {
     console.log(className)
     if (className.indexOf("card--selected") == -1) {
-      clicked = false;
+      selected = false;
       console.log(teamToPlay.cards[i], ":", "clicked=false")
     } else {
+      selected = true;
       console.log(teamToPlay.cards[i], ":", "check selected")
     }
   })
   .catch(() => {
+    console.log(chalk.bold.redBright(teamToPlay.cards[i], 'check card selected error'));
+  });
+  return selected;
+}
+
+async function doCardSelect(page,teamToPlay,i) {
+  let clicked = true;
+  // `//div[@card_detail_id="${teamToPlay.cards[i].toString()}"]/img`
+  console.log("1  clickWithCheck ......xpath  contains")
+  clicked = await page.waitForXPath(
+      `//*[contains(@id, "-${teamToPlay.cards[i].toString()}-")]/img`,
+      {timeout: 20000, visible: true})
+  .then(card => {
+    card.focus();
+    page.waitForTimeout(500)
+    console.log("1.1 " + chalk.bold.greenBright(teamToPlay.cards[i], 'xpath  focused'));
+    return card.click() .then(() =>{
+      console.log("1.2 " + chalk.bold.greenBright(teamToPlay.cards[i], 'xpath  contains clicked'));
+      return true;
+    })
+    .catch((e) => {
+      clicked = false;
+      console.log(chalk.bold.redBright(teamToPlay.cards[i],
+          'xpath  contains not clicked',e));
+      return false;
+    });
+  })
+  .catch((e) => {
     clicked = false;
-    console.log(chalk.bold.redBright(teamToPlay.cards[i], 'check not clicked'));
+    console.log(chalk.bold.redBright(teamToPlay.cards[i],
+        'xpath  contains not clicked',e));
+    return false;
   });
 
-  return clicked;
+  page.waitForTimeout(1000)
+
+  if(!clicked) {
+    const cardItem = await page.$x(`//*[contains(@id, "-${teamToPlay.cards[i].toString()}-")]/img`)
+    .catch((e) => {
+      console.log(chalk.bold.redBright(teamToPlay.cards[i],
+          'xpath  contains not visiable'),e);
+    });
+    await  cardItem[0].click().then(() =>{
+      console.log("1.3 " + chalk.bold.greenBright(teamToPlay.cards[i], 'xpath  contains clicked'));
+    }).catch((e) =>{
+      clicked = false;
+      console.log(chalk.bold.redBright(teamToPlay.cards[i],
+          'xpath  contains not clicked222',e));
+    })
+
+    page.waitForTimeout(1000)
+
+    if(!clicked){
+      const selector = "div[card_detail_id='" + teamToPlay.cards[i].toString()
+          + "'] > img"
+      await page.evaluate((selector) => {
+        clicked = true
+        console.log("1.4  card selector clicked........:", selector)
+        return document.querySelector(selector).click()
+      }, selector)
+      .catch((e) =>{
+        console.log("card click selector error......",e)
+      });
+    }
+  }
+
+}
+
+async function doCardSelectAgain(page,teamToPlay,i) {
+  const selector = "div[card_detail_id='" + teamToPlay.cards[i].toString()
+      + "'] > img"
+  await page.evaluate((selector) => {
+    console.log("2.1  card selector clicked........:", selector)
+    return document.querySelector(selector).click()
+  }, selector)
+  .catch((e) =>{
+    console.log("2.1.1  card click selector error......",e)
+  });
+
+  page.waitForTimeout(1000)
+
+
+  const cardItem = await page.$x(`//*[contains(@id, "-${teamToPlay.cards[i].toString()}-")]/img`)
+  .catch((e) => {
+    console.log(chalk.bold.redBright(teamToPlay.cards[i],
+        'xpath  contains not visiable'),e);
+  });
+  await  cardItem[0].click().then(() =>{
+    console.log("2.2 " + chalk.bold.greenBright(teamToPlay.cards[i], 'xpath  contains clicked'));
+  }).catch((e) =>{
+    console.log(chalk.bold.redBright(teamToPlay.cards[i],
+        '2.2.1  xpath  contains not clicked222',e));
+  })
 }
 
 
@@ -626,7 +733,14 @@ async function startBotPlayMatch(page, browser) {
       console.log("already logined --------------------------:" + loginAccount)
     }
 
-    await page.goto('https://splinterlands.io/?p=battle_history');//https://splinterlands.com/
+    await page.goto('https://splinterlands.com/?p=battle_history')
+    .then(() =>console.log("1 goto splinterlands.com/?p=battle_history success.............."))
+    .catch(() => {
+      console.log("goto  splinterlands.com/?p=battle_history error ........")
+      page.goto('https://splinterlands.com/?p=battle_history')
+      .then(() =>console.log("1 goto splinterlands.com/?p=battle_history success.............."))
+    })
+    ;//https://splinterlands.com/
     // await page.waitForTimeout(8000);
     // await page.reload();
     await page.waitForTimeout(8000 * 4);
@@ -734,7 +848,8 @@ async function startBotPlayMatch(page, browser) {
         rating: rating,
         power: power + "(" + deltaPower + ")",
         sps: totalDec.toFixed(2),
-        league: league
+        league: league,
+        NC: cardNoClickCnt
       };
 
       doSummaryLog(summaryInfo)
@@ -996,7 +1111,8 @@ async function startBotPlayMatch(page, browser) {
       rating: rating,
       power: power + "(" + deltaPower + ")",
       sps: totalDec.toFixed(2),
-      league: league
+      league: league,
+      NC: cardNoClickCnt
     };
 
     doSummaryLog(summaryInfo)
@@ -1177,17 +1293,17 @@ async function doGreenBtnStart(page) {
   console.log("----------------leftTime--------",
       new Date().toLocaleString(), leftTime)
   await page.$eval('.btn-green', elem => elem.click())
-  .then(() => console.log('btn-green clicked', new Date().toLocaleString()))
-  .catch(async () => {
-    console.log('Start Fight didnt work, waiting 5 sec and retry');
-    await page.waitForTimeout(5000);
+  .then(() => console.log('1 btn-green clicked', new Date().toLocaleString()))
+  .catch(async (e) => {
+    console.log('Start Fight didnt work, waiting 5 sec and retry',e);
+    await page.waitForTimeout(3000);
     await page.$eval('.btn-green', elem => elem.click())
     .then(() => {
-      console.log('btn-green clicked');
+      console.log('2 btn-green clicked');
     })
-    .catch(() => {
+    .catch((e) => {
       startFightFail = true;
-      console.log('Start Fight didnt work. Did the opponent surrender?');
+      console.log('Start Fight didnt work. Did the opponent surrender?',e);
     });
   });
   if (startFightFail) {
