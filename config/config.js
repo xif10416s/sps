@@ -8,6 +8,8 @@ function doConfigInit(username ){
   process.env.wsport = userConfig['port']
   process.env.skip_cs = userConfig['skip_cs']
   process.env.max_cnt = userConfig['max_cnt']
+  process.env.algorithm = userConfig['algorithm']
+  process.env.algorithm_rating = userConfig['algorithm_rating'] ? userConfig['algorithm_rating'] : "0.3"
   process.env.MAX_REWARDS = userConfig['MAX_REWARDS'] ?  userConfig['MAX_REWARDS'] : "false"
   process.env.RANKED = userConfig['RANKED'] ? userConfig['RANKED'] : "W"
   process.env.SKIP_QUEST = userConfig['SKIP_QUEST'] ? userConfig['SKIP_QUEST'] : process.env.SKIP_QUEST

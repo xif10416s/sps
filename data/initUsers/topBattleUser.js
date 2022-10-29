@@ -5,9 +5,12 @@ const proxyAgent = new HttpsProxyAgent('http://192.168.99.1:1081');
 
 //https://api2.splinterlands.com/battle/history2?player=$top&leaderboard=1&format=wild&v=1657933584115&token=O8WX6PK9KG&username=xgq123
 async function getTopBattleHistory(leaderboard,format) {
-  const battleHistory = await fetch(
-      'https://api2.splinterlands.com/battle/history2?player=$top&leaderboard='
-      + leaderboard + '&format='+format+'&v=1657933584115&token=O8WX6PK9KG&username=xgq123', { agent: proxyAgent})
+  const url = 'https://api2.splinterlands.com/battle/history2?player=$top&leaderboard='
+  + leaderboard + '&format='+format+'&v=1657933584115&token=O8WX6PK9KG&username=xgq123'
+  console.log(url)
+  const battleHistory = await fetch(url
+      // , { agent: proxyAgent}
+      )
   .then((response) => {
     if (!response.ok) {
       console.log('Network response was not ok');
@@ -38,7 +41,9 @@ async function getTopBattleHistory(leaderboard,format) {
 async function getLeaderboardBattleHistory(leaderboard,format) {
   const battleHistory = await fetch(
       'https://api2.splinterlands.com/players/leaderboard_with_player?season=91&leaderboard='
-      + leaderboard + '&format='+format+'&v=1657932718267&token=O8WX6PK9KG&username=xgq123', { agent: proxyAgent})
+      + leaderboard + '&format='+format+'&v=1657932718267&token=O8WX6PK9KG&username=xgq123'
+      // , { agent: proxyAgent}
+      )
   .then((response) => {
     if (!response.ok) {
       console.log('Network response was not ok');
@@ -91,24 +96,24 @@ async function saveBattlesHistory() {
     // console.log(users.filter(distinct))
   })
 
-  await getBattleHistory('wild').then(player => {
-    fs.writeFile('data/initUsers/wild_topBattleUserJSON.json', JSON.stringify(player), function (err) {
-      if (err) {
-        console.log(err);
-      }
-    });
-    // console.log(users.filter(distinct))
-  })
+  // await getBattleHistory('wild').then(player => {
+  //   fs.writeFile('data/initUsers/wild_topBattleUserJSON.json', JSON.stringify(player), function (err) {
+  //     if (err) {
+  //       console.log(err);
+  //     }
+  //   });
+  //   // console.log(users.filter(distinct))
+  // })
 
 }
 
 module.exports.saveBattlesHistory = saveBattlesHistory;
 
-// (async ()=>{
-//
-//   // wild modern
-//   await saveBattlesHistory()
-//   // console.log(JSON.stringify(l1))
-//
-//
-// })()
+(async ()=>{
+
+  // wild modern
+ //await saveBattlesHistory()
+  // console.log(JSON.stringify(l1))
+
+
+})()

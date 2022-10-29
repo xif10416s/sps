@@ -1,7 +1,7 @@
 {
   "name": "hkd123",
   "password": "5J3xJd11RdRshTkzkm8Wj5zG9GXMX9bmxCCxNjMRGYkjsR2FUE6",
-  "port": 3003,
+  "port": "ws://192.168.99.100:3003",
   "favourite_summoner": "",
   "skip_cs": "false",
   "max_cnt": "9999" ,
@@ -9,6 +9,8 @@
   "PREFER_CS": "true",
   "SKIP_QUEST": "dragon",
   "ECR_RECOVER_TO": 85,
+  "algorithm": "ml",
+  "algorithm_rating": "0.6",
   "RANKED": "M",
   "QUEST_PRIORITY": "true" ,
   "CLAIM_DAILY_QUEST_REWARD": "true"

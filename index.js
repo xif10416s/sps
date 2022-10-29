@@ -270,7 +270,7 @@ async function findSeekingEnemyModal(page, visibleTimeout = 15000) {
 }
 
 async function findCreateTeamButton(page, findOpponentDialogStatus = 0,
-    btnCreateTeamTimeout = 60000) {
+    btnCreateTeamTimeout = 30000) {
   console.log(`findCreateTeamButton waiting for create team button: `,
       findOpponentDialogStatus);
   //#enemy_found_ranked > div > div > div.modal-body > div > div:nth-child(2) > button
@@ -690,7 +690,7 @@ async function startBotPlayMatch(page, browser) {
       height: 1600,
       deviceScaleFactor: 1,
     });
-    await page.goto('https://splinterlands.io/').catch(() => {
+    await page.goto('https://splinterlands.com/').catch(() => {
       console.log("opening browser error ......")
       throw new PageRestartException(`Restart needed.`);
     });
@@ -711,7 +711,7 @@ async function startBotPlayMatch(page, browser) {
     }
   }
   try {
-    await page.waitForTimeout(8000 * 4);
+    await page.waitForTimeout(3000);
 
     // let item = await page.waitForSelector('#log_in_button > button', {
     //   visible: true,
@@ -1486,7 +1486,7 @@ const executablePath = process.env.CHROME_EXEC || null;
 const config = require('./config/config');
 
 let puppeteer_options = {
-  browserWSEndpoint: 'ws://192.168.99.100:' + process.env.wsport,
+  browserWSEndpoint: process.env.wsport,
   headless: isHeadlessMode, // default is true
   args: ['--no-sandbox',
     // '--proxy-server=192.168.99.1:1081',

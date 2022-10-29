@@ -1,14 +1,16 @@
 {
   "name": "sugelafei2",
   "password": "5JQEjfcDq6yExFBzKy8WeAhtX5b7iiKmvyixV6i9bfUK6hNVF82",
-  "port": 3001,
+  "port": "ws://192.168.99.100:3001",
   "favourite_summoner": "",
   "skip_cs": "false",
   "max_cnt": "9999" ,
   "PREFER_CS": "true",
-  "MINUTES_BATTLES_INTERVAL": 5,
+  "MINUTES_BATTLES_INTERVAL": 1,
   "SKIP_QUEST": "dragon",
   "TARGET_FP": 18000,
+  "algorithm": "ml",
+  "algorithm_rating": "0.6",
   "ECR_RECOVER_TO": 85,
   "RANKED": "M",
   "CLAIM_DAILY_QUEST_REWARD": "true"

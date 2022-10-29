@@ -1,7 +1,7 @@
 {
   "name": "xifei1234",
   "password": "5JjstmL9GcrZihFXyaxY4EcT28DzMW67ovZgDQpXoR7EzsH7Bb3",
-  "port": 3005,
+  "port": "ws://192.168.99.100:3005",
   "favourite_summoner": "",
   "skip_cs": "false",
   "max_cnt": "9999" ,
@@ -10,6 +10,8 @@
   "SKIP_QUEST": "dragon",
   "ECR_RECOVER_TO": 85,
   "RANKED": "M",
+  "algorithm": "ml",
   "QUEST_PRIORITY": "false" ,
-  "CLAIM_DAILY_QUEST_REWARD": "true"
+  "CLAIM_DAILY_QUEST_REWARD": "true",
+  "algorithm_rating": "0.3"
 }

@@ -1,7 +1,8 @@
 //
 const cardsDetails = require("./cardsDetails.json");
 const mordenCard = require("./mordenCard.json");
-
+console.log("cardsDetails size :" + cardsDetails.length )
+console.log(cardsDetails[0]['distribution'][0] )
 const cardsDetailsNameMap = {}
 const cardsDetailsIDMap = {}
 
@@ -32,7 +33,13 @@ cardsDetails.map(cd => {
           };
 
   const abilities = stat['abilities'] //
-  const cardDetailId = cd['distribution'][0]['card_detail_id']
+  let cardDetailId = -1;
+  if(cd['distribution'][0]) {
+    cardDetailId = cd['distribution'][0]['card_detail_id']
+  } else {
+    console.log(cd)
+  }
+
   const item = {
     'statSum1': statSum1,
     'type': type,

@@ -206,16 +206,16 @@ sudo service cron restart
 node battlesGetDataRawV1.js
 
 // -e "MAX_QUEUE_LENGTH=300"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=200"  -e "PREBOOT_CHROME=true" -e "KEEP_ALIVE=true"
-docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3000:3000 -m 1g --memory-swap -1 --restart always -d --name browserless browserless/chrome
-docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3001:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3001 browserless/chrome
-docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3002:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3002 browserless/chrome
-docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3003:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3003 browserless/chrome
-docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3004:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3004 browserless/chrome
-docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3005:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3005 browserless/chrome
-docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3006:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3006 browserless/chrome
-docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3007:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3007 browserless/chrome
-docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3008:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3008 browserless/chrome
-docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3009:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3009 browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3000:3000 -m  600m  --memory-swap -1 --restart always -d --name browserless browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3001:3000 -m  600m --memory-swap -1 --restart always -d --name browserless3001 browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3002:3000 -m  600m --memory-swap -1 --restart always -d --name browserless3002 browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3003:3000 -m  600m --memory-swap -1 --restart always -d --name browserless3003 browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3004:3000 -m  600m --memory-swap -1 --restart always -d --name browserless3004 browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3005:3000 -m  600m --memory-swap -1 --restart always -d --name browserless3005 browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3006:3000 -m  600m --memory-swap -1 --restart always -d --name browserless3006 browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3007:3000 -m  600m --memory-swap -1 --restart always -d --name browserless3007 browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3008:3000 -m  600m --memory-swap -1 --restart always -d --name browserless3008 browserless/chrome
+docker run -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3009:3000 -m  600m --memory-swap -1 --restart always -d --name browserless3009 browserless/chrome
 
 // proxy --
 docker run  --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3000:3000 -m 1g --memory-swap -1 --restart always -d --name browserless browserless/chrome
@@ -223,11 +223,11 @@ docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http:/
 docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3002:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3002 browserless/chrome
 docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3003:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3003 browserless/chrome
 docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3004:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3004 browserless/chrome
-docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3005:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3005 browserless/chrome
-docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3006:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3006 browserless/chrome
-docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3007:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3007 browserless/chrome
-docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3008:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3008 browserless/chrome
-docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3009:3000 -m 1g --memory-swap -1 --restart always -d --name browserless3009 browserless/chrome
+docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3005:3000 -m 600m --memory-swap -1 --restart always -d --name browserless3005 browserless/chrome
+docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3006:3000 -m 600m --memory-swap -1 --restart always -d --name browserless3006 browserless/chrome
+docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3007:3000 -m 600m --memory-swap -1 --restart always -d --name browserless3007 browserless/chrome
+docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3008:3000 -m 600m --memory-swap -1 --restart always -d --name browserless3008 browserless/chrome
+docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3009:3000 -m 600m --memory-swap -1 --restart always -d --name browserless3009 browserless/chrome
 
 docker run  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=5"    -p 13000:3000 -m 500m --memory-swap -1 --restart always -d --name browserless13000 browserless/chrome
 docker run --env HTTP_PROXY="http://192.168.99.1:1081" --env HTTPS_PROXY="http://192.168.99.1:1081"   -e "MAX_QUEUE_LENGTH=5"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=5"    -p 13000:3000 -m 4g --memory-swap -1 --restart always -d --name browserless13000 browserless/chrome
@@ -274,7 +274,11 @@ net stop LxssManager
 net start LxssManager
 
 # 最新卡片信息  -- cardsDetails.json -- 
+https://github.com/kiokizz/Splinterlands-API/blob/master/README.md
 https://api2.splinterlands.com/cards/get_details
+
+possibleTeams#summoners 更新 新summoner
+
 
 ## docker start
 sudo swapon -p 5 /mnt/sda1/swap/swapfile
@@ -283,9 +287,29 @@ docker stats
 
 node --max-old-space-size=5192 src/server/WebServer.js
 
-browserless/chrome
+docker pull browserless/chrome:latest
+docker pull 1nj0zren.mirror.aliyuncs.com/portainer/portainer
+docker pull 1nj0zren.mirror.aliyuncs.com/browserless/chrome:latest
 https://github.com/browserless/chrome
 https://docs.browserless.io/docs/docker.html
+ssh seki@192.168.1.11
+route delete 192.168.1.0
+
+## 192.168.1.0    255.255.255.0            在链路上       192.168.1.6    291
+##  main恢复
+route  add 192.168.1.0 mask 255.255.255.0 192.168.1.6
+
+##  mac
+访问 99.0 通过1.6
+netsh interface portproxy show v4tov4
+netstat -ano|findstr 1081
+netsh interface portproxy add v4tov4 listenport=1081 listenaddress=192.168.1.6 connectport=1081 connectaddress=192.168.99.1
+netsh interface portproxy del v4tov4 listenport=1081 listenaddress=192.168.1.6
+docker run --env HTTP_PROXY="http://192.168.1.6:1081" --env HTTPS_PROXY="http://192.168.1.6:1081"  -e "MAX_QUEUE_LENGTH=1"  -e "CONNECTION_TIMEOUT=90000000"  -e "MAX_CONCURRENT_SESSIONS=1"    -p 3009:3000 -m 600m --memory-swap -1 --restart always -d --name browserless3009 browserless/chrome
+
+启动配置
+"port": "ws://192.168.1.11:3009"
+
 
 
 ## chrome debug
@@ -316,12 +340,12 @@ load data infile 'F:12.csv' into table battle_stat_cs_ls_v5 Fields TERMINATED by
 1.2  移动文件到：dataDir = "/mnt/f/battleData"
 2. 分析
 /mnt/e/spark/spark-3.2.0-bin-hadoop3.2/bin/spark-shell --conf spark.local.dir=/mnt/h/temp  --master local[6] --driver-memory 10g  --name test
-2.1 batSt_csc
+2.1 batSt_csv
 3  导入
 3.1  重建表 &  关闭索引
-SET SESSION BULK_INSERT_BUFFER_SIZE=256217728;
-SET SESSION MYISAM_SORT_BUFFER_SIZE=256217728;
-set global KEY_BUFFER_SIZE = 256217728 ;
+//SET SESSION BULK_INSERT_BUFFER_SIZE=256217728;
+//SET SESSION MYISAM_SORT_BUFFER_SIZE=256217728;
+//set global KEY_BUFFER_SIZE = 256217728 ;
 alter table battle_stat_v5 DISABLE keys ;
 alter table battle_stat_cs_ls_v5 DISABLE keys ;
 node anlysis/etl/dataImport.js
@@ -365,3 +389,7 @@ sudo service cron restart
 sudo supervisord -c /etc/supervisor/supervisord.conf
 sudo supervisorctl
 三、监控窗口
+四，清理
+node D:\source\python\spsAuto\splinterlands-bot\logs\logCleaner.js
+
+

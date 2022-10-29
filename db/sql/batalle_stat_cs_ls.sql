@@ -1,3 +1,4 @@
+// no use
 CREATE TABLE `battle_stat_cs_ls_v5`  (
   `id` int(9) NOT NULL AUTO_INCREMENT,
   `startMana` int(9) NOT NULL,

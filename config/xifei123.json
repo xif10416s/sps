@@ -1,14 +1,16 @@
 {
   "name": "xifei123",
   "password": "5JayvrytpFTiQjpHQcWntd9eXLmunuSGPid9TqvghmADww7T1LT",
-  "port": 3000,
+  "port": "ws://192.168.99.100:3000",
   "favourite_summoner": "",
   "skip_cs": "false",
   "max_cnt": "9999" ,
   "PREFER_CS": "true",
   "SKIP_QUEST": "dragon",
-  "MINUTES_BATTLES_INTERVAL": 7,
+  "MINUTES_BATTLES_INTERVAL": 1,
   "ECR_RECOVER_TO": 85,
+  "algorithm": "ml",
+  "algorithm_rating": "0.6",
   "RANKED": "M",
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }

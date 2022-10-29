@@ -1,7 +1,7 @@
 {
   "name": "xgq123",
   "password": "5Ki3EqJYbcVWeG3JxGfS757aPWam46xBDwwZNS4DrBxYMWscFoE",
-  "port": 3008,
+  "port": "ws://192.168.99.100:3008",
   "favourite_summoner": "",
   "skip_cs": "false",
   "max_cnt": "9999" ,
@@ -9,6 +9,8 @@
   "MINUTES_BATTLES_INTERVAL": 2,
   "RANKED": "M",
   "SKIP_QUEST": "dragon",
+  "algorithm": "ml",
+  "algorithm_rating": "0.6",
   "ECR_RECOVER_TO": 85,
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }

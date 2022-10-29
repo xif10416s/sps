@@ -1,14 +1,16 @@
 {
   "name": "xqm1234",
   "password": "5Jx86P5e2cbxHLtPPsb1wX6fqFQkZJoRMhyTqiHK5MMjjY3usUA",
-  "port": 3007,
+  "port": "ws://192.168.99.100:3007",
   "favourite_summoner": "",
   "skip_cs": "false",
   "max_cnt": "9999" ,
   "PREFER_CS": "true",
-  "MINUTES_BATTLES_INTERVAL": 3,
+  "MINUTES_BATTLES_INTERVAL": 1,
   "ECR_RECOVER_TO": 85,
   "RANKED": "M",
+  "algorithm": "ml",
+  "algorithm_rating": "0.6",
   "SKIP_QUEST": "dragon",
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }

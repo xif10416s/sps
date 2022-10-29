@@ -20,8 +20,8 @@ async function getBattleHistoryRaw(player = '', format, data = {}) {
     const battleHistory = await fetch(
         'https://api2.splinterlands.com/battle/history2?player='
         + player.toLocaleLowerCase() + "&format=" + format
-        + "&v=1657932127908&token=O8WX6PK9KG&username=xgq123"
-        // ,{agent: proxyAgent}
+        + "&v=1657932127908&token=O8WX6PK9KG&username=xgq1234"
+       // ,{agent: proxyAgent}
         )
     .then((response) => {
       if (!response.ok) {
@@ -121,24 +121,25 @@ const extractMonsterLost = (team) => {
 
 let date = new Date();
 let dateStr = date.toISOString().split("T")[1];
-let isInit = false;
+// dateStr = new Date().toLocaleTimeString()
+let isInit =false;
 
-if (dateStr && dateStr.startsWith("08:30:")) {
+if (dateStr && dateStr.startsWith("07:0") || dateStr && dateStr.startsWith("07:1") ) {
   console.log("--------topBattleUser.saveBattlesHistory---------")
-  topBattleUser.saveBattlesHistory();
+  topBattleUser.saveBattlesHistory().then( ()=>{
+    console.log("--------topBattleUser.saveBattlesHistory---------finish")
+  });
 }
 
-if (dateStr && dateStr.startsWith("08:40:")) {
+if (dateStr && dateStr.startsWith("07:3") || dateStr && dateStr.startsWith("07:4")) {
   isInit = true;
 }
 
-if (dateStr && dateStr.startsWith("08:50:")) {
-  isInit = true;
-}
+
 
 console.log("get data isInit :", isInit, dateStr, dateStr.split(":")[1])
 
-let fromScore = 1000;
+let fromScore = 500;
 let newTopBattleUsers = []
 let format = "wild"
 let remainUsers = []
@@ -193,21 +194,28 @@ if (isInit) {
 
 let extendArray = [];
 let count = 0;
-let delta = 100;
+let delta = 50;
 let batchCount = 5;
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve,ms))
+}
 
 async function collectData(arr) {
-  console.log('batch count started : ', new Date().toLocaleTimeString(),
+  console.log('batch count started : ', count , new Date().toLocaleTimeString(),
       ' arr:' + arr.length, 'battlesCnt:', battlesList.length);
 
   for (let i = 0; i <arr.length ; i++) {
+    await sleep(500);
+    // console.log("getBattleHistoryRaw start  --------- :" + arr[i]);
     await  getBattleHistoryRaw(arr[i],format)
     .then(checkBattles => {
-      // console.log("----checkbattles---",checkBattles.length)
+      if(!checkBattles){
+        console.log("getBattleHistoryRaw error  --------- :" + arr[i]);
+      }
       return checkAndSave(checkBattles)
     }).catch((error) => {
-      console.log(error);
+      console.log("checkAndSave error ------------------!!!!");
     })
   }
   // let battles = arr.map(user =>
@@ -314,9 +322,9 @@ async function checkAndSave(battles) {
     console.log('-------------------error---and save');
     const cleanBattleList = battlesList.filter(x => x != undefined);
     await saveDatas(cleanBattleList, mergeArray);
-    dbUtil.pool.end(function (err) {
-      // 所有的连接都已经被关闭
-    });
+    // dbUtil.pool.end(function (err) {
+    //   // 所有的连接都已经被关闭
+    // });
     throw new Error('Network response was not ok');
   }
 }

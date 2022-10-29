@@ -6,7 +6,8 @@ const extendsHandler = require("./data/strategy/extendsHandler")
 const preferCs = require('./data/strategy/preferCs')
 const cardsDetail = require('./data/cardsDetails');
 const enemy = require('./src/enemy/enemy');
-const summoners = [{260: 'fire'},
+const summoners = [
+    {260: 'fire'},
   {257: 'water'},
   {437: 'water'},
   {224: 'dragon'},
@@ -54,9 +55,18 @@ const summoners = [{260: 'fire'},
   {111: 'water'},
   {56: 'dragon'},
   {205: 'dragon'},
-  {130: 'dragon'}];
+  {130: 'dragon'},
+  {499: 'death'},
+  {502: 'life'},
+  {501: 'fire'},
+  {498: 'water'},
+  {500: 'earth'},
+  {503: 'dragon'},
+  {449: 'death'}];
 
 const splinters = ['fire', 'life', 'earth', 'water', 'death', 'dragon'];
+const request = require('request')
+const zero_cards=[366,380,394,408,422]
 
 const getSummoners = (myCards, splinters) => {
   try {
@@ -103,6 +113,10 @@ let availabilityCheck = (base, toCheck) => toCheck.slice(0, 7).every(
     v => {
       if (v == "") {
         return true;
+      }
+      // 0卡存在的 排除 20221022
+      if(zero_cards.indexOf(v) != -1) {
+         return true;
       }
       return base.includes(v)
     });
@@ -365,14 +379,27 @@ const possibleTeams = async (matchDetails, acc) => {
   }
 
   // TODO for mordern combine
-  if (possibleTeams && possibleTeams.length <= 100 && matchDetails.ranked
-      == "M") {
-    console.log(" do Wild select merge")
-    matchDetails.ranked = "W"
-    possibleTeams = possibleTeams.concat(await askFormation(matchDetails));
-    console.log("askFormation  change Wild select possibleTeams :",
-        possibleTeams.length)
-  }
+  // if (possibleTeams && possibleTeams.length <= 100 && matchDetails.ranked
+  //     == "M") {
+  //   console.log(" do Wild select merge")
+  //   matchDetails.ranked = "W"
+  //   possibleTeams = possibleTeams.concat(await askFormation(matchDetails));
+  //   console.log("askFormation  change Wild select possibleTeams :",
+  //       possibleTeams.length)
+  // }
+  // remove zero
+
+  possibleTeams = possibleTeams.map(t =>{
+    zero_cards.forEach(x => {
+      const position =  t.indexOf(x)
+      if(position != -1){
+        t.splice(position, 1);
+        t.splice(6, 0,"");
+      }
+    })
+    return t;
+  })
+  console.log("askFormation  possibleTeams zero:", possibleTeams.length)
   return possibleTeams;
 };
 
@@ -381,6 +408,24 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
   console.log("4-1 third step most winnning team start :", possibleTeams.length)
   let bestCombination = await battles.mostWinningSummonerTank(possibleTeams);
   // logger.log("4-2 third step most bestcombination  :", JSON.stringify(bestCombination))
+  // 机器学习
+  if(process.env.algorithm && process.env.algorithm == "ml") {
+    console.log("4-4-0-0---  doMLPredict--------------")
+    const fromRating = process.env.algorithm_rating
+    const mlTeamInfo = await doMLPredict(possibleTeams,matchDetails.mana, matchDetails.rating,matchDetails.rules,parseFloat(fromRating),matchDetails['enemyPossbileTeams'],matchDetails['splinters'])
+    console.log("4-4-0-0---  doMLPredict--------------:",mlTeamInfo)
+    const mlTeam = mlTeamInfo[0]
+    if(mlTeam && mlTeam.length >=1) {
+      const maxMana =  matchDetails.mana >=52 ? 52 : matchDetails.mana
+      if(maxMana - calcTotalMana(mlTeam) <=6) {
+        matchDetails['logContent']['strategy'] = "ml"
+        matchDetails['logContent']['isMatchPrefer'] = ""
+        matchDetails['logContent']['stgLen'] = possibleTeams.length
+        matchDetails['logContent']['QuestMatch'] = mlTeamInfo[1]
+        return [mlTeam[0],mlTeam];
+      }
+    }
+  }
 
   if (process.env.skip_cs && process.env.skip_cs == "false") {
     console.log("4-4-0 third step makeBestCombine  start ............",
@@ -390,11 +435,11 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
     if (bcTeams && matchDetails.rating && (matchDetails.rating <= 1000
         && bcTeams.length >= 10 || matchDetails.rating > 1000 && bcTeams.length
         >= 5)) {
-      let priorityToTheQuest = process.env.QUEST_PRIORITY === 'false' ? false
-          : true;
-      if (priorityToTheQuest) {
-        bcTeams = doFocusFilter(bcTeams, matchDetails.quest, 1)
-      }
+      // let priorityToTheQuest = process.env.QUEST_PRIORITY === 'false' ? false
+      //     : true;
+      // if (priorityToTheQuest) {
+      //   bcTeams = doFocusFilter(bcTeams, matchDetails.quest, 1)
+      // }
       let bcCombine = await battles.mostWinningSummonerTank(bcTeams);
       const mostWinningBcTeam = await findBestTeam(bcCombine, bcTeams)
       console.log("4-4-0 third step makeBestCombine  used ............",
@@ -403,25 +448,25 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
       return mostWinningBcTeam;
     }
 
-    console.log("4-4-1 third step makeBestCombineByCs  start ............",
-        new Date())
-    const byCsTeams = await makeBestCombineByCs(possibleTeams, matchDetails, 5);
-    if (byCsTeams != null && byCsTeams[1] && matchDetails.rating
-        && (matchDetails.rating <= 1000 && byCsTeams[1].length >= 10
-            || matchDetails.rating > 1000 && byCsTeams[1].length >= 5)) {
-      let csTeams = byCsTeams[1];
-      let priorityToTheQuest = process.env.QUEST_PRIORITY === 'false' ? false
-          : true;
-      if (priorityToTheQuest) {
-        csTeams = doFocusFilter(csTeams, matchDetails.quest, 1)
-      }
-      let byCsCombine = await battles.mostWinningSummonerTank(csTeams);
-      const makeBestCombineByCsTeam = await findBestTeam(byCsCombine, csTeams)
-      console.log("4-4-1 third step makeBestCombineByCsTeam  used ............",
-          new Date())
-      // logger.log("4-4-1 third step makeBestCombineByCsTeam  used ............",new Date())
-      return makeBestCombineByCsTeam;
-    }
+    // console.log("4-4-1 third step makeBestCombineByCs  start ............",
+    //     new Date())
+    // const byCsTeams = await makeBestCombineByCs(possibleTeams, matchDetails, 5);
+    // if (byCsTeams != null && byCsTeams[1] && matchDetails.rating
+    //     && (matchDetails.rating <= 1000 && byCsTeams[1].length >= 10
+    //         || matchDetails.rating > 1000 && byCsTeams[1].length >= 5)) {
+    //   let csTeams = byCsTeams[1];
+    //   let priorityToTheQuest = process.env.QUEST_PRIORITY === 'false' ? false
+    //       : true;
+    //   if (priorityToTheQuest) {
+    //     csTeams = doFocusFilter(csTeams, matchDetails.quest, 1)
+    //   }
+    //   let byCsCombine = await battles.mostWinningSummonerTank(csTeams);
+    //   const makeBestCombineByCsTeam = await findBestTeam(byCsCombine, csTeams)
+    //   console.log("4-4-1 third step makeBestCombineByCsTeam  used ............",
+    //       new Date())
+    //   // logger.log("4-4-1 third step makeBestCombineByCsTeam  used ............",new Date())
+    //   return makeBestCombineByCsTeam;
+    // }
   } else {
     console.log("4-4 third step skip  makeBestCombine")
   }
@@ -747,7 +792,9 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
   }
 
   // do prefer summoners
-  if (matchDetails.rating && (matchDetails.rating <= 1100)) {
+  if(process.env.algorithm  && process.env.algorithm == "ml") {
+
+  } else if (matchDetails.rating && (matchDetails.rating <= 1000) ) {
     const filteredTeamsForLowRatting = availableTeamsToPlay.filter(
         team => team[0] === 259);
     if (filteredTeamsForLowRatting.length >= 2) {
@@ -883,24 +930,24 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
       possibleTeams)
   // ----
   let enemyPossbileTeams = [];
-  let mostEnemyAgainstTeam = [];
-  if (matchDetails.enemyRecent && matchDetails.enemyRecent.length > 0) {
-    const manaRange = getManaRange(matchDetails)
-    let manaMatchTeams = enemy.filterManaMatch(matchDetails.enemyRecent,
-        matchDetails.orgMana, manaRange[0], manaRange[1],
-        matchDetails.splinters);
-    if (manaMatchTeams && manaMatchTeams.length > 0) {
-      let manaRuleMatchTeams = enemy.filterRuleMatch(manaMatchTeams,
-          matchDetails.rules);
-      if (manaRuleMatchTeams && manaRuleMatchTeams.length > 0) {
-        enemyPossbileTeams = manaRuleMatchTeams;
-      }
-    }
 
-    matchDetails['enemyPossbileTeams'] = enemyPossbileTeams;
-    matchDetails['enemySplinterTeams'] = matchDetails.enemyRecent;
-    console.log('enemyPossbileTeams : ', enemyPossbileTeams.length)
-  }
+  // if (matchDetails.enemyRecent && matchDetails.enemyRecent.length > 0) {
+  //   const manaRange = getManaRange(matchDetails)
+  //   let manaMatchTeams = enemy.filterManaMatch(matchDetails.enemyRecent,
+  //       matchDetails.orgMana, manaRange[0], manaRange[1],
+  //       matchDetails.splinters);
+  //   if (manaMatchTeams && manaMatchTeams.length > 0) {
+  //     let manaRuleMatchTeams = enemy.filterRuleMatch(manaMatchTeams,
+  //         matchDetails.rules);
+  //     if (manaRuleMatchTeams && manaRuleMatchTeams.length > 0) {
+  //       enemyPossbileTeams = manaRuleMatchTeams;
+  //     }
+  //   }
+  //
+  //   matchDetails['enemyPossbileTeams'] = enemyPossbileTeams;
+  //   matchDetails['enemySplinterTeams'] = matchDetails.enemyRecent;
+  //   console.log('enemyPossbileTeams : ', enemyPossbileTeams.length)
+  // }
 
   // by card cs
   let mostWinningBcTeam = []
@@ -976,10 +1023,9 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
       && mostWinningSummonerTankComboTeam.length > 1
           ? mostWinningSummonerTankComboTeam[1] : []
       , matchDetails);
-  const enemyAgainstTeam = extendsHandler.doExtendsHandler(
-      mostEnemyAgainstTeam && mostEnemyAgainstTeam.length > 1
-          ? mostEnemyAgainstTeam[1] : []
-      , matchDetails);
+
+
+
   const againstrevertTeam = extendsHandler.doExtendsHandler(
       makeBestCombineByCsPFSTeam && makeBestCombineByCsPFSTeam.length > 1
           ? makeBestCombineByCsPFSTeam[1] : []
@@ -1023,14 +1069,33 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
           ? makeBestCombineByCsTeam[1] : []
       , matchDetails);
   console.timeEnd("battle")
+
+  const empt = matchDetails['enemyRecent']
+  let enemyAgainstTeam = await doMLPredict(possibleTeams,matchDetails.mana, matchDetails.rating,matchDetails.rules,0.001,empt,matchDetails['splinters'])
+  const mlTeam = extendsHandler.doExtendsHandler(
+      enemyAgainstTeam[0] && enemyAgainstTeam[0].length > 1
+          ? enemyAgainstTeam[0] : []
+      , matchDetails);
+  console.log(`doMLPredict enemyAgainstTeam: ${JSON.stringify(enemyAgainstTeam[0])}`)
+  console.log(`doMLPredict enemyAgainstTeam: ${JSON.stringify(enemyAgainstTeam[1])}`)
+  console.log(mostWinTeam)
+
   return {
     mostWinTeam: mostWinTeam,
-    mostEnemyAgainstTeam: enemyAgainstTeam,
+    mostEnemyAgainstTeam: mlTeam,
     mostAgainstrevertTeam: againstrevertTeam,
     summoners: summonerTeamMap,
-    recentEenmyTeam: [...enemyMostCsTeam, ...possbiletEnemyTeam],
+    recentEenmyTeam: matchDetails.enemyRecent.map(b => {
+      return [getCardNameByID(b['summoner_id']),
+        getCardNameByID(b['monster_1_id']), getCardNameByID(b['monster_2_id'])
+        , getCardNameByID(b['monster_3_id']),
+        getCardNameByID(b['monster_4_id']), getCardNameByID(b['monster_5_id']),
+        getCardNameByID(b['monster_6_id']), '', b['mana_cap'], b['isWin'],
+        b['ruleset']]
+    }),
     mostBcTeam: mostBcTeam,
-    mostByCsTeam: mostByCsTeam
+    mostByCsTeam: mostByCsTeam,
+    score : enemyAgainstTeam[1] ? enemyAgainstTeam[1] : 0
   }
 }
 
@@ -1503,6 +1568,56 @@ async function extendsCombineSearch(cs, matchTeams, matchDetails,
   const rs = JSON.parse(string);
   console.log('extendsCombineSearch', rs, sql);
   return matchCsTeam(rs, matchTeams)
+}
+
+//[["278", "380" ,"180" ,"188" ,"-1" ,"-1" ,"-1" ,19 ,"Fog of War|Noxious Fumes", 1500]]
+async function doMLPredict(possibleTeams,mana, rating,rules,score,enemyPossbileTeams,splinters) {
+  const splinter= [ 'fire', 'water', 'earth', 'life', 'death', 'dragon' ]
+  let active = [0,0,0,0,0,0]
+  splinters.map(x => {
+    active[splinter.indexOf(x)]=1
+  })
+  let requestData = possibleTeams.map(x =>[x[0].toString(),x[1].toString(),x[2].toString(),x[3].toString(),x[4].toString(),x[5].toString(),x[6].toString(),parseInt(mana),rules,rating,active.join(",")])
+  const data = JSON.stringify(requestData)
+  const splintersSummoners =getSplintersSummoners(splinters)
+  let ept = enemyPossbileTeams.filter(x => splintersSummoners.indexOf(x['summoner_id']) != -1)
+  let topSummoners = battles.matchedEnemyPossbileSummoners(
+      ept, true);
+  const tems = topSummoners
+  // console.log(data)
+  const result = await new Promise((resolve, reject) => {
+    request({
+      url: 'http://192.168.99.100:28888',
+      method: "POST",
+      // json: true,
+      headers: {
+        "content-type": "application/json",
+        "account":process.env.ACCOUNT,
+        "ems":tems
+      },
+      body: data
+    }, function(error, response, body) {
+      if (!error && response.statusCode == 200) {
+        resolve(body);
+      } else {
+        reject(' error - -');
+      }
+    });
+
+  }).then(result => {
+    console.log("outside request: " + result);
+    return result;
+  }).catch(err => {
+    console.log("error: " + err)
+    return null
+  })
+  if(result == null ){
+    return []
+  }
+
+  const index = JSON.parse(result).filter(x =>parseFloat(x.rate) >= score).map(x =>x.index)[0]
+  const rate = JSON.parse(result)[0].rate
+  return [possibleTeams[index],rate]
 }
 
 module.exports.possibleTeams = possibleTeams;

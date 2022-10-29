@@ -60,6 +60,7 @@
 
     $("#enemy").val(getUrlParam("enemyName").toLowerCase())
 
+    $("#rateNum").val(getUrlParam("rateNum").toLowerCase())
     if(getUrlParam("rule")){
       console.log(getUrlParam("rule"))
       let rules = getUrlParam("rule").split("|");
@@ -193,6 +194,8 @@
   <div>
     <button id="bt" style="width: 80px;height: 40px;">test</button>
   </div>
+
+  <label>rateNum:</label> <input id="rateNum"/></div>
 </div>
 <div style="display:flex">
   <div>
@@ -320,7 +323,7 @@
       });
 
       let reqUrl = "/api/search?rule=" + rule + "&mana=" + $("#mana").val() + "&enemy=" + $(
-          "#enemy").val() + "&player=" + $("#player").val() + "&sp=" + spiners
+          "#enemy").val() + "&player=" + $("#player").val() + "&sp=" + spiners +"&rateNum=" + $("#rateNum").val()
       $.get(reqUrl, function (data, status) {
         $("#bt").removeAttr("disabled");
         $("input[name='category']").each(function () {
@@ -354,7 +357,7 @@
 
         if (data.mostEnemyAgainstTeam && data.mostEnemyAgainstTeam.length > 0) {
           html += "<tr>";
-          html += "<td>对手克制组 </td>"
+          html += "<td>机器学习"+ data.score +"</td>"
           html += "<td>" + createItemDiv(data.mostEnemyAgainstTeam[0]) + "</td>"
           html += "<td>" + createTeamDiv(data.mostEnemyAgainstTeam) + "</td>"
           html += "</tr>";
