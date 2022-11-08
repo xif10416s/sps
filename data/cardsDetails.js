@@ -1,17 +1,19 @@
 //
 const cardsDetails = require("./cardsDetails.json");
 const mordenCard = require("./mordenCard.json");
+const chaosCard = require("./chaosCard.json");
 console.log("cardsDetails size :" + cardsDetails.length )
 console.log(cardsDetails[0]['distribution'][0] )
 const cardsDetailsNameMap = {}
 const cardsDetailsIDMap = {}
-
+////*[@id="app"]/div[2]/div/div/div/div/div[2]/div/div/div/table/tbody/tr/td[2]/span
 
 cardsDetails.map(cd => {
   const name = cd['name'];
   const stat = cd['stats']
   const type = cd['type'] // Monster ,Summoner
   const color = cd['color']
+  const editions = cd['editions']
   const statSum1 =
       type == 'Monster' ?
           {
@@ -46,7 +48,8 @@ cardsDetails.map(cd => {
     'abilities': abilities,
     'cardDetailId': cardDetailId,
     'name': name,
-    'color':color
+    'color':color,
+    'editions':editions
   };
   cardsDetailsNameMap[name] = item;
   cardsDetailsIDMap[cardDetailId] = item;
@@ -157,6 +160,17 @@ function doModernFilter(myCards){
   })
 }
 
+function doChaosFilter(myCards){
+  return myCards.filter( cardId =>{
+    if(cardsDetailsIDMap[cardId]){
+      return chaosCard.indexOf( cardsDetailsIDMap[cardId]['name'])  != -1;
+    }
+    else {
+      console.log("---------miss--------",cardId)
+      return false;
+    }
+  })
+}
 
 function checkType(target,most, secondMost, perferSummonersInfo) {
   console.log(target,most,secondMost,perferSummonersInfo)
@@ -173,6 +187,7 @@ module.exports.cardsDetailsIDMap = cardsDetailsIDMap;
 module.exports.getEnemyBufferRecentInfo = getEnemyBufferRecentInfo;
 module.exports.getEnemyTeamPerfer = getEnemyTeamPerfer;
 module.exports.doModernFilter = doModernFilter
+module.exports.doChaosFilter = doChaosFilter
 
 
 let test = [["Kelya Frendul","1"],["Serpent of Eld","1"],["Elven Defender","1"],["Flying Squid","1"],["Mantoid","1"],["Deeplurker","1"],["Goblin Chariot","1"],["Kelya Frendul","1"],["Serpent of Eld","1"],["Merdaali Guardian","1"],["Deeplurker","1"],["Ice Pixie","1"],["Albatross","1"],["",""],["Thaddius Brood","1"],["Cursed Windeku","1"],["Carrion Shade","1"],["Death Elemental","1"],["",""],["",""],["",""],["Obsidian","1"],["Unicorn Mustang","1"],["Mycelic Slipspawn","1"],["Goblin Psychic","1"],["Khmer Princess","1"],["",""],["",""],["Kelya Frendul","1"],["Hardy Stonefish","1"],["Albatross","1"],["Ice Pixie","1"],["Deeplurker","1"],["",""],["",""]]

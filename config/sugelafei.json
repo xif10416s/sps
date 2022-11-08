@@ -13,5 +13,7 @@
   "algorithm_rating": "0.6",
   "RANKED": "M",
   "SKIP_QUEST": "dragon",
+  "guildLayer": 8,
+  "guildId": "bf52217a86d4cef1388fe596bc547d5394f54124",
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }

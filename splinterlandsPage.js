@@ -189,15 +189,64 @@ async function checkMatchMana(page) {
     return manaValue;
 }
 
+
 async function checkMatchRules(page) {
     const rules = await page.$$eval("#enemy_found_ranked > div > div > div.modal-body > section.combat__conflict > div > div.combat__rules > div > div > img", el => el.map(x => x.getAttribute("data-original-title")));
     return rules.map(x => x.split(':')[0]).join('|')
 }
 
+
 async function checkMatchActiveSplinters(page) {
     const splinterUrls = await page.$$eval("#enemy_found_ranked > div > div > div.modal-body > section.combat__conflict > div > div.combat__splinters > div > img",
             el => el.map(x => x.getAttribute("src")));
     return splinterUrls.map(splinter => splinterIsActive(splinter)).filter(x => x);
+}
+
+
+
+async function checkMatchManaBrawl(page) {
+    const mana = await getElementText(page,"#brawl_enemy_found_page_body > div > div:nth-child(2) > div.panel > div:nth-child(3) > div.col-xs-5 > div > div > div > div > div > div")
+    console.log("checkMatchManaBrawl :" , mana.trim())
+    const manaValue = parseInt(mana.trim(), 10);
+    return manaValue;
+}
+
+async function checkMatchRulesBrawl(page) {
+    //const rules = await page.$$eval("#brawl_enemy_found_page_body > div > div:nth-child(2) > div.panel > div:nth-child(3) > div.col-xs-4 > div > div > img", el => el.map(x => x.getAttribute("data-original-title")));
+    const rules = await page.evaluate(() => {
+        let results = [];
+        let items = document.querySelectorAll("#brawl_enemy_found_page_body > div > div:nth-child(2) > div.panel > div:nth-child(3) > div.col-xs-4 > div > div > img");
+        items.forEach((item) => {
+            results.push(item.getAttribute('data-original-title'));
+        });
+        return results;
+    })
+    console.log("checkMatchRulesBrawl :" , rules)
+    return rules.map(x => x.split(':')[0]).join('|')
+}
+
+async function checkMatchActiveSplintersBrawl(page) {
+    // const splinters = await page.$$eval("#brawl_enemy_found_page_body > div > div > div.panel > div > div.col-xs-3 > div > div > img",
+    //     el => el.map(x => x.getAttribute("data-original-title")));
+    // console.log("checkMatchActiveSplintersBrawl :" , splinters.length)
+    const splinters = await page.evaluate(() => {
+        let results = [];
+        let items = document.querySelectorAll("#brawl_enemy_found_page_body > div > div > div.panel > div > div.col-xs-3 > div > div > img");
+        items.forEach((item) => {
+            results.push(item.getAttribute('data-original-title'));
+        });
+        return results;
+    })
+
+    return splinters.map(x => {
+        console.log("checkMatchActiveSplintersBrawl :" , x)
+        const arr = x.split(':')
+        if("Inactive" == arr[1]){
+            return ""
+        } else {
+            return arr[0].trim().toLowerCase()
+        }
+    }).filter(x => x );
 }
 
 async function checkMatchEnemy(page) {
@@ -264,3 +313,6 @@ exports.checkMatchRules = checkMatchRules;
 exports.checkMatchActiveSplinters = checkMatchActiveSplinters;
 exports.splinterIsActive = splinterIsActive;
 exports.checkMatchEnemy = checkMatchEnemy;
+exports.checkMatchRulesBrawl =checkMatchRulesBrawl;
+exports.checkMatchManaBrawl = checkMatchManaBrawl;
+exports.checkMatchActiveSplintersBrawl = checkMatchActiveSplintersBrawl;

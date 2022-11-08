@@ -13,5 +13,7 @@
   "algorithm_rating": "0.6",
   "RANKED": "M",
   "QUEST_PRIORITY": "true" ,
+  "guildLayer": -1,
+  "guildId": "d350abb95ed1183c3570ea3977ef45c016c04c56",
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }

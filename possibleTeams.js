@@ -140,16 +140,16 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule,
   let date = new Date();
   let endDate = new Date(date.setDate(date.getDate() + 2))
   let endDateStr = endDate.toISOString().split("T")[0];
-  let startDate = new Date(date.setDate(date.getDate() - 60))
+  let startDate = new Date(date.setDate(date.getDate() - 360))
   let startDateStr = startDate.toISOString().split("T")[0];
   if (keyRules.length > 1) {
     let sql = 'select * from ' + tableName
-        + ' where  mana_cap = ?  and summoner_id in (?)  and (ruleset = ? or ruleset = ?) and created_date_day <= ? and created_date_day >= ?  limit 1000000';
+        + ' where  mana_cap = ?  and summoner_id in (?)  and (ruleset = ? or ruleset = ?) and created_date_day <= ? and created_date_day >= ?  limit 100000';
     let params = [mana, summoners, ruleset, keyRules[1] + "|" + keyRules[0],
       endDateStr, startDateStr];
     if (mana > highMana) {
       sql = 'select * from ' + tableName + ' where  mana_cap >= ' + highMana
-          + ' and  mana_cap <= ?  and summoner_id in (?)  and (ruleset = ? or ruleset = ?) and created_date_day <= ? and created_date_day >= ?  limit 1000000';
+          + ' and  mana_cap <= ?  and summoner_id in (?)  and (ruleset = ? or ruleset = ?) and created_date_day <= ? and created_date_day >= ?  limit 100000';
     }
     let data = await dbUtils.sqlQuery(sql, params);
     let string = JSON.stringify(data);
@@ -172,10 +172,10 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule,
     }
   } else {
     let sql = 'select * from ' + tableName
-        + ' where  mana_cap = ?  and summoner_id in (?)  and ruleset = ? and created_date_day <= ? and created_date_day >= ?  limit 1000000';
+        + ' where  mana_cap = ?  and summoner_id in (?)  and ruleset = ? and created_date_day <= ? and created_date_day >= ?  limit 100000';
     if (mana > highMana) {
       sql = 'select * from ' + tableName + ' where mana_cap >=  ' + highMana
-          + ' and mana_cap <= ?  and summoner_id in (?)  and ruleset = ? and created_date_day <= ? and created_date_day >= ?  limit 1000000';
+          + ' and mana_cap <= ?  and summoner_id in (?)  and ruleset = ? and created_date_day <= ? and created_date_day >= ?  limit 100000';
     }
     let data = await dbUtils.sqlQuery(sql,
         [mana, summoners, ruleset, endDateStr, startDateStr]);
@@ -194,10 +194,10 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule,
     if (mustSingleRule != null) {
       console.log("mustSingleRule.. :", mustSingleRule)
       let sql = 'select * from ' + tableName
-          + ' where  mana_cap = ?  and summoner_id in (?)  and ruleset like ? and created_date_day <= ? and created_date_day >= ?  limit 1000000 ';
+          + ' where  mana_cap = ?  and summoner_id in (?)  and ruleset like ? and created_date_day <= ? and created_date_day >= ?  limit 100000 ';
       if (mana > highMana) {
         sql = 'select * from ' + tableName + ' where  mana_cap >= ' + highMana
-            + '  and mana_cap<= ?  and summoner_id in (?)  and ruleset like ? and created_date_day <= ? and created_date_day >= ?  limit 1000000';
+            + '  and mana_cap<= ?  and summoner_id in (?)  and ruleset like ? and created_date_day <= ? and created_date_day >= ?  limit 100000';
       }
       let params = [mana, summoners, "%" + mustSingleRule + "%", endDateStr,
         startDateStr]
@@ -212,10 +212,10 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule,
     }
 
     let sql = 'select * from ' + tableName
-        + ' where  mana_cap = ?  and summoner_id in (?)  and ( ruleset like ?  or ruleset like ?) and created_date_day <= ? and created_date_day >= ?  limit 1000000';
+        + ' where  mana_cap = ?  and summoner_id in (?)  and ( ruleset like ?  or ruleset like ?) and created_date_day <= ? and created_date_day >= ?  limit 100000';
     if (mana > highMana) {
       sql = 'select * from ' + tableName + ' where  mana_cap >= ' + highMana
-          + ' and mana_cap <= ?  and summoner_id in (?)  and ( ruleset like ?  or ruleset like ?) and created_date_day <= ? and created_date_day >= ?  limit 1000000';
+          + ' and mana_cap <= ?  and summoner_id in (?)  and ( ruleset like ?  or ruleset like ?) and created_date_day <= ? and created_date_day >= ?  limit 100000';
     }
     let params = [mana, summoners, keyRules[0] + "%", keyRules[1] + "%",
       endDateStr, startDateStr]
@@ -792,12 +792,10 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
   }
 
   // do prefer summoners
-  if(process.env.algorithm  && process.env.algorithm == "ml") {
-
-  } else if (matchDetails.rating && (matchDetails.rating <= 1000) ) {
+  if (matchDetails.rating && (matchDetails.rating <= 800) ) {
     const filteredTeamsForLowRatting = availableTeamsToPlay.filter(
         team => team[0] === 259);
-    if (filteredTeamsForLowRatting.length >= 2) {
+    if (filteredTeamsForLowRatting.length >= 10) {
       availableTeamsToPlay = filteredTeamsForLowRatting;
       console.log('do prefer summoners for low rating',
           availableTeamsToPlay.length);
@@ -1071,7 +1069,7 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
   console.timeEnd("battle")
 
   const empt = matchDetails['enemyRecent']
-  let enemyAgainstTeam = await doMLPredict(possibleTeams,matchDetails.mana, matchDetails.rating,matchDetails.rules,0.001,empt,matchDetails['splinters'])
+  let enemyAgainstTeam = await doMLPredict(possibleTeams,matchDetails.mana, matchDetails.rating,matchDetails.rules,0.4,empt,matchDetails['splinters'])
   const mlTeam = extendsHandler.doExtendsHandler(
       enemyAgainstTeam[0] && enemyAgainstTeam[0].length > 1
           ? enemyAgainstTeam[0] : []
@@ -1579,11 +1577,14 @@ async function doMLPredict(possibleTeams,mana, rating,rules,score,enemyPossbileT
   })
   let requestData = possibleTeams.map(x =>[x[0].toString(),x[1].toString(),x[2].toString(),x[3].toString(),x[4].toString(),x[5].toString(),x[6].toString(),parseInt(mana),rules,rating,active.join(",")])
   const data = JSON.stringify(requestData)
+  let tems = ''
   const splintersSummoners =getSplintersSummoners(splinters)
-  let ept = enemyPossbileTeams.filter(x => splintersSummoners.indexOf(x['summoner_id']) != -1)
-  let topSummoners = battles.matchedEnemyPossbileSummoners(
-      ept, true);
-  const tems = topSummoners
+  if(enemyPossbileTeams && enemyPossbileTeams.length >0 ) {
+    let ept = enemyPossbileTeams.filter(x => splintersSummoners.indexOf(x['summoner_id']) != -1)
+    let topSummoners = battles.matchedEnemyPossbileSummoners(
+        ept, true);
+    tems = topSummoners.join(",")
+  }
   // console.log(data)
   const result = await new Promise((resolve, reject) => {
     request({
