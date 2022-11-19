@@ -285,7 +285,7 @@ function matchedEnemyPossbileSummoners(enemyPossbileTeams,isSlice = false) {
     let entries = Object.entries(mostSummoner);
     let sorted = entries.sort((a, b) => b[1] - a[1]);
     console.log("-------sorted[0][0]---", sorted)
-    enemyPs = sorted.map(ep => ep[0]).filter( x=> x != null && x != "undefined");
+    enemyPs = sorted.filter(x=> x[1]>=3 ).map(ep => ep[0]).filter( x=> x != null && x != "undefined");
     if(isSlice && sorted.length >= 2) {
       enemyPs = enemyPs.slice(0,2)
     }

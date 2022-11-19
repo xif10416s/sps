@@ -104,13 +104,14 @@ http.createServer(async function (request, response) {
       }
 
       console.log(myCards.indexOf(339),myCards.length)
-
+      const [cards ,idMap] = await  user.getPlayerCardsV2(player)
       const matchDetails = {
         orgMana: mana,
         mana: mana,
         rules: rule,
         rating: rateNum,
         splinters: sp,
+        idMap:idMap,
         myCards: myCards,
         enemyRecent: enemyRecentTeams,
         ranked: ranked,
@@ -346,17 +347,15 @@ http.createServer(async function (request, response) {
 
     if (pathname.startsWith("/api/init")) {
       let player = arg1.player;
-      user.getPlayerCards(player).then((x) => {
-        console.log('cards retrieved');
-        return x
-      }).then(x => {
-        fs.writeFile(`data/playcards/${player}_cards.json`, JSON.stringify(x),
-            function (err) {
-              if (err) {
-                console.log(err);
-              }
-            });
-      })
+      const [cards ,idMap] = await  user.getPlayerCardsV2(player)
+      console.log("playcards: ",JSON.stringify(cards))
+      fs.writeFile(`data/playcards/${player}_cards.json`, JSON.stringify(cards),
+          function (err) {
+            if (err) {
+              console.log(err);
+            }
+      });
+
       response.write(player)
       response.end()
       return;

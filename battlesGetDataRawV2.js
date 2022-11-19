@@ -124,14 +124,14 @@ let dateStr = date.toISOString().split("T")[1];
 // dateStr = new Date().toLocaleTimeString()
 let isInit =false;
 
-if (dateStr && dateStr.startsWith("07:0") || dateStr && dateStr.startsWith("07:1") ) {
+if (dateStr && dateStr.startsWith("07:0") || dateStr && dateStr.startsWith("07:1") || dateStr && dateStr.startsWith("07:2")) {
   console.log("--------topBattleUser.saveBattlesHistory---------")
   topBattleUser.saveBattlesHistory().then( ()=>{
     console.log("--------topBattleUser.saveBattlesHistory---------finish")
   });
 }
 
-if (dateStr && dateStr.startsWith("07:3") || dateStr && dateStr.startsWith("07:4")) {
+if (dateStr && dateStr.startsWith("07:3") || dateStr && dateStr.startsWith("07:4") || dateStr && dateStr.startsWith("07:5")) {
   isInit = true;
 }
 

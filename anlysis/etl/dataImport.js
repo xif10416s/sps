@@ -109,7 +109,9 @@ async function doImport(type) {
 
 (async () => {
   // await doMove("bat");
-  // await doImport("bat");
-  // await doMove("cs");
-  await doImport("cs");
+  await doImport("bat");
+
 })()
+
+// await doMove("cs");
+// await doImport("cs");

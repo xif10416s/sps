@@ -12,14 +12,15 @@ import java.util.Calendar
 import scala.collection.mutable.ArrayBuffer
 import org.apache.spark.sql.Dataset
 
-val manaArr = Array((12,12),(13,13),(14,14),(15,15),(16,16),(17,17),(18,18),(19,19),(20,20),(21,21),(22,22),(23,23),(24,24),(25,25),(26,26),(27,27),(28,28),(29,29),(30,30),(31,32),(33,34),(35,36),(37,38),(39,40),(41,44),(45,50),(51,99))
-//val manaArr = Array((45,50),(51,99))
+//val manaArr = Array((12,12),(13,13),(14,14),(15,15),(16,16),(17,17),(18,18),(19,19),(20,20),(21,21),(22,22),(23,23),(24,24),(25,25),(26,26),(27,27),(28,28),(29,29),(30,30),(31,32),(33,34),(35,36),(37,38),(39,40),(41,44),(45,50),(51,99))
+val manaArr = Array((20,20),(21,21),(22,22),(23,23),(24,24),(25,25),(26,26),(27,27),(28,28),(29,29),(30,30),(31,32),(33,34),(35,36),(37,38),(39,40),(41,44),(45,50),(51,99))
 
 case class Item(mana_cap:Int , ruleset:String, summoner_id:Int ,monster_1_id:Int,monster_2_id:Int,monster_3_id:Int,monster_4_id:Int,monster_5_id:Int,monster_6_id:Int,summoner_id_lost:Int,monster_1_id_lost:Int,monster_2_id_lost:Int,monster_3_id_lost:Int,monster_4_id_lost:Int,monster_5_id_lost:Int,monster_6_id_lost:Int)
 case class AgainstMap(mana_cap:Int, ruleset:String,wc:String,lcs:(Int,String))
 case class StatCS(startMana:Int ,endMana:Int ,cs:String,len:Int, rule:String, summonerId:Int,teams:Int,totalCnt:Int)
 case class StatCSResult(startMana:Int ,endMana:Int ,cs:String,len:Int, rule:String, summonerId:Int,teams:Int,totalCnt:Int,lostTeams:Int,lostTotalCnt:Int)
-val KEY_SINGLE_RULES="Broken Arrows|Even Stevens|Keep Your Distance|Little League|Lost Legendaries|Lost Magic|Odd Ones Out|Rise of the Commons|Taking Sides|Up Close and Personal|Up Close & Personal|Back to Basics|Noxious Fumes|Healed Out|Earthquake|Reverse Speed|Super Sneak|Target Practice|Melee Mayhem|Explosive Weaponry|Fog of War|Equaliser|Heavy Hitters|Stampede|Thorns|Magic Reflect|Return Fire"
+val KEY_SINGLE_RULES="Broken Arrows|Even Stevens|Keep Your Distance|Little League|Lost Legendaries|Lost Magic|Odd Ones Out|Rise of the Commons|Taking Sides|Up Close and Personal|Up Close & Personal|Back to Basics|Noxious Fumes|Healed Out|Earthquake|Reverse Speed|Super Sneak|Target Practice|Melee Mayhem|Explosive Weaponry|Fog of War|Equaliser|Heavy Hitters|Stampede|Briar Patch|Magic Reflect|Fire & Regret"
+
 val defaultRule = "default"
 val skipIds = Array(-1,131,91,169,366,380,394,408,422,77,91,95,119,136,169,227,230,238,277,290,296,297,298,313,353,367,381,395,409,426)
 val upCnt = 2;
@@ -389,7 +390,7 @@ def  doRangeByMana(arr:Array[(Int, Int)]):Unit = {
   arr.foreach(ms =>{
     println(ms._1)
     doAnalysis(ds.filter(s"mana_cap>= ${ms._1} and mana_cap <= ${ms._2}"),ms._1,ms._2)
-    doAnalysisCS(ds.filter(s"mana_cap>= ${ms._1} and mana_cap <= ${ms._2}"),ms._1,ms._2)
+//    doAnalysisCS(ds.filter(s"mana_cap>= ${ms._1} and mana_cap <= ${ms._2}"),ms._1,ms._2)
   })
 }
 

@@ -130,7 +130,7 @@ let logger = new console.Console(file, file);
 const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule,
     ranked) => {
   let keyRules = ruleset.split('|');
-  let tableName = 'battle_history_raw_v2';
+  let tableName = 'battle_history_raw_morden';
   if (ranked == 'M') {
     tableName = 'battle_history_raw_morden';
   }
@@ -225,16 +225,27 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule,
     console.log("3 singlerule match : ", ruleset, rs3.length, params, sql);
     // logger.log("3 singlerule match : ", ruleset, rs3.length, params, sql);
     return rs3;
-  } else {
-    console.log("1.0 full match :", rs.length)
-    return rs;
   }
+
+  // no rule
+  let sql = 'select * from ' + tableName
+      + ' where  mana_cap = ?  and summoner_id in (?)  and created_date_day <= ? and created_date_day >= ?  limit 100000';
+  if (mana > highMana) {
+    sql = 'select * from ' + tableName + ' where  mana_cap >= ' + highMana
+        + ' and mana_cap <= ?  and summoner_id in (?)  and created_date_day <= ? and created_date_day >= ?  limit 100000';
+  }
+  let params = [mana, summoners, endDateStr, startDateStr]
+  let data = await dbUtils.sqlQuery(sql, params);
+  let string = JSON.stringify(data);
+  let rs3 = rs.concat(JSON.parse(string));
+  console.log("1.0 full match :", rs3.length ,ruleset)
+  return rs3;
 }
 
 const battlesFilterByManacap = async (mana, ruleset, summoners, ranked) => {
   let orgMana = mana;
   let mustRule = null;
-  let tableName = 'battle_history_raw_v2';
+  let tableName = 'battle_history_raw_morden';
   if (ranked == 'M') {
     tableName = 'battle_history_raw_morden';
   }
@@ -372,7 +383,8 @@ const possibleTeams = async (matchDetails, acc) => {
   } catch (e) {
     console.log(
         "askFormation   possibleTeams == 0  && matchDetails.ranked == M , do Wild select")
-    matchDetails.ranked = "W"
+    matchDetails.ranked = "M"
+    matchDetails.mana = matchDetails.mana - 2
     possibleTeams = await askFormation(matchDetails);
     console.log("askFormation  change Wild select possibleTeams :",
         possibleTeams.length)
@@ -408,27 +420,34 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
   console.log("4-1 third step most winnning team start :", possibleTeams.length)
   let bestCombination = await battles.mostWinningSummonerTank(possibleTeams);
   // logger.log("4-2 third step most bestcombination  :", JSON.stringify(bestCombination))
+
   // 机器学习
-  if(process.env.algorithm && process.env.algorithm == "ml") {
-    console.log("4-4-0-0---  doMLPredict--------------")
-    const fromRating = process.env.algorithm_rating
-    const mlTeamInfo = await doMLPredict(possibleTeams,matchDetails.mana, matchDetails.rating,matchDetails.rules,parseFloat(fromRating),matchDetails['enemyPossbileTeams'],matchDetails['splinters'])
-    console.log("4-4-0-0---  doMLPredict--------------:",mlTeamInfo)
-    const mlTeam = mlTeamInfo[0]
-    if(mlTeam && mlTeam.length >=1) {
-      const maxMana =  matchDetails.mana >=52 ? 52 : matchDetails.mana
-      if(maxMana - calcTotalMana(mlTeam) <=6) {
-        matchDetails['logContent']['strategy'] = "ml"
-        matchDetails['logContent']['isMatchPrefer'] = ""
-        matchDetails['logContent']['stgLen'] = possibleTeams.length
-        matchDetails['logContent']['QuestMatch'] = mlTeamInfo[1]
-        return [mlTeam[0],mlTeam];
+  try {
+    if(process.env.algorithm && process.env.algorithm == "ml") {
+      console.log("4-4-0-0---  doMLPredict--------------")
+      const fromRating = process.env.algorithm_rating
+      const mlTeamInfo = await doMLPredict(possibleTeams,matchDetails.mana, matchDetails.rating,matchDetails.rules,parseFloat(fromRating),matchDetails['enemyPossbileTeams'],matchDetails['splinters'],matchDetails['idMap'])
+      console.log("4-4-0-0---  doMLPredict--------------:",mlTeamInfo)
+      const mlTeam = mlTeamInfo[0]
+      if(mlTeam && mlTeam.length >=1) {
+        const maxMana =  matchDetails.mana >=52 ? 52 : matchDetails.mana
+        if(maxMana - calcTotalMana(mlTeam) <=6) {
+          matchDetails['logContent']['strategy'] = "ml"
+          matchDetails['logContent']['isMatchPrefer'] = ""
+          matchDetails['logContent']['stgLen'] = possibleTeams.length
+          matchDetails['logContent']['QuestMatch'] = mlTeamInfo[1]
+          return [mlTeam[0],mlTeam];
+        }
       }
     }
+  } catch (e) {
+    console.log(e)
   }
 
-  if (process.env.skip_cs && process.env.skip_cs == "false") {
-    console.log("4-4-0 third step makeBestCombine  start ............",
+
+
+
+  console.log("4-4-0 third step makeBestCombine  start ............",
         new Date())
     let bcTeams = await makeBestCombine(possibleTeams, matchDetails,
         bestCombination.bestSummoner);
@@ -467,9 +486,10 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
     //   // logger.log("4-4-1 third step makeBestCombineByCsTeam  used ............",new Date())
     //   return makeBestCombineByCsTeam;
     // }
-  } else {
-    console.log("4-4 third step skip  makeBestCombine")
-  }
+
+
+
+
 
   const mostWinningSummonerTankComboTeam = await findBestTeam(bestCombination,
       possibleTeams)
@@ -792,15 +812,15 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
   }
 
   // do prefer summoners
-  if (matchDetails.rating && (matchDetails.rating <= 800) ) {
-    const filteredTeamsForLowRatting = availableTeamsToPlay.filter(
-        team => team[0] === 259);
-    if (filteredTeamsForLowRatting.length >= 10) {
-      availableTeamsToPlay = filteredTeamsForLowRatting;
-      console.log('do prefer summoners for low rating',
-          availableTeamsToPlay.length);
-    }
-  }
+  // if (matchDetails.rating && (matchDetails.rating <= 800) ) {
+  //   const filteredTeamsForLowRatting = availableTeamsToPlay.filter(
+  //       team => team[0] === 259);
+  //   if (filteredTeamsForLowRatting.length >= 10) {
+  //     availableTeamsToPlay = filteredTeamsForLowRatting;
+  //     console.log('do prefer summoners for low rating',
+  //         availableTeamsToPlay.length);
+  //   }
+  // }
 
   //CHECK FOR QUEST: TODO
   matchDetails['logContent']['QuestMatch'] = "skip"
@@ -1069,7 +1089,7 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
   console.timeEnd("battle")
 
   const empt = matchDetails['enemyRecent']
-  let enemyAgainstTeam = await doMLPredict(possibleTeams,matchDetails.mana, matchDetails.rating,matchDetails.rules,0.4,empt,matchDetails['splinters'])
+  let enemyAgainstTeam = await doMLPredict(possibleTeams,matchDetails.mana, matchDetails.rating,matchDetails.rules,0.4,empt,matchDetails['splinters'],matchDetails['idMap'])
   const mlTeam = extendsHandler.doExtendsHandler(
       enemyAgainstTeam[0] && enemyAgainstTeam[0].length > 1
           ? enemyAgainstTeam[0] : []
@@ -1077,6 +1097,8 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
   console.log(`doMLPredict enemyAgainstTeam: ${JSON.stringify(enemyAgainstTeam[0])}`)
   console.log(`doMLPredict enemyAgainstTeam: ${JSON.stringify(enemyAgainstTeam[1])}`)
   console.log(mostWinTeam)
+
+
 
   return {
     mostWinTeam: mostWinTeam,
@@ -1569,13 +1591,30 @@ async function extendsCombineSearch(cs, matchTeams, matchDetails,
 }
 
 //[["278", "380" ,"180" ,"188" ,"-1" ,"-1" ,"-1" ,19 ,"Fog of War|Noxious Fumes", 1500]]
-async function doMLPredict(possibleTeams,mana, rating,rules,score,enemyPossbileTeams,splinters) {
+async function doMLPredict(possibleTeams,mana, rating,rules,score,enemyPossbileTeams,splinters,idMap) {
+  idMap[-1]=0;
+  idMap['']=0;
   const splinter= [ 'fire', 'water', 'earth', 'life', 'death', 'dragon' ]
   let active = [0,0,0,0,0,0]
   splinters.map(x => {
     active[splinter.indexOf(x)]=1
   })
-  let requestData = possibleTeams.map(x =>[x[0].toString(),x[1].toString(),x[2].toString(),x[3].toString(),x[4].toString(),x[5].toString(),x[6].toString(),parseInt(mana),rules,rating,active.join(",")])
+  console.log("doMLPredict  filter possibleTeams : " , possibleTeams.length)
+  let keyMap = {}
+  const possibleDistinctTeams = possibleTeams.filter(x =>{
+  	const key = x[0].toString()+","+x[1].toString()+","+x[2].toString()+","+x[3].toString()+","+x[4].toString()+","+x[5].toString()+","+x[6].toString()
+  	if(keyMap[key] == null) {
+  		keyMap[key] = true;
+  		return true;
+  	} else {
+  		return false;
+  	}
+  })
+
+
+  let requestData =  possibleDistinctTeams.map(x =>[x[0].toString(),idMap[x[0].toString()].toString(),x[1].toString(),x[2].toString()==""?"-1":x[2].toString(),x[3].toString()==""?"-1":x[3].toString(),x[4].toString()==""?"-1":x[4].toString(),x[5].toString()==""?"-1":x[5].toString(),x[6].toString()==""?"-1":x[6].toString(),idMap[x[1].toString()].toString(),idMap[x[2].toString()].toString(),idMap[x[3].toString()].toString(),idMap[x[4].toString()].toString(),idMap[x[5].toString()].toString(),idMap[x[6].toString()].toString(),parseInt(mana),rules,rating,active.join(",")])
+  
+  console.log("doMLPredict  filter duplicated : " , requestData.length)
   const data = JSON.stringify(requestData)
   let tems = ''
   const splintersSummoners =getSplintersSummoners(splinters)
@@ -1583,7 +1622,7 @@ async function doMLPredict(possibleTeams,mana, rating,rules,score,enemyPossbileT
     let ept = enemyPossbileTeams.filter(x => splintersSummoners.indexOf(x['summoner_id']) != -1)
     let topSummoners = battles.matchedEnemyPossbileSummoners(
         ept, true);
-    tems = topSummoners.join(",")
+    tems = topSummoners.length >0 ? topSummoners[0]: '';
   }
   // console.log(data)
   const result = await new Promise((resolve, reject) => {
@@ -1606,7 +1645,7 @@ async function doMLPredict(possibleTeams,mana, rating,rules,score,enemyPossbileT
     });
 
   }).then(result => {
-    console.log("outside request: " + result);
+    console.log("outside request: .....");
     return result;
   }).catch(err => {
     console.log("error: " + err)
@@ -1615,10 +1654,20 @@ async function doMLPredict(possibleTeams,mana, rating,rules,score,enemyPossbileT
   if(result == null ){
     return []
   }
+  if(rating <= 1000 ) {
+    const earthFilter =  JSON.parse(result).filter(x => x["team"][0] == "259" && parseFloat(x.rate) >= 0.3)
+    if(earthFilter && earthFilter.length >0 ) {
+      console.log("doMLPredict  earthFilter .............." );
+      return [possibleDistinctTeams[earthFilter[0].index],earthFilter[0].rate]
+    }
+  }
 
-  const index = JSON.parse(result).filter(x =>parseFloat(x.rate) >= score).map(x =>x.index)[0]
-  const rate = JSON.parse(result)[0].rate
-  return [possibleTeams[index],rate]
+  const filterResult = JSON.parse(result).filter(x =>parseFloat(x.rate) >= score)
+  if(filterResult && filterResult.length >0 ) {
+    return [possibleDistinctTeams[filterResult[0].index],filterResult[0].rate]
+  } 
+
+  return []
 }
 
 module.exports.possibleTeams = possibleTeams;

@@ -132,7 +132,7 @@ async function checkEcr(page) {
 async function checkDec(page) {
   try {
     const dec = await getElementText(page,
-        "#bs-example-navbar-collapse-1 > ul.nav.navbar-nav.navbar-right > li:nth-child(3) > div.sps-container > div.balance",
+        "#bs-example-navbar-collapse-1 > ul.nav.navbar-nav.navbar-right > li:nth-child(2) > div.dec-container > div.balance",
         3000);
     if (dec) {
       console.log(chalk.bold.whiteBright.bgMagenta('Your current Dec ' + dec));
@@ -382,7 +382,7 @@ async function clickSummonerCard(page, teamToPlay) {
   let clicked = true;
   ////*[contains(@id, '-259-')]/img
   await page.waitForXPath(`//*[contains(@id, "-${teamToPlay.summoner}-")]/img`,
-      {timeout: 3000})
+      {timeout: 15000})
   .then(card => {
     card.focus();
     page.waitForTimeout(500)
@@ -401,7 +401,7 @@ async function clickSummonerCard(page, teamToPlay) {
   });
 
   if(!clicked){
-    const html = await page.waitForSelector("html").then(html => html.outerHTML)
+    const html = await page.waitForXPath("/html").then(html => html.outerHTML).catch(()=>{})
     console.log(html)
   }
   // if (!clicked) {
@@ -431,15 +431,24 @@ async function clickSummonerCard(page, teamToPlay) {
   if(!clicked){
     const selector = "div[card_detail_id='" + teamToPlay.summoner
         + "'] > img"
-    await page.evaluate((selector) => {
-      clicked = true
-      console.log("summoner  card selector clicked........:", selector)
-      return document.querySelector(selector).click()
-    }, selector)
-    .catch((e) =>{
+    await page.waitForSelector(selector,{timeout: 5000, visible: true}).then((item) => item.click())
+    .then(() =>{
+      clicked = true;
+      console.log("summoner  card selector clicked........:", selector);
+    }).catch((e)=>{
       clicked = false
       console.log("card click selector error......",e)
-    });
+    })
+
+    // await page.evaluate((selector) => {
+    //   clicked = true
+    //   console.log("summoner  card selector clicked........:", selector)
+    //   return document.querySelector(selector).click()
+    // }, selector)
+    // .catch((e) =>{
+    //   clicked = false
+    //   console.log("card click selector error......",e)
+    // });
   }
 
   return clicked
@@ -621,30 +630,25 @@ async function doCardSelectAgain(page,teamToPlay,i) {
 
 async function clickCreateTeamButton(page) {
   let clicked = true;
-  console.log('clickCreateTeamButton reload start .....',
+  console.log('0 clickCreateTeamButton reload start .....',
       new Date().toLocaleTimeString())
   await reload(page);
-  await page.waitForNavigation();
-  console.log('clickCreateTeamButton reload end .....',
-      new Date().toLocaleTimeString())
-  await page.waitForTimeout(1000);
-  await page.waitForSelector('.btn--create-team', {timeout: 10000})
-  .then(e => {
-    e.click();
-    console.log('btn--create-team clicked', new Date().toLocaleTimeString());
-  })
-  .then(() => {
-    page.waitForTimeout(5000)
-  })
-  .catch(() => {
-    clicked = false;
-    console.log('Create team didnt work. Did the opponent surrender?');
-    console.log(
-        new Date().toLocaleString() + ":" + process.env.ACCOUNT + ":"
-        + errorCnt + ":" + "clickCreateTeamButton not clicked")
-    doSummaryErrorLog({time:new Date().toLocaleString() , account: process.env.ACCOUNT ,errorCnt:errorCnt,reason: "TeamButton not clicked" })
-  });
+  await page.waitForNavigation({timeout: 5000}).catch(() =>{});
+  let url = await page.url();
+  console.log("1. clickCreateTeamButton current url :" ,url)
 
+  await page.click('.btn--create-team').then(() => console.log('clickCreateTeamButton btn--create-team  clicked again..............', new Date().toLocaleTimeString()))
+  .then(() => {
+    clicked = true
+  })
+  .catch(() => console.log('clickCreateTeamButton page.click   btn--create-team error'))
+
+  await page.waitForNavigation({timeout: 5000}).catch(() =>{});
+  url = await page.url();
+  console.log("2. clickCreateTeamButton current url :" ,url)
+  if(url != "https://splinterlands.com/?p=create_team2"){
+    clicked = false
+  }
   return clicked
 }
 
@@ -759,7 +763,7 @@ async function startBotPlayMatch(page, browser) {
     const rating = await checkRating(page);
     const power = await checkPower(page);
     const ecr = await checkEcr(page);
-    // const dec = await checkDec(page)
+    const dec = await checkDec(page)
     const league = await checkLeague(page)
     const seasonRewardCnt = await checkSeasonRewards(page)
     // const nextQuestTime = await  checkNextQuest(page)
@@ -852,7 +856,7 @@ async function startBotPlayMatch(page, browser) {
         qc: quest != null ? quest?.completed : "-",
         rating: rating,
         power: power + "(" + deltaPower + ")",
-        sps: totalDec.toFixed(2),
+        sps: dec,
         league: league,
         NC: cardNoClickCnt
       };
@@ -866,7 +870,7 @@ async function startBotPlayMatch(page, browser) {
 
     console.log('getting user cards collection from splinterlands API...')
 
-    let myCards = await doPlayerCardsInit(RANKED)
+    let [myCards,idMap] = await doPlayerCardsInit(RANKED)
     console.log("doPlayerCardsInit:",myCards.length)
     //check if season reward is available
     await doSeasonClaim(page);
@@ -923,6 +927,7 @@ async function startBotPlayMatch(page, browser) {
       rating: rating,
       quest: quest.splinter,
       ranked: RANKED,
+      idMap: idMap,
       logContent: {
         account: account,
         isWin: '',
@@ -975,8 +980,27 @@ async function startBotPlayMatch(page, browser) {
       errorCnt++;
       throw new Error('Team Selection error: no possible team to play');
     }
-
-    await page.waitForTimeout(5000);
+    let url = await page.url();
+    console.log("1. current url :" ,url)
+    await page.click('.btn--create-team').then(() => console.log('btn--create-team clicked again..............', new Date().toLocaleTimeString()))
+    .catch(() => console.log('page.click   btn--create-team error'))
+    url = await page.url();
+    console.log("2. current url :" ,url)
+    await page.waitForNavigation({timeout: 5000}).catch(() =>{});
+    url = await page.url();
+    console.log("3. waitForNavigation current url :" ,url)
+    if(url != "https://splinterlands.com/?p=create_team2") {
+      await page.waitForNavigation({timeout: 5000}).catch(() =>{});
+      url = await page.url();
+      console.log("3. waitForNavigation current url :" ,url)
+      if(url != "https://splinterlands.com/?p=create_team2" &&
+          !await clickCreateTeamButton(page)){
+        errorCnt++;
+        cardNoClickCnt ++;
+        url = await page.url();
+        console.log("4. waitForNavigation current url :" ,url)
+      }
+    }
 
     // Click cards based on teamToPlay value.
     if (!await clickCards(page, teamToPlay, matchDetails, 1)) {
@@ -1118,7 +1142,7 @@ async function startBotPlayMatch(page, browser) {
       qc: quest?.completed,
       rating: rating,
       power: power + "(" + deltaPower + ")",
-      sps: totalDec.toFixed(2),
+      sps: dec, //totalDec.toFixed(2),
       league: league,
       NC: cardNoClickCnt
     };
@@ -1146,21 +1170,8 @@ async function startBotPlayMatch(page, browser) {
   }
 }
 async function doPlayerCardsInit(RANKED) {
-  let myCards = []
-  await user.getPlayerCards(account.toLowerCase()).then(
-      x => myCards.push(...x))
-  myCards = Array.from(new Set(myCards))
-  if (myCards) {
-    console.log(account, ' deck size: ' + myCards.length)
-    console.log("----------RANKED--------:", RANKED)
-    if (RANKED == "M") {
-      myCards = cardsDetail.doModernFilter(myCards);
-      console.log(account, 'filed MODEN CARD deck size: ' + myCards.length)
-    }
-  } else {
-    console.log(account, ' playing only basic cards')
-  }
-  return myCards;
+  const [myCards , idMaps] =  await user.getPlayerCardsV2(account.toLowerCase())
+  return [myCards , idMaps] ;
 }
 
 function checkPowerUpgrade(rating ,power,ranked){
@@ -1742,7 +1753,7 @@ async function doGuildBrawl(page){
     let isGold = false;
     try {
       console.log("isGoldDiv[0]:",isGoldDiv[0])
-      if(isGoldDiv[0].startsWith("Gold Cards")){
+      if(isGoldDiv&&isGoldDiv.length>0 && isGoldDiv[0].startsWith("Gold Cards")){
         isGold = true;
       }
     } catch (e) {
@@ -1789,19 +1800,10 @@ async function doGuildBrawl(page){
       await page.waitForTimeout(10000)
       // 检查类型
       console.log("4.1  enterTeam: visable")
-      let myCards = []
-      await user.getPlayerCardsOnlyOwner(account.toLowerCase(),isGold).then(
-          x => myCards.push(...x))
-      .catch(()=>{
-            console.log("4.2  getPlayerCardsOnlyOwner: again")
-      })
+      let [myCards ,idMap] = await user.getPlayerCardsOnlyOwnerV2(account.toLowerCase(),isGold)
 
       if(myCards.length == 0) {
-        await user.getPlayerCardsOnlyOwner(account.toLowerCase(),isGold).then(
-            x => myCards.push(...x))
-        .catch(()=>{
-          console.log("4.3  getPlayerCardsOnlyOwner: again")
-        })
+          [myCards ,idMap] = await user.getPlayerCardsOnlyOwnerV2(account.toLowerCase(),isGold)
       }
 
 
@@ -1858,6 +1860,7 @@ async function doGuildBrawl(page){
         rating: 1500,
         ranked: 'M',
         quest:"earth",
+        idMap:idMap,
         logContent: {
           account: account,
           isWin: '',
