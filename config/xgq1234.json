@@ -9,9 +9,9 @@
   "MINUTES_BATTLES_INTERVAL": 2,
   "RANKED": "M",
   "algorithm": "ml",
-  "algorithm_rating": "0.6",
+  "algorithm_rating": "0.25",
   "SKIP_QUEST": "dragon",
-  "ECR_RECOVER_TO": 85,
+  "ECR_RECOVER_TO": 90,
   "guildLayer": -1,
   "guildId": "ac689b5f8f139b57fda60af237adfdf4e5d63a75",
   "CLAIM_DAILY_QUEST_REWARD": "true"

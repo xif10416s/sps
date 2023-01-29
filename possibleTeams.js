@@ -131,124 +131,113 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule,
     ranked) => {
   let keyRules = ruleset.split('|');
   let tableName = 'battle_history_raw_morden';
-  if (ranked == 'M') {
-    tableName = 'battle_history_raw_morden';
-  }
-
-  const highMana = 40;
+  const manaRange = getManaRange({'mana': mana});
+  let fromMana = manaRange[0];
+  let endMana = mana;
   let rs = [];
   let date = new Date();
   let endDate = new Date(date.setDate(date.getDate() + 2))
   let endDateStr = endDate.toISOString().split("T")[0];
-  let startDate = new Date(date.setDate(date.getDate() - 360))
+  let startDate = new Date(date.setDate(date.getDate() - 180))
   let startDateStr = startDate.toISOString().split("T")[0];
+  const selectSql = "   summoner_id, monster_1_id, monster_2_id , monster_3_id , monster_4_id , monster_5_id , monster_6_id "
+  const minRSCount = 1000
+
+  // 1  full rule match 
+  // 1.1  two rules
   if (keyRules.length > 1) {
-    let sql = 'select * from ' + tableName
-        + ' where  mana_cap = ?  and summoner_id in (?)  and (ruleset = ? or ruleset = ?) and created_date_day <= ? and created_date_day >= ?  limit 100000';
-    let params = [mana, summoners, ruleset, keyRules[1] + "|" + keyRules[0],
+    let sql = 'select '+ selectSql +' from ' + tableName
+        + ' where  mana_cap >= ?  and   mana_cap <= ? and summoner_id in (?)  and (ruleset = ? or ruleset = ?) and created_date_day <= ? and created_date_day >= ?  limit 1000000';
+    let params = [fromMana ,mana, summoners, ruleset, keyRules[1] + "|" + keyRules[0],
       endDateStr, startDateStr];
-    if (mana > highMana) {
-      sql = 'select * from ' + tableName + ' where  mana_cap >= ' + highMana
-          + ' and  mana_cap <= ?  and summoner_id in (?)  and (ruleset = ? or ruleset = ?) and created_date_day <= ? and created_date_day >= ?  limit 100000';
-    }
+    
     let data = await dbUtils.sqlQuery(sql, params);
     let string = JSON.stringify(data);
     rs = JSON.parse(string);
-    console.log("1.1 full match rs :" + rs.length, params, sql)
-    // logger.log("1.1 full match rs :" + rs.length, params, sql)
+    console.log("1.1  two rules full match rs :" + rs.length, params, sql)
+    // 1.1.1  two fules must match 
     if (mustSingleRule != null && mustSingleRule == "ALL") {
-      if (rs.length >= 100) {
+      
+      if (process.env.WEAK_KEY_RULES.indexOf(keyRules[0]) != -1) {
+        mustSingleRule = keyRules[1];
+      }
+      if (process.env.WEAK_KEY_RULES.indexOf(keyRules[1]) != -1) {
+        mustSingleRule = keyRules[0];
+      }
+
+      // no week rule
+      if (rs.length >= minRSCount ||  mustSingleRule == "ALL" ) {
+      	console.log("1.1.1 [two rule all must match]  two fules must match........ ",rs.length)
         return rs;
       } else {
-        if (process.env.WEAK_KEY_RULES.indexOf(keyRules[0]) != -1) {
-          mustSingleRule = keyRules[1];
-        }
-        if (process.env.WEAK_KEY_RULES.indexOf(keyRules[1]) != -1) {
-          mustSingleRule = keyRules[0];
-        }
-        console.log("1.1.1 full match less 100 , filter weak rule :",
+        console.log("1.1.2 full match less "+ minRSCount +" , filter weak rule :",
             mustSingleRule, ruleset)
       }
     }
+    //1.2   one rule match
   } else {
-    let sql = 'select * from ' + tableName
-        + ' where  mana_cap = ?  and summoner_id in (?)  and ruleset = ? and created_date_day <= ? and created_date_day >= ?  limit 100000';
-    if (mana > highMana) {
-      sql = 'select * from ' + tableName + ' where mana_cap >=  ' + highMana
-          + ' and mana_cap <= ?  and summoner_id in (?)  and ruleset = ? and created_date_day <= ? and created_date_day >= ?  limit 100000';
-    }
+    let sql = 'select '+ selectSql +' from ' + tableName
+        + ' where  mana_cap >= ?  and   mana_cap <= ?  and summoner_id in (?)  and  ruleset like ? and created_date_day <= ? and created_date_day >= ?   limit 1000000';
+  
     let data = await dbUtils.sqlQuery(sql,
-        [mana, summoners, ruleset, endDateStr, startDateStr]);
+        [fromMana, mana, summoners, "%" + ruleset + "%", endDateStr, startDateStr]);
     let string = JSON.stringify(data);
     rs = JSON.parse(string);
-    console.log("1.2 full match rs :" + rs.length)
-    if (mustSingleRule != null && mustSingleRule == "ALL") {
-      console.log("1.2 full match  mustSingleRule rs :" + rs.length)
+    console.log("1.2  one rules full match rs :" + rs.length,  sql)
+    if (rs.length >= minRSCount || mustSingleRule != null && mustSingleRule == "ALL") {
+      console.log("1.2.1 [one rule single must match]  full match  mustSingleRule rs :" + rs.length)
       // logger.log("1.2 full match  mustSingleRule rs :" + rs.length)
       return rs;
     }
   }
 
-  let leastCnt = 5000;
-  if (rs.length <= leastCnt && keyRules.length > 1) {
+  // 1.3  two rule spereate match
+  if ( keyRules.length > 1 ) {
+  	// 1.3.1  two rule with has one must rule
     if (mustSingleRule != null) {
-      console.log("mustSingleRule.. :", mustSingleRule)
-      let sql = 'select * from ' + tableName
-          + ' where  mana_cap = ?  and summoner_id in (?)  and ruleset like ? and created_date_day <= ? and created_date_day >= ?  limit 100000 ';
-      if (mana > highMana) {
-        sql = 'select * from ' + tableName + ' where  mana_cap >= ' + highMana
-            + '  and mana_cap<= ?  and summoner_id in (?)  and ruleset like ? and created_date_day <= ? and created_date_day >= ?  limit 100000';
-      }
-      let params = [mana, summoners, "%" + mustSingleRule + "%", endDateStr,
+      console.log("1.3.1  two rules one must rule  mustSingleRule.. :", mustSingleRule)
+      let sql = 'select '+ selectSql +' from ' + tableName
+          + ' where  mana_cap >= ?  and   mana_cap <= ?   and summoner_id in (?)  and ruleset like ?  and created_date_day <= ? and created_date_day >= ?   limit 100000 ';
+     
+      let params = [fromMana, mana, summoners, "%" + mustSingleRule + "%", endDateStr,
         startDateStr]
       let data = await dbUtils.sqlQuery(sql, params);
       let string = JSON.stringify(data);
       let rs2 = rs.concat(JSON.parse(string));
-      console.log("2 mustsingeRule match : ", mustSingleRule, "org rule:",
+      console.log("1.3.2  [two rule single must match] mustsingeRule match : ", mustSingleRule, "org rule:",
           ruleset, rs2.length, params, sql)
-      // logger.log("2 mustsingeRule match : ", mustSingleRule, "org rule:",
-      //     ruleset, rs2.length,params, sql)
       return rs2;
     }
 
-    let sql = 'select * from ' + tableName
-        + ' where  mana_cap = ?  and summoner_id in (?)  and ( ruleset like ?  or ruleset like ?) and created_date_day <= ? and created_date_day >= ?  limit 100000';
-    if (mana > highMana) {
-      sql = 'select * from ' + tableName + ' where  mana_cap >= ' + highMana
-          + ' and mana_cap <= ?  and summoner_id in (?)  and ( ruleset like ?  or ruleset like ?) and created_date_day <= ? and created_date_day >= ?  limit 100000';
-    }
-    let params = [mana, summoners, keyRules[0] + "%", keyRules[1] + "%",
+    // 1.3.2  two rule no must rule
+    let sql = 'select '+ selectSql +'  from ' + tableName
+        + ' where  mana_cap >= ?  and   mana_cap <= ?   and summoner_id in (?)  and ( ruleset like ?  or ruleset like ?) and created_date_day <= ? and created_date_day >= ?  limit 1000000';
+    
+    let params = [fromMana,mana, summoners, "%" + keyRules[0] + "%", "%" + keyRules[1] + "%",
       endDateStr, startDateStr]
     let data = await dbUtils.sqlQuery(sql, params);
     let string = JSON.stringify(data);
     let rs3 = rs.concat(JSON.parse(string));
-    console.log("3 singlerule match : ", ruleset, rs3.length, params, sql);
+    console.log("1.3.3  [two rule no must match] no mustSingleRule  : ", ruleset, rs3.length, params, sql);
     // logger.log("3 singlerule match : ", ruleset, rs3.length, params, sql);
     return rs3;
   }
 
   // no rule
-  let sql = 'select * from ' + tableName
-      + ' where  mana_cap = ?  and summoner_id in (?)  and created_date_day <= ? and created_date_day >= ?  limit 100000';
-  if (mana > highMana) {
-    sql = 'select * from ' + tableName + ' where  mana_cap >= ' + highMana
-        + ' and mana_cap <= ?  and summoner_id in (?)  and created_date_day <= ? and created_date_day >= ?  limit 100000';
-  }
-  let params = [mana, summoners, endDateStr, startDateStr]
+  let sql = 'select '+ selectSql +'  from ' + tableName
+      + ' where   mana_cap >= ?  and   mana_cap <= ?  and summoner_id in (?)  and created_date_day <= ? and created_date_day >= ?   limit 100000';
+  
+  let params = [fromMana, mana, summoners, endDateStr, startDateStr]
   let data = await dbUtils.sqlQuery(sql, params);
   let string = JSON.stringify(data);
   let rs3 = rs.concat(JSON.parse(string));
-  console.log("1.0 full match :", rs3.length ,ruleset)
+  console.log("1.0.0 full match :", rs3.length ,ruleset)
   return rs3;
 }
 
 const battlesFilterByManacap = async (mana, ruleset, summoners, ranked) => {
-  let orgMana = mana;
   let mustRule = null;
-  let tableName = 'battle_history_raw_morden';
-  if (ranked == 'M') {
-    tableName = 'battle_history_raw_morden';
-  }
+
   let keyRules = ruleset.split('|');
   if (keyRules.length > 1) {
     if (process.env.KEY_SINGLE_RULES.indexOf(keyRules[0]) != -1 &&
@@ -273,36 +262,26 @@ const battlesFilterByManacap = async (mana, ruleset, summoners, ranked) => {
 
   console.log("1-1 first step select data start..", mana, ruleset, mustRule,
       summoners)
-  let rs = await selectBattleDate(mana, ruleset, summoners, mustRule, ranked)
-  console.log(1, mana, rs.length);
-  console.log("1-1 first step select data end..", rs.length)
-  if (rs.length <= 1000) {
-    mana = mana - 1;
-    rs = rs.concat(
-        await selectBattleDate(mana, ruleset, summoners, mustRule, ranked))
-    if (rs.length > 100) {
-      console.log("1-2 first step select data less 100 mana -1 select ..", mana,
-          rs.length)
-      // console.log(2, mana, rs.length);
-      return rs;
-    }
 
-    if (rs.length == 0 && mustRule == null) {
-      let sql = 'select * from ' + tableName
-          + ' where  mana_cap = ?  and summoner_id in (?)  limit 50000';
-      console.log(sql);
-      const data3 = await dbUtils.sqlQuery(sql, [orgMana, summoners]);
-      let string3 = JSON.stringify(data3);
-      rs = JSON.parse(string3);
-      console.log("1-3 first step select data no rules.", orgMana, rs.length)
-      return rs;
-    }
-  } else {
-    console.log("1-1 first step orgMana match  select data over 1000. ", mana,
-        rs.length)
-    return rs;
+  let rs = []
+  try {
+  	 rs = await selectBattleDate(mana, ruleset, summoners, mustRule, ranked)
+     console.log("1-1 first step select data end..", mana,rs.length)
+  } catch (e) {
+  	 console.log("1-1 first step select data error ....", e);
   }
-};
+  
+  if (rs.length <= 0) {
+  	  mana = mana - 2 
+  	  console.log("1-1-1 first step select data end..", mana,rs.length)
+      rs = await selectBattleDate(mana, ruleset, summoners, mustRule, ranked)
+      console.log("1-1-1 first step select data end..", mana,rs.length)
+  } 
+
+  console.log("1-1-2 first step orgMana match  select data over 1. ", mana,
+        rs.length)
+  return rs;
+}
 
 function compare(a, b) {
   const totA = a[9];
@@ -340,10 +319,10 @@ const cardsIdsforSelectedBattles = (mana, ruleset, splinters,
               x.monster_5_id) : '',
           x.monster_6_id && parseInt(x.monster_6_id) != -1 ? parseInt(
               x.monster_6_id) : '',
-          summonerColor(x.summoner_id) ? summonerColor(x.summoner_id) : '',
-          x.tot ? parseInt(x.tot) : '',
-          x.ratio ? parseInt(x.ratio) : '',
-          x.battle_queue_id
+          summonerColor(x.summoner_id) ? summonerColor(x.summoner_id) : ''
+          // x.tot ? parseInt(x.tot) : '',
+          // x.ratio ? parseInt(x.ratio) : '',
+          // x.battle_queue_id
         ];
       }
   ).filter(
@@ -415,82 +394,70 @@ const possibleTeams = async (matchDetails, acc) => {
   return possibleTeams;
 };
 
-const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
-  doManaStat(possibleTeams, matchDetails, "mostWinningSummonerTankCombo")
-  console.log("4-1 third step most winnning team start :", possibleTeams.length)
-  let bestCombination = await battles.mostWinningSummonerTank(possibleTeams);
-  // logger.log("4-2 third step most bestcombination  :", JSON.stringify(bestCombination))
+async function doEnemySMAlgorithm(possibleTeams, matchDetails,bestCombination) {
+  console.log("4-4-0 third step makeBestCombine  start ............",
+      new Date())
+  let bcTeams = await makeBestCombine(possibleTeams, matchDetails,
+      bestCombination.bestSummoner);
+  if (bcTeams && matchDetails.rating && (matchDetails.rating <= 1000
+      && bcTeams.length >= 3 || matchDetails.rating > 1000 && bcTeams.length
+      >= 3)) {
 
+    let bcCombine = await battles.mostWinningSummonerTank(bcTeams);
+    const mostWinningBcTeam = await findBestTeam(bcCombine, bcTeams)
+    console.log("4-4-0 third step makeBestCombine  used ............",
+        new Date())
+
+    return mostWinningBcTeam;
+  }
+  return null;
+}
+
+
+async function doMLAlgorithm(possibleTeams, matchDetails,bestCombination) {
   // 机器学习
   try {
-    if(process.env.algorithm && process.env.algorithm == "ml") {
+    // if(process.env.algorithm && process.env.algorithm == "ml") {
       console.log("4-4-0-0---  doMLPredict--------------")
       const fromRating = process.env.algorithm_rating
       const mlTeamInfo = await doMLPredict(possibleTeams,matchDetails.mana, matchDetails.rating,matchDetails.rules,parseFloat(fromRating),matchDetails['enemyPossbileTeams'],matchDetails['splinters'],matchDetails['idMap'])
-      console.log("4-4-0-0---  doMLPredict--------------:",mlTeamInfo)
+      console.log("4-4-0-0---  doMLPredict--------------:",mlTeamInfo[0],mlTeamInfo[1])
       const mlTeam = mlTeamInfo[0]
       if(mlTeam && mlTeam.length >=1) {
-        const maxMana =  matchDetails.mana >=52 ? 52 : matchDetails.mana
-        if(maxMana - calcTotalMana(mlTeam) <=6) {
+        const manaRange = getManaRange(matchDetails);
+        if(manaRange[0] <= calcTotalMana(mlTeam)) {
           matchDetails['logContent']['strategy'] = "ml"
           matchDetails['logContent']['isMatchPrefer'] = ""
           matchDetails['logContent']['stgLen'] = possibleTeams.length
           matchDetails['logContent']['QuestMatch'] = mlTeamInfo[1]
-          return [mlTeam[0],mlTeam];
+          return [mlTeam[0],mlTeam,mlTeamInfo[2]];
         }
       }
-    }
+    // }
   } catch (e) {
     console.log(e)
   }
+  return null
+}
 
-
-
-
-  console.log("4-4-0 third step makeBestCombine  start ............",
+async function doCSAlgorithm(possibleTeams, matchDetails,bestCombination) {
+  console.log("4-4-1 third step makeBestCombineByCs  start ............",
+      new Date())
+  const byCsTeams = await makeBestCombineByCs(possibleTeams, matchDetails, 5);
+  if (byCsTeams != null && byCsTeams[1] && byCsTeams[1].length >= 5 ) {
+    let csTeams = byCsTeams[1];
+    let byCsCombine = await battles.mostWinningSummonerTank(csTeams);
+    const makeBestCombineByCsTeam = await findBestTeam(byCsCombine, csTeams)
+    console.log("4-4-1 third step makeBestCombineByCsTeam  used ............",
         new Date())
-    let bcTeams = await makeBestCombine(possibleTeams, matchDetails,
-        bestCombination.bestSummoner);
-    if (bcTeams && matchDetails.rating && (matchDetails.rating <= 1000
-        && bcTeams.length >= 10 || matchDetails.rating > 1000 && bcTeams.length
-        >= 5)) {
-      // let priorityToTheQuest = process.env.QUEST_PRIORITY === 'false' ? false
-      //     : true;
-      // if (priorityToTheQuest) {
-      //   bcTeams = doFocusFilter(bcTeams, matchDetails.quest, 1)
-      // }
-      let bcCombine = await battles.mostWinningSummonerTank(bcTeams);
-      const mostWinningBcTeam = await findBestTeam(bcCombine, bcTeams)
-      console.log("4-4-0 third step makeBestCombine  used ............",
-          new Date())
-
-      return mostWinningBcTeam;
-    }
-
-    // console.log("4-4-1 third step makeBestCombineByCs  start ............",
-    //     new Date())
-    // const byCsTeams = await makeBestCombineByCs(possibleTeams, matchDetails, 5);
-    // if (byCsTeams != null && byCsTeams[1] && matchDetails.rating
-    //     && (matchDetails.rating <= 1000 && byCsTeams[1].length >= 10
-    //         || matchDetails.rating > 1000 && byCsTeams[1].length >= 5)) {
-    //   let csTeams = byCsTeams[1];
-    //   let priorityToTheQuest = process.env.QUEST_PRIORITY === 'false' ? false
-    //       : true;
-    //   if (priorityToTheQuest) {
-    //     csTeams = doFocusFilter(csTeams, matchDetails.quest, 1)
-    //   }
-    //   let byCsCombine = await battles.mostWinningSummonerTank(csTeams);
-    //   const makeBestCombineByCsTeam = await findBestTeam(byCsCombine, csTeams)
-    //   console.log("4-4-1 third step makeBestCombineByCsTeam  used ............",
-    //       new Date())
-    //   // logger.log("4-4-1 third step makeBestCombineByCsTeam  used ............",new Date())
-    //   return makeBestCombineByCsTeam;
-    // }
+    // logger.log("4-4-1 third step makeBestCombineByCsTeam  used ............",new Date())
+    return makeBestCombineByCsTeam;
+  }
+  return null
+}
 
 
-
-
-
+async function doBaseAlgorithm(possibleTeams, matchDetails,bestCombination) {
   const mostWinningSummonerTankComboTeam = await findBestTeam(bestCombination,
       possibleTeams)
   doManaStat(possibleTeams, matchDetails, "findBestTeam")
@@ -504,6 +471,68 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
   matchDetails['logContent']['isMatchPrefer'] = ""
   matchDetails['logContent']['stgLen'] = possibleTeams.length
   return mostWinningSummonerTankComboTeam;
+}
+
+
+async function invokeAlgorithm(alg,possibleTeams, matchDetails,bestCombination) {
+  try{
+    if(process.env.algorithm && alg == "ml") {
+      const mlAlg =await doMLAlgorithm(possibleTeams, matchDetails,bestCombination)
+      if(mlAlg != null){
+        return mlAlg
+      }
+    }
+
+    if(process.env.algorithm && alg == "sm") {
+      const smAlg =await doEnemySMAlgorithm(possibleTeams, matchDetails,bestCombination)
+      if(smAlg != null) {
+        return smAlg
+      }
+    }
+
+    if(process.env.algorithm && alg == "cs") {
+      const csAlg =await doCSAlgorithm(possibleTeams, matchDetails,bestCombination)
+      if(csAlg != null) {
+        return csAlg
+      }
+    }
+  } catch (e) {
+
+  }
+  return null
+}
+
+const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
+  doManaStat(possibleTeams, matchDetails, "mostWinningSummonerTankCombo")
+  console.log("4-1 third step most winnning team start :", possibleTeams.length , process.env.algorithm)
+  let bestCombination = await battles.mostWinningSummonerTank(possibleTeams);
+  // logger.log("4-2 third step most bestcombination  :", JSON.stringify(bestCombination))
+
+  try{
+    if(process.env.algorithm  &&  process.env.algorithm != "") {
+      const algs = process.env.algorithm.split(",")
+      for (let i = 0; i < algs.length; i++) {
+        const alg = algs[i]
+        console.log("***** alg ****:" , alg , possibleTeams.length)
+        const rs = await invokeAlgorithm(alg,possibleTeams, matchDetails,bestCombination)
+        if(rs != null ){
+          // if(alg == "ml") {
+          //   possibleTeams = rs[2]
+          //   bestCombination = await battles.mostWinningSummonerTank(possibleTeams);
+          // } else {
+          //   return rs;
+          // }
+          return rs;
+        }
+      }
+    }
+  }catch (e) {
+    console.log(e)
+  }
+
+  const baseAlg = await doBaseAlgorithm(possibleTeams, matchDetails,bestCombination)
+  return baseAlg;
+
 };
 
 const FOCUS_TYPE = {
@@ -805,8 +834,13 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
   if (process.env.CONSIDER_ENEMY === 'true' && matchDetails.enemyRecent
       && matchDetails.enemyRecent.length > 0) {
     let enemyPossbileTeams = matchDetails.enemyRecent;
-
-    console.log('enemyPossbileTeams : ', enemyPossbileTeams.length);
+    const splinters = matchDetails['splinters']
+    const splintersSummoners =getSplintersSummoners(splinters)
+    console.log('enemyPossbileTeams ...: ', enemyPossbileTeams.length );
+    if(enemyPossbileTeams && enemyPossbileTeams.length >0 ) {
+       enemyPossbileTeams = enemyPossbileTeams.filter(x => splintersSummoners.indexOf(x['summoner_id']) != -1)
+    }
+    console.log('enemyPossbileTeams filter splinter...: ', enemyPossbileTeams.length );
     matchDetails['enemyPossbileTeams'] = enemyPossbileTeams;
     matchDetails['enemySplinterTeams'] = enemyPossbileTeams;
   }
@@ -824,101 +858,101 @@ const teamSelection = async (possibleTeams, matchDetails, quest,
 
   //CHECK FOR QUEST: TODO
   matchDetails['logContent']['QuestMatch'] = "skip"
-  if (priorityToTheQuest && availableTeamsToPlay.length > 5000 && quest
-      && quest.total) {
-    const left = 1;
-    const questCheck = matchDetails.splinters.includes(quest.splinter) && left
-        > 0;
-
-    if (questCheck) {
-      const filteredTeamsForQuest = availableTeamsToPlay.filter(
-          team => team[7] === quest.splinter);
-      console.log("2-3-1",
-          left + ' battles left for the splinter' + quest.splinter + ' quest');
-      // logger.log("2-3-1", left + ' battles left for the splinter' + quest.splinter + ' quest')
-      console.log("2-3-1", 'play for the quest splinter', quest.splinter, '? ',
-          questCheck, " length:", filteredTeamsForQuest.length);
-      // for death splinter
-      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length
-          > 500 && quest.splinter == 'death' && matchDetails.orgMana <= 24) {
-        console.log('Try to play for the quest with Teams size (V1):death',
-            filteredTeamsForQuest.length);
-        availableTeamsToPlay = filteredTeamsForQuest;
-        matchDetails['logContent']['QuestMatch'] = quest.splinter + ":"
-            + availableTeamsToPlay.length
-      }
-
-      // for water splinter
-      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length
-          > 200 && quest.splinter == 'water' && matchDetails.orgMana >= 25) {
-        console.log('Try to play for the quest with Teams size (V1):water',
-            filteredTeamsForQuest.length);
-        availableTeamsToPlay = filteredTeamsForQuest;
-        matchDetails['logContent']['QuestMatch'] = quest.splinter + ":"
-            + availableTeamsToPlay.length
-      }
-
-      // for fire splinter
-      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length
-          > 1000 && quest.splinter == 'fire' && matchDetails.orgMana >= 27) {
-        console.log('Try to play for the quest with Teams size (V1):fire',
-            filteredTeamsForQuest.length);
-        availableTeamsToPlay = filteredTeamsForQuest;
-        matchDetails['logContent']['QuestMatch'] = quest.splinter + ":"
-            + availableTeamsToPlay.length
-      }
-
-      // for life splinter
-      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length
-          > 2000 && quest.splinter == 'life' && (matchDetails.orgMana >= 40
-              || matchDetails.orgMana <= 20)) {
-        console.log('Try to play for the quest with Teams size (V1):life',
-            filteredTeamsForQuest.length);
-        availableTeamsToPlay = filteredTeamsForQuest;
-        matchDetails['logContent']['QuestMatch'] = quest.splinter + ":"
-            + availableTeamsToPlay.length
-      }
-
-      // for earth splinter
-      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length
-          > 200 && quest.splinter == 'earth' && matchDetails.orgMana >= 27) {
-        console.log('Try to play for the quest with Teams size (V1):earth',
-            filteredTeamsForQuest.length);
-        availableTeamsToPlay = filteredTeamsForQuest;
-        matchDetails['logContent']['QuestMatch'] = quest.splinter + ":"
-            + availableTeamsToPlay.length
-      }
-
-      console.log("dragon length : ", availableTeamsToPlay.filter(
-          team => team[7] === "dragon").length)
-      // for dragon splinter
-      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length
-          > 500 && quest.splinter == 'dragon' && matchDetails.orgMana >= 28) {
-        console.log('Try to play for the quest with Teams size (V1):dragon',
-            filteredTeamsForQuest.length);
-        availableTeamsToPlay = filteredTeamsForQuest;
-        matchDetails['logContent']['QuestMatch'] = quest.splinter + ":"
-            + availableTeamsToPlay.length
-      }
-
-      //  no condition match teams
-      if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length
-          > 5000
-          && splinters.includes(quest.splinter)) {
-        console.log('Try to play for the quest with Teams size (V1): ',
-            filteredTeamsForQuest.length);
-        // logger.log('Try to play for the quest with Teams size (V1): ',
-        //     filteredTeamsForQuest.length);
-        availableTeamsToPlay = filteredTeamsForQuest;
-        matchDetails['logContent']['QuestMatch'] = quest.splinter + ":"
-            + availableTeamsToPlay.length
-      } else {
-        console.log('CHECK FOR QUEST skip: ',
-            filteredTeamsForQuest.length);
-      }
-    }
-
-  }
+  // if (priorityToTheQuest && availableTeamsToPlay.length > 50000000 && quest
+  //     && quest.total) {
+  //   const left = 1;
+  //   const questCheck = matchDetails.splinters.includes(quest.splinter) && left
+  //       > 0;
+  //
+  //   if (questCheck) {
+  //     const filteredTeamsForQuest = availableTeamsToPlay.filter(
+  //         team => team[7] === quest.splinter);
+  //     console.log("2-3-1",
+  //         left + ' battles left for the splinter' + quest.splinter + ' quest');
+  //     // logger.log("2-3-1", left + ' battles left for the splinter' + quest.splinter + ' quest')
+  //     console.log("2-3-1", 'play for the quest splinter', quest.splinter, '? ',
+  //         questCheck, " length:", filteredTeamsForQuest.length);
+  //     // for death splinter
+  //     if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length
+  //         > 500 && quest.splinter == 'death' && matchDetails.orgMana <= 24) {
+  //       console.log('Try to play for the quest with Teams size (V1):death',
+  //           filteredTeamsForQuest.length);
+  //       availableTeamsToPlay = filteredTeamsForQuest;
+  //       matchDetails['logContent']['QuestMatch'] = quest.splinter + ":"
+  //           + availableTeamsToPlay.length
+  //     }
+  //
+  //     // for water splinter
+  //     if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length
+  //         > 200 && quest.splinter == 'water' && matchDetails.orgMana >= 25) {
+  //       console.log('Try to play for the quest with Teams size (V1):water',
+  //           filteredTeamsForQuest.length);
+  //       availableTeamsToPlay = filteredTeamsForQuest;
+  //       matchDetails['logContent']['QuestMatch'] = quest.splinter + ":"
+  //           + availableTeamsToPlay.length
+  //     }
+  //
+  //     // for fire splinter
+  //     if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length
+  //         > 1000 && quest.splinter == 'fire' && matchDetails.orgMana >= 27) {
+  //       console.log('Try to play for the quest with Teams size (V1):fire',
+  //           filteredTeamsForQuest.length);
+  //       availableTeamsToPlay = filteredTeamsForQuest;
+  //       matchDetails['logContent']['QuestMatch'] = quest.splinter + ":"
+  //           + availableTeamsToPlay.length
+  //     }
+  //
+  //     // for life splinter
+  //     if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length
+  //         > 2000 && quest.splinter == 'life' && (matchDetails.orgMana >= 40
+  //             || matchDetails.orgMana <= 20)) {
+  //       console.log('Try to play for the quest with Teams size (V1):life',
+  //           filteredTeamsForQuest.length);
+  //       availableTeamsToPlay = filteredTeamsForQuest;
+  //       matchDetails['logContent']['QuestMatch'] = quest.splinter + ":"
+  //           + availableTeamsToPlay.length
+  //     }
+  //
+  //     // for earth splinter
+  //     if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length
+  //         > 200 && quest.splinter == 'earth' && matchDetails.orgMana >= 27) {
+  //       console.log('Try to play for the quest with Teams size (V1):earth',
+  //           filteredTeamsForQuest.length);
+  //       availableTeamsToPlay = filteredTeamsForQuest;
+  //       matchDetails['logContent']['QuestMatch'] = quest.splinter + ":"
+  //           + availableTeamsToPlay.length
+  //     }
+  //
+  //     console.log("dragon length : ", availableTeamsToPlay.filter(
+  //         team => team[7] === "dragon").length)
+  //     // for dragon splinter
+  //     if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length
+  //         > 500 && quest.splinter == 'dragon' && matchDetails.orgMana >= 28) {
+  //       console.log('Try to play for the quest with Teams size (V1):dragon',
+  //           filteredTeamsForQuest.length);
+  //       availableTeamsToPlay = filteredTeamsForQuest;
+  //       matchDetails['logContent']['QuestMatch'] = quest.splinter + ":"
+  //           + availableTeamsToPlay.length
+  //     }
+  //
+  //     //  no condition match teams
+  //     if (left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length
+  //         > 5000
+  //         && splinters.includes(quest.splinter)) {
+  //       console.log('Try to play for the quest with Teams size (V1): ',
+  //           filteredTeamsForQuest.length);
+  //       // logger.log('Try to play for the quest with Teams size (V1): ',
+  //       //     filteredTeamsForQuest.length);
+  //       availableTeamsToPlay = filteredTeamsForQuest;
+  //       matchDetails['logContent']['QuestMatch'] = quest.splinter + ":"
+  //           + availableTeamsToPlay.length
+  //     } else {
+  //       console.log('CHECK FOR QUEST skip: ',
+  //           filteredTeamsForQuest.length);
+  //     }
+  //   }
+  //
+  // }
 
   const res = await mostWinningSummonerTankCombo(availableTeamsToPlay,
       matchDetails);
@@ -949,23 +983,19 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
   // ----
   let enemyPossbileTeams = [];
 
-  // if (matchDetails.enemyRecent && matchDetails.enemyRecent.length > 0) {
-  //   const manaRange = getManaRange(matchDetails)
-  //   let manaMatchTeams = enemy.filterManaMatch(matchDetails.enemyRecent,
-  //       matchDetails.orgMana, manaRange[0], manaRange[1],
-  //       matchDetails.splinters);
-  //   if (manaMatchTeams && manaMatchTeams.length > 0) {
-  //     let manaRuleMatchTeams = enemy.filterRuleMatch(manaMatchTeams,
-  //         matchDetails.rules);
-  //     if (manaRuleMatchTeams && manaRuleMatchTeams.length > 0) {
-  //       enemyPossbileTeams = manaRuleMatchTeams;
-  //     }
-  //   }
-  //
-  //   matchDetails['enemyPossbileTeams'] = enemyPossbileTeams;
-  //   matchDetails['enemySplinterTeams'] = matchDetails.enemyRecent;
-  //   console.log('enemyPossbileTeams : ', enemyPossbileTeams.length)
-  // }
+  if (matchDetails.enemyRecent && matchDetails.enemyRecent.length > 0) {
+    let enemyPossbileTeams = matchDetails.enemyRecent;
+    const splinters = matchDetails['splinters']
+    const splintersSummoners =getSplintersSummoners(splinters)
+    console.log('enemyPossbileTeams ...: ', enemyPossbileTeams.length );
+    if(enemyPossbileTeams && enemyPossbileTeams.length >0 ) {
+      enemyPossbileTeams = enemyPossbileTeams.filter(x => splintersSummoners.indexOf(x['summoner_id']) != -1)
+    }
+    console.log('enemyPossbileTeams filter splinter...: ', enemyPossbileTeams.length );
+    matchDetails['enemyPossbileTeams'] = enemyPossbileTeams;
+    matchDetails['enemySplinterTeams'] = enemyPossbileTeams;
+    console.log('enemyPossbileTeams : ', enemyPossbileTeams.length)
+  }
 
   // by card cs
   let mostWinningBcTeam = []
@@ -1089,7 +1119,7 @@ const teamSelectionForWeb = async (possibleTeams, matchDetails) => {
   console.timeEnd("battle")
 
   const empt = matchDetails['enemyRecent']
-  let enemyAgainstTeam = await doMLPredict(possibleTeams,matchDetails.mana, matchDetails.rating,matchDetails.rules,0.4,empt,matchDetails['splinters'],matchDetails['idMap'])
+  let enemyAgainstTeam = await doMLPredict(possibleTeams,matchDetails.mana, matchDetails.rating,matchDetails.rules,0.001,empt,matchDetails['splinters'],matchDetails['idMap'])
   const mlTeam = extendsHandler.doExtendsHandler(
       enemyAgainstTeam[0] && enemyAgainstTeam[0].length > 1
           ? enemyAgainstTeam[0] : []
@@ -1132,20 +1162,20 @@ function getCardNameByID(cardId) {
 
 function getManaRange(matchDetails) {
   let delta = 0;
-  if (matchDetails.mana <= 17) {
-    delta = 0
-  }
-  if (matchDetails.mana >= 18 && matchDetails.mana <= 28) {
+  if (matchDetails.mana <= 15) {
     delta = 1
   }
-  if (matchDetails.mana >= 29 && matchDetails.mana <= 35) {
+  if (matchDetails.mana >= 16 && matchDetails.mana <= 28) {
     delta = 2
   }
-  if (matchDetails.mana >= 36 && matchDetails.mana <= 44) {
+  if (matchDetails.mana >= 29 && matchDetails.mana <= 35) {
     delta = 3
   }
+  if (matchDetails.mana >= 36 && matchDetails.mana <= 45) {
+    delta = 4
+  }
 
-  let fromMana = matchDetails.mana >= 45 ? 45 : parseInt(matchDetails.mana)
+  let fromMana = matchDetails.mana >= 46 ? 42 : parseInt(matchDetails.mana)
       - parseInt(delta);
   let endMana = parseInt(matchDetails.mana) + parseInt(delta);
   return [fromMana, endMana]
@@ -1256,12 +1286,14 @@ async function makeBestCombine(possibleTeams, matchDetails,
       matchCS[1].length);
   let isMatchPrefer = false;
 
-  if (matchCS[1].length <= 0 && matchDetails['enemyPossbileTeams']
-      && matchDetails['enemySplinterTeams']
-      && matchDetails['enemyPossbileTeams'].length
-      < matchDetails['enemySplinterTeams'].length) { //TODO
-    matchSplintersSummoners = battles.matchedEnemyPossbileSummoners(
-        matchDetails['enemySplinterTeams'], false);
+  if (matchCS[1].length <= 0 && mostSummoner
+      // && matchDetails['enemyPossbileTeams']
+      // && matchDetails['enemySplinterTeams']
+      // && matchDetails['enemyPossbileTeams'].length
+      // < matchDetails['enemySplinterTeams'].length
+    ) { //TODO
+    // matchSplintersSummoners = battles.matchedEnemyPossbileSummoners(
+    //     matchDetails['enemySplinterTeams'], false);
     if (mostSummoner) {
       matchSplintersSummoners.push(mostSummoner)
     }
@@ -1292,7 +1324,7 @@ async function makeBestCombine(possibleTeams, matchDetails,
   console.log("--makeBestCombine--final--", cs,
       JSON.stringify(matchTeams.length))
   if (matchTeams != null && matchTeams.length > 0) {
-    matchDetails['logContent']['strategy'] = "ByEnemySM"
+    matchDetails['logContent']['strategy'] = "sm"
     matchDetails['logContent']['isMatchPrefer'] = isMatchPrefer
     matchDetails['logContent']['stgLen'] = matchTeams.length
   }
@@ -1374,17 +1406,10 @@ const skipIds = [-1, 131, 91, 169, 366, 380, 394, 408, 422, 77, 91, 95, 119,
 // 根据enemy 组合
 async function makeBestCombineByCs(possibleTeams, matchDetails, limitCnt = 3) {
   let teamCs = []
-  let filterStart = 0;
-  let filterEnd = 99;
-  if (matchDetails.mana <= 24) {
-    filterEnd = 24;
-  } else if (matchDetails.mana <= 38) {
-    filterStart = 24;
-    filterEnd = 38;
-  } else {
-    filterStart = 38;
-    filterEnd = 99;
-  }
+  const manaRange = getManaRange(matchDetails);
+  let filterStart = manaRange[0];;
+  let filterEnd =  manaRange[1];
+
 
   let maxEnemyMana = 0;
   let minEnemyMana = 99;
@@ -1392,7 +1417,8 @@ async function makeBestCombineByCs(possibleTeams, matchDetails, limitCnt = 3) {
       || matchDetails['enemyPossbileTeams'].length == 0) {
     return null;
   }
-  let ept = matchDetails['enemyPossbileTeams'].filter(t => {
+  let ept = matchDetails['enemyPossbileTeams']
+   .filter(t => {
     if (t['mana_cap'] > maxEnemyMana) {
       maxEnemyMana = t['mana_cap'];
     }
@@ -1404,13 +1430,13 @@ async function makeBestCombineByCs(possibleTeams, matchDetails, limitCnt = 3) {
     return t['mana_cap'] >= filterStart && t['mana_cap'] <= filterEnd
   })
 
-  console.log("maxEnemyMana:", maxEnemyMana, "minEnemyMana:", minEnemyMana)
-  if (ept.length == 0) {
-    ept = matchDetails['enemyPossbileTeams'].filter(t => {
-      return t['mana_cap'] >= filterStart - 10 && t['mana_cap'] <= filterEnd
-          + 10
-    })
-  }
+  // console.log("maxEnemyMana:", maxEnemyMana, "minEnemyMana:", minEnemyMana)
+  // if (ept.length == 0) {
+  //   ept = matchDetails['enemyPossbileTeams'].filter(t => {
+  //     return t['mana_cap'] >= filterStart - 10 && t['mana_cap'] <= filterEnd
+  //         + 10
+  //   })
+  // }
   console.log("makeBestCombineByCs ept:", matchDetails.mana, ept)
   // console.log("ept:",ept)
   if (ept == null || ept.length == 0) {
@@ -1472,7 +1498,7 @@ async function makeBestCombineByCs(possibleTeams, matchDetails, limitCnt = 3) {
 
   const matchSplintersSummoners = {}
   topCs.forEach(x => matchSplintersSummoners[x.split("-")[0]] = true)
-  const manaRange = getManaRange(matchDetails);
+
   let fromMana = manaRange[0];
   let endMana = manaRange[1];
 
@@ -1520,7 +1546,7 @@ async function makeBestCombineByCs(possibleTeams, matchDetails, limitCnt = 3) {
   console.log("--makeBestCombineByCs--final--", cs,
       JSON.stringify(matchTeams.length))
   if (matchTeams != null && matchTeams.length > 0) {
-    matchDetails['logContent']['strategy'] = "ByEnemyCs"
+    matchDetails['logContent']['strategy'] = "cs"
     matchDetails['logContent']['isMatchPrefer'] = isMatchPrefer
     matchDetails['logContent']['stgLen'] = matchTeams.length
   }
@@ -1612,21 +1638,21 @@ async function doMLPredict(possibleTeams,mana, rating,rules,score,enemyPossbileT
   })
 
 
-  let requestData =  possibleDistinctTeams.map(x =>[x[0].toString(),idMap[x[0].toString()].toString(),x[1].toString(),x[2].toString()==""?"-1":x[2].toString(),x[3].toString()==""?"-1":x[3].toString(),x[4].toString()==""?"-1":x[4].toString(),x[5].toString()==""?"-1":x[5].toString(),x[6].toString()==""?"-1":x[6].toString(),idMap[x[1].toString()].toString(),idMap[x[2].toString()].toString(),idMap[x[3].toString()].toString(),idMap[x[4].toString()].toString(),idMap[x[5].toString()].toString(),idMap[x[6].toString()].toString(),parseInt(mana),rules,rating,active.join(",")])
+  let requestData =  possibleDistinctTeams.map(x =>{
+    const sLevel = idMap[x[0].toString()];
+
+    return [x[0].toString(),sLevel.toString(),x[1].toString(),x[2].toString()==""?"-1":x[2].toString(),x[3].toString()==""?"-1":x[3].toString(),x[4].toString()==""?"-1":x[4].toString(),x[5].toString()==""?"-1":x[5].toString(),x[6].toString()==""?"-1":x[6].toString(), sLevel == 1 ? "1" :  idMap[x[1].toString()].toString(),sLevel == 1 ? "1" :  idMap[x[2].toString()].toString(), sLevel == 1 ? "1" :  idMap[x[3].toString()].toString(),sLevel == 1 ? "1" : idMap[x[4].toString()].toString(),sLevel == 1 ? "1" :  idMap[x[5].toString()].toString(),sLevel == 1 ? "1" :  idMap[x[6].toString()].toString(),parseInt(mana),rules,rating,active.join(",")]
+  })
   
   console.log("doMLPredict  filter duplicated : " , requestData.length)
   const data = JSON.stringify(requestData)
   let tems = ''
-  const splintersSummoners =getSplintersSummoners(splinters)
-  if(enemyPossbileTeams && enemyPossbileTeams.length >0 ) {
-    let ept = enemyPossbileTeams.filter(x => splintersSummoners.indexOf(x['summoner_id']) != -1)
-    let topSummoners = battles.matchedEnemyPossbileSummoners(
-        ept, true);
-    tems = topSummoners.length >0 ? topSummoners[0]: '';
-  }
-  // console.log(data)
+  let topSummoners = battles.matchedEnemyPossbileSummoners(enemyPossbileTeams, true);
+  tems = topSummoners.length >0 ? topSummoners[0]: '';
+
   const result = await new Promise((resolve, reject) => {
     request({
+      //url: 'http://localhost:8880',
       url: 'http://192.168.99.100:28888',
       method: "POST",
       // json: true,
@@ -1654,19 +1680,23 @@ async function doMLPredict(possibleTeams,mana, rating,rules,score,enemyPossbileT
   if(result == null ){
     return []
   }
-  if(rating <= 1000 ) {
-    const earthFilter =  JSON.parse(result).filter(x => x["team"][0] == "259" && parseFloat(x.rate) >= 0.3)
-    if(earthFilter && earthFilter.length >0 ) {
-      console.log("doMLPredict  earthFilter .............." );
-      return [possibleDistinctTeams[earthFilter[0].index],earthFilter[0].rate]
-    }
-  }
+  // if(rating <= 1000 ) {
+  //   const earthFilter =  JSON.parse(result).filter(x => x["team"][0] == "259" && parseFloat(x.rate) >= 0.3)
+  //   if(earthFilter && earthFilter.length >0 ) {
+  //     console.log("doMLPredict  earthFilter .............." );
+  //     return [possibleDistinctTeams[earthFilter[0].index],earthFilter[0].rate]
+  //   }
+  // }
 
   const filterResult = JSON.parse(result).filter(x =>parseFloat(x.rate) >= score)
-  if(filterResult && filterResult.length >0 ) {
-    return [possibleDistinctTeams[filterResult[0].index],filterResult[0].rate]
-  } 
 
+  if(filterResult && filterResult.length >0 ) {
+    const teams = filterResult.map(x => possibleDistinctTeams[x.index] )
+    console.log("filterResult[0].team : ", filterResult[0]['team'] , teams.length)
+    return [possibleDistinctTeams[filterResult[0].index],filterResult[0].rate,teams]
+  }
+
+  console.log("filterResult  team zero ......")
   return []
 }
 

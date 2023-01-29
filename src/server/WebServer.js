@@ -76,7 +76,7 @@ http.createServer(async function (request, response) {
       let enemy = JSON.parse(arg1.enemy)
       // console.log("enemy : " , enemy)
       let sp = arg1.sp
-      let rateNum = parseInt(arg1.rateNum.replace(",",""))
+      let rateNum = parseInt(arg1.rateNum.replace(",","").replace("(","").replace(")",""))
       if (sp == '') {
         sp = splinters;
       } else {
@@ -88,7 +88,7 @@ http.createServer(async function (request, response) {
       // const enemyRecentTeams = []
 
       let enemyRecentTeams = parseTeam(enemy)
-      console.log("enemyRecentTeams :" ,enemyRecentTeams)
+      console.log("enemyRecentTeams :" ,enemyRecentTeams , arg1.rateNum)
       let myCards = []
       try {
         delete require.cache[require.resolve("../../data/playcards/" + player + "_cards")]
@@ -103,7 +103,7 @@ http.createServer(async function (request, response) {
         return {msg: "error"}
       }
 
-      console.log(myCards.indexOf(339),myCards.length)
+      console.log(myCards.indexOf(339),myCards.length,rateNum)
       const [cards ,idMap] = await  user.getPlayerCardsV2(player)
       const matchDetails = {
         orgMana: mana,
@@ -114,7 +114,7 @@ http.createServer(async function (request, response) {
         idMap:idMap,
         myCards: myCards,
         enemyRecent: enemyRecentTeams,
-        ranked: ranked,
+        ranked: 3000,
         enemyPossbileTeams: enemyRecentTeams,
         logContent: {}
       }

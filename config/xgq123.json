@@ -10,7 +10,7 @@
   "RANKED": "M",
   "SKIP_QUEST": "dragon",
   "algorithm": "ml",
-  "algorithm_rating": "0.6",
-  "ECR_RECOVER_TO": 85,
+  "algorithm_rating": "0.15",
+  "ECR_RECOVER_TO": 90,
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }

@@ -1,19 +1,47 @@
 const fetch = require('node-fetch');
 const fs = require('fs');
 
-const topBattleUser = require('./data/initUsers/topBattleUser');
-const modern_newTopBattleUsers = require(
-    './data/initUsers/modern_topBattleUserJSON');
-const wild_newTopBattleUsers = require(
-    './data/initUsers/wild_topBattleUserJSON');
-const intUsers = [];
-let remainFileModern = `data/modern_remain_raw.json`;
-let remainFileWild = `data/wild_remain_raw.json`;
-const remainUsersModern = require(`./data/modern_remain_raw`);
-const remainUsersWild = require(`./data/wild_remain_raw`);
+let intUsers = ['xqm123','xqm1234','xifei123','xifei1234','hkd123','hkd1234','sugelafei','sugelafei2','xgq123','xgq1234']
+let remainFileModern = `./data/modern_remain_raw.json`;
+const remainUsersModern = require(remainFileModern);
+
+let processedFilePath = `./data/battles_get_processed.json`;
+
+let processedList = []
+try {
+  processedList = require(processedFilePath)
+} catch (e) {
+   
+}
+intUsers = intUsers.concat(processedList)
+let processedSet = new Set(processedList);
+
+
 const dbUtil = require('./db/script/dbUtils');
 const HttpsProxyAgent = require('https-proxy-agent');
 const proxyAgent = new HttpsProxyAgent('http://192.168.99.1:1081');
+
+let date = new Date();
+let dateStr = date.toISOString();
+// dateStr = new Date().toLocaleTimeString()
+let isInit=false;
+console.log("------",dateStr, " week :" , date.getDay())
+
+if ((dateStr && dateStr.startsWith("07:3") || dateStr && dateStr.startsWith("07:4") || dateStr && dateStr.startsWith("07:5"))) {
+  isInit = true;
+}
+
+console.log("get data isInit :", isInit, dateStr , processedSet.size)
+
+let fromScore = 100;
+let remainUsers = []
+let remainFile = null;
+let format = "modern"
+
+remainUsers = remainUsersModern;
+remainFile = remainFileModern;
+
+console.log("date ----:", dateStr , intUsers.length)
 
 async function getBattleHistoryRaw(player = '', format, data = {}) {
   try {
@@ -42,7 +70,6 @@ async function getBattleHistoryRaw(player = '', format, data = {}) {
   } catch (e) {
     return null;
   }
-
 }
 
 const extractGeneralInfo = (x) => {
@@ -119,68 +146,17 @@ const extractMonsterLost = (team) => {
   };
 };
 
-let date = new Date();
-let dateStr = date.toISOString().split("T")[1];
-// dateStr = new Date().toLocaleTimeString()
-let isInit =false;
 
-if (dateStr && dateStr.startsWith("07:0") || dateStr && dateStr.startsWith("07:1") || dateStr && dateStr.startsWith("07:2")) {
-  console.log("--------topBattleUser.saveBattlesHistory---------")
-  topBattleUser.saveBattlesHistory().then( ()=>{
-    console.log("--------topBattleUser.saveBattlesHistory---------finish")
-  });
-}
-
-if (dateStr && dateStr.startsWith("07:3") || dateStr && dateStr.startsWith("07:4") || dateStr && dateStr.startsWith("07:5")) {
-  isInit = true;
-}
-
-
-
-console.log("get data isInit :", isInit, dateStr, dateStr.split(":")[1])
-
-let fromScore = 500;
-let newTopBattleUsers = []
-let format = "wild"
-let remainUsers = []
-let remainFile = null;
-
-format = "modern";
-newTopBattleUsers = modern_newTopBattleUsers;
-remainUsers = remainUsersModern;
-remainFile = remainFileModern;
-
-// if (dateStr.split(":")[1].startsWith("0") || dateStr.split(":")[1].startsWith(
-//     "2")
-//     || dateStr.split(":")[1].startsWith("4")) {
-//   format = "wild";
-//   newTopBattleUsers = wild_newTopBattleUsers;
-//   remainUsers = remainUsersWild;
-//   remainFile = remainFileWild;
-//   fromScore = 1200;
-// }
-
-console.log("date ----:", dateStr,"format: " ,format, newTopBattleUsers.length)
 
 let battlesList = [];
-const usersToGrab = intUsers;
-
-const concatArr = usersToGrab.concat(newTopBattleUsers);
 // 排重
 let map = new Map();
 let mergeArray = [];
 
 if (isInit) {
   console.log('init collectdata begin ........');
-  for (let i = 0; i < concatArr.length; i++) {
-    if (!map.has(concatArr[i])) {
-      map.set(concatArr[i], true);
-      mergeArray.push(concatArr[i].trim());
-    }
-  }
-  console.log('concatArr :' + concatArr.length,
-      ' usersToGrab : ' + usersToGrab.length,
-      ' newTopBattleUsers: ' + newTopBattleUsers.length);
+  processedSet =new Set([])
+  mergeArray = intUsers
   console.log('mergeArray length : ' + mergeArray.length);
 } else {
   console.log('remain collectdata begin ........', remainUsers.length);
@@ -206,25 +182,26 @@ async function collectData(arr) {
       ' arr:' + arr.length, 'battlesCnt:', battlesList.length);
 
   for (let i = 0; i <arr.length ; i++) {
-    await sleep(500);
+    // if(processedSet.has(arr[i])) {
+    //   console.log("processedSet exists  --------- :" + arr[i])
+    //   continue;
+    // }
+    
+    await sleep(100);
     // console.log("getBattleHistoryRaw start  --------- :" + arr[i]);
     await  getBattleHistoryRaw(arr[i],format)
     .then(checkBattles => {
       if(!checkBattles){
         console.log("getBattleHistoryRaw error  --------- :" + arr[i]);
       }
+      processedSet.add(arr[i])
       return checkAndSave(checkBattles)
     }).catch((error) => {
       console.log("checkAndSave error ------------------!!!!");
     })
+
+    processedSet.add(arr[i])
   }
-  // let battles = arr.map(user =>
-  //     getBattleHistoryRaw(user,format)
-  //     .then(checkBattles => checkAndSave(checkBattles)).catch((error) => {
-  //       console.log(error);
-  //     })
-  // );
-  // await battles;
   count++;
   mergeArray = mergeArray.concat(extendArray);
   console.log('batch count : ', count, 'battlesCnt:', battlesList.length,
@@ -355,4 +332,10 @@ async function saveDatas(battlesList, mergeArray) {
 
 (async () => {
   await collectData(mergeArray.splice(0, delta));
+  fs.writeFileSync(processedFilePath, JSON.stringify(Array.from(processedSet)), function (err) {
+        if (err) {
+          console.log(err);
+        }
+        console.log(processedFilePath, '----save processedFilePath--end--');
+      });
 })()

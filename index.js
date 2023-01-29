@@ -24,6 +24,7 @@ let runFlgCnt = 0;
 let errorCnt = 0;
 let runStat = false;
 let cardNoClickCnt = 0;
+let winMap = {"ml-T":0 , "ml-F":0 , "mts-T": 0 , "mts-F":0 , "sm-T":0 ,"sm-F":0 ,"cs-T": 0 , "cs-F":0 , "cnt": 0}
 
 
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
@@ -52,8 +53,11 @@ let csvWriter = createCsvWriter({
 const summaryFile = fs.createWriteStream('./logs/Summary.txt', {'flags': 'a'});
 const summaryErrorFile = fs.createWriteStream('./logs/SummaryError.txt',
     {'flags': 'a'});
+const summaryWinFile = fs.createWriteStream('./logs/SummaryWin.txt',
+    {'flags': 'a'});
 let summaryLogger = new console.Console(summaryFile, summaryFile);
 let summaryErrorLogger = new console.Console(summaryErrorFile, summaryErrorFile);
+let summaryWinLogger = new console.Console(summaryWinFile, summaryWinFile);
 
 async function getQuest(page) {
   try {
@@ -814,7 +818,7 @@ async function startBotPlayMatch(page, browser) {
     const isWaitForBeginWithHighECR = ecr && process.env.ECR_RECOVER_TO && ecr
         <= parseFloat(process.env.ECR_RECOVER_TO);
     const isOverECR = ecr && ecr >= 95;
-    const isLowEcr = ecr && ecr <= 70
+    const isLowEcr = ecr && ecr <= 75 //TODO .....
     const checkRatingAndPower = parseInt(rating) >= 1030;
     let dailyTaskAlmostFinished = isDailyTaskAlmostFinished(quest);
 
@@ -823,50 +827,8 @@ async function startBotPlayMatch(page, browser) {
         "checkRatingAndPower:", checkRatingAndPower, "!isOverECR:", !isOverECR)
     // do sleep
     // await doGuildBrawl(page)
-    if ((isWaitForBeginWithHighECR && !dailyTaskAlmostFinished) && !isOverECR
-        && checkRatingAndPower && process.env.MAX_REWARDS == "false"
-        || isLowEcr) {
-      // const random = Math.ceil(Math.random() * 1) * 60000
-      console.log(chalk.bold.white(
-          `Time needed to recover ECR, approximately ${ 30 } minutes.ecr:`), ecr, isWaitForBeginWithHighECR);
-      const halfAnHoursMs = 1*1000*3600 / 2;
-      console.log(chalk.bold.white(
-          `Initiating sleep mode. The bot will awaken at ${new Date(
-              Date.now() + halfAnHoursMs ).toLocaleString()}`));
-      // logsummsary
-
-      const summaryInfo = {
-        time: new Date(
-            Date.now() + halfAnHoursMs ).toLocaleTimeString(),
-        NQT: nextQuestTime,
-        CT: claimTime,
-        user: process.env.ACCOUNT,
-        NQ: RANKED,
-        ECR: ecr,
-        WC: winTotal,
-        LC: loseTotal,
-        FC: quest.fc
-        ,
-        WR: (winTotal / (winTotal + loseTotal)).toFixed(2),
-        SRC: seasonRewardCnt  //totalDec.toFixed(2)
-        ,
-        quest: quest != null ? quest?.splinter : "-",
-        LW: "-",
-        qt: quest != null ? quest?.total : "-",
-        qc: quest != null ? quest?.completed : "-",
-        rating: rating,
-        power: power + "(" + deltaPower + ")",
-        sps: dec,
-        league: league,
-        NC: cardNoClickCnt
-      };
-
-      doSummaryLog(summaryInfo)
-      await doGuildBrawl(page)
-      await sleep(halfAnHoursMs);
-      runStat = true;
-      throw new Error(`Restart needed.`);
-    }
+    await  doSleepWait(page,isWaitForBeginWithHighECR,dailyTaskAlmostFinished,checkRatingAndPower,isLowEcr,isOverECR
+        ,nextQuestTime,RANKED,quest,ecr,seasonRewardCnt,power,deltaPower,dec,league,rating)
 
     console.log('getting user cards collection from splinterlands API...')
 
@@ -926,7 +888,7 @@ async function startBotPlayMatch(page, browser) {
       enemyRecent: enemyRecent,
       rating: rating,
       quest: quest.splinter,
-      ranked: RANKED,
+      ranked: rating,
       idMap: idMap,
       logContent: {
         account: account,
@@ -980,6 +942,7 @@ async function startBotPlayMatch(page, browser) {
       errorCnt++;
       throw new Error('Team Selection error: no possible team to play');
     }
+    await page.waitForNavigation({timeout: 3000}).catch(() =>{});
     let url = await page.url();
     console.log("1. current url :" ,url)
     await page.click('.btn--create-team').then(() => console.log('btn--create-team clicked again..............', new Date().toLocaleTimeString()))
@@ -1084,7 +1047,6 @@ async function startBotPlayMatch(page, browser) {
         console.log(chalk.green('You won! Reward: ' + decWon + ' DEC'));
         totalDec += !isNaN(parseFloat(decWon)) ? parseFloat(decWon) : 0;
         winTotal += 1;
-
         // ---------- check daily claim start TODO
         if (isClaimDailyQuestMode === true) {
           await doDailyClaim(page);
@@ -1098,7 +1060,6 @@ async function startBotPlayMatch(page, browser) {
         console.log(chalk.green('You won! Reward: ' + decWon + ' DEC'));
         totalDec += !isNaN(parseFloat(decWon)) ? parseFloat(decWon) : 0;
         winTotal += 1;
-
         // ---------- check daily claim start TODO
         if (isClaimDailyQuestMode === true) {
           await doDailyClaim(page);
@@ -1137,7 +1098,7 @@ async function startBotPlayMatch(page, browser) {
       SRC: seasonRewardCnt// totalDec.toFixed(2)
       ,
       quest: quest?.splinter + ":" + teamToPlay.cards[7],
-      LW: isWin,
+      LW: isWin+":"+matchDetails['logContent']['strategy'],
       qt: quest?.total,
       qc: quest?.completed,
       rating: rating,
@@ -1149,12 +1110,22 @@ async function startBotPlayMatch(page, browser) {
 
     doSummaryLog(summaryInfo)
 
+    if(isWin != "D") {
+      winMap[matchDetails['logContent']['strategy']+"-"+isWin] = winMap[matchDetails['logContent']['strategy']+"-"+isWin] + 1
+      winMap['cnt'] = loseTotal - winTotal;
+      const winSummaryInfo =  Object.assign({"user": process.env.ACCOUNT},winMap)
+      winSummaryInfo["alg"] = process.env.algorithm
+      doSummaryWinLog(winSummaryInfo);
+    }
+
+
     matchDetails['logContent']['isWin'] = isWin
     matchDetails['logContent']['rating'] = rating
     runStat = true;
     runFlgCnt = 0;
     await csvWriter.writeRecords([matchDetails['logContent']]).then(
         () => console.log('The CSV file was written successfully'));
+
   } catch (e) {
     console.log(
         'Error handling browser not opened, internet connection issues, or battle cannot start:',
@@ -1167,6 +1138,73 @@ async function startBotPlayMatch(page, browser) {
     console.log(
         new Date().toLocaleString() + ":" + process.env.ACCOUNT + ":"
         + errorCnt + ":" + e.message)
+  }
+}
+
+async function doSleepWait(page,isWaitForBeginWithHighECR,dailyTaskAlmostFinished,checkRatingAndPower,isLowEcr,isOverECR
+    ,nextQuestTime,RANKED,quest,ecr,seasonRewardCnt,power,deltaPower,dec,league,rating) {
+  // do sleep .....
+  let deltaLost = loseTotal - winTotal
+  if ((isWaitForBeginWithHighECR && !dailyTaskAlmostFinished
+      && checkRatingAndPower && process.env.MAX_REWARDS == "false"
+      || (isLowEcr ) ) && !isOverECR) {
+    // const random = Math.ceil(Math.random() * 1) * 60000
+
+    let oneMinitusMs = 1 * 1000 * 60
+    let halfAnHoursMs = oneMinitusMs * 30 ;
+    let delayMs  = halfAnHoursMs
+    if(deltaLost > 0 ){
+      if(deltaLost >= 6 )  {
+        deltaLost = 6 ;
+      }
+
+      delayMs = halfAnHoursMs + oneMinitusMs * 10 * deltaLost
+    }
+
+
+    console.log(chalk.bold.white(
+        `Time needed to recover ECR, approximately ${ delayMs / oneMinitusMs } minutes.ecr:`), ecr, isWaitForBeginWithHighECR );
+    // logsummsary
+
+    const summaryInfo = {
+      time: new Date(
+          Date.now() + delayMs ).toLocaleTimeString(),
+      NQT: nextQuestTime,
+      CT: claimTime,
+      user: process.env.ACCOUNT,
+      NQ: RANKED,
+      ECR: ecr,
+      WC: winTotal,
+      LC: loseTotal,
+      FC: quest.fc
+      ,
+      WR: (winTotal / (winTotal + loseTotal)).toFixed(2),
+      SRC: seasonRewardCnt  //totalDec.toFixed(2)
+      ,
+      quest: quest != null ? quest?.splinter : "-",
+      LW: "-",
+      qt: quest != null ? quest?.total : "-",
+      qc: quest != null ? quest?.completed : "-",
+      rating: rating,
+      power: power + "(" + deltaPower + ")",
+      sps: dec,
+      league: league,
+      NC: cardNoClickCnt
+    };
+    try {
+      doSummaryLog(summaryInfo)
+      await doGuildBrawl(page)
+    }
+    catch (e){
+      console.log(e)
+    }
+    console.log(chalk.bold.white(
+        `Initiating sleep mode. The bot will awaken at ${new Date(
+            Date.now() + delayMs ).toLocaleString()}`));
+
+    await sleep(delayMs);
+    runStat = true;
+    throw new Error(`Restart needed.`);
   }
 }
 async function doPlayerCardsInit(RANKED) {
@@ -1455,11 +1493,17 @@ function doSummaryLog(summaryInfo) {
       });
 
   let summaryArray = []
+  const totalSum ={"user":"total","WC":0,"LC":0}
   statJson['users'].forEach(user => {
     if (statJson[user]) {
+      totalSum['WC'] = statJson[user]['WC'] + totalSum['WC']
+      totalSum['LC'] = statJson[user]['LC'] + totalSum['LC']
       summaryArray.push(statJson[user])
     }
   })
+
+  totalSum['WR'] = (totalSum['WC']/(totalSum['WC'] + totalSum['LC'])).toFixed(2)
+  summaryArray.push(totalSum)
   summaryLogger.table(summaryArray)
 }
 
@@ -1498,6 +1542,41 @@ function doSummaryErrorLog(summaryInfo) {
   summaryErrorLogger.table(summaryArray)
 }
 
+
+function doSummaryWinLog(summaryInfo) {
+  delete require.cache[require.resolve("./data/log/winStat.json")]
+  let statJson = require('./data/log/winStat')
+  statJson[process.env.ACCOUNT] = summaryInfo
+  fs.writeFile(`./data/log/winStat.json`, JSON.stringify(statJson),
+      function (err) {
+        if (err) {
+          console.log(err);
+        }
+      });
+
+  let summaryArray = []
+  let totalSum =Object.assign({"user": "total"},{"ml-T":0 , "ml-F":0 , "mts-T": 0 , "mts-F":0 , "sm-T":0 ,"sm-F":0 ,"cs-T": 0 , "cs-F":0})
+  totalSum["alg"] = ""
+
+  statJson['users'].forEach(user => {
+    if (statJson[user]) {
+      totalSum['ml-T'] = statJson[user]['ml-T'] + totalSum['ml-T']
+      totalSum['ml-F'] = statJson[user]['ml-F'] + totalSum['ml-F']
+      totalSum['mts-T'] = statJson[user]['mts-T'] + totalSum['mts-T']
+      totalSum['mts-F'] = statJson[user]['mts-F'] + totalSum['mts-F']
+      totalSum['sm-T'] = statJson[user]['sm-T'] + totalSum['sm-T']
+      totalSum['sm-F'] = statJson[user]['sm-F'] + totalSum['sm-F']
+      totalSum['cs-T'] = statJson[user]['cs-T'] + totalSum['cs-T']
+      totalSum['cs-F'] = statJson[user]['cs-F'] + totalSum['cs-F']
+      summaryArray.push(statJson[user])
+    }
+  })
+  const totalWinCnt =  totalSum['ml-T'] + totalSum['mts-T'] + totalSum['sm-T'] + totalSum['cs-T']
+  const totalLostCnt =  totalSum['ml-F'] + totalSum['mts-F'] + totalSum['sm-F'] + totalSum['cs-F']
+  totalSum["alg"] = totalWinCnt +":" + totalLostCnt +" ," + (totalWinCnt/(totalWinCnt + totalLostCnt)).toFixed(2)
+  summaryArray.push(totalSum)
+  summaryWinLogger.table(summaryArray)
+}
 
 // 30 MINUTES INTERVAL BETWEEN EACH MATCH (if not specified in the .env file)
 const isHeadlessMode = process.env.HEADLESS === 'false' ? false : true;
@@ -1833,11 +1912,11 @@ async function doGuildBrawl(page){
 
       let [mana, rules, splinters] = await Promise.all([
         splinterlandsPage.checkMatchManaBrawl(page).then((mana) => mana).catch(
-            () => 'no mana'),
+            () => 17),
         splinterlandsPage.checkMatchRulesBrawl(page).then(
-            (rulesArray) => rulesArray).catch(() => 'no rules'),
+            (rulesArray) => rulesArray).catch(() => 'Standard'),
         splinterlandsPage.checkMatchActiveSplintersBrawl(page).then(
-            (splinters) => splinters).catch(() => 'no splinters')
+            (splinters) => splinters).catch(() => [ 'fire', 'water', 'earth', 'life', 'death', 'dragon' ])
       ]);
       if(rules == null || rules == "" ){
         rules = "Standard"
@@ -1858,7 +1937,7 @@ async function doGuildBrawl(page){
         enemyRecent: [],
         enemyPossbileTeams:[],
         rating: 1500,
-        ranked: 'M',
+        ranked: 3500,
         quest:"earth",
         idMap:idMap,
         logContent: {

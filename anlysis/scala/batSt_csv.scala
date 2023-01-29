@@ -12,8 +12,8 @@ import java.util.Calendar
 import scala.collection.mutable.ArrayBuffer
 import org.apache.spark.sql.Dataset
 
-//val manaArr = Array((12,12),(13,13),(14,14),(15,15),(16,16),(17,17),(18,18),(19,19),(20,20),(21,21),(22,22),(23,23),(24,24),(25,25),(26,26),(27,27),(28,28),(29,29),(30,30),(31,32),(33,34),(35,36),(37,38),(39,40),(41,44),(45,50),(51,99))
-val manaArr = Array((20,20),(21,21),(22,22),(23,23),(24,24),(25,25),(26,26),(27,27),(28,28),(29,29),(30,30),(31,32),(33,34),(35,36),(37,38),(39,40),(41,44),(45,50),(51,99))
+val manaArr = Array((12,12),(13,13),(14,14),(15,15),(16,16),(17,17),(18,18),(19,19),(20,20),(21,21),(22,22),(23,23),(24,24),(25,25),(26,26),(27,27),(28,28),(29,29),(30,30),(31,32),(33,34),(35,36),(37,38),(39,40),(41,44),(45,50),(51,99))
+//val manaArr = Array((20,20),(21,21),(22,22),(23,23),(24,24),(25,25),(26,26),(27,27),(28,28),(29,29),(30,30),(31,32),(33,34),(35,36),(37,38),(39,40),(41,44),(45,50),(51,99))
 
 case class Item(mana_cap:Int , ruleset:String, summoner_id:Int ,monster_1_id:Int,monster_2_id:Int,monster_3_id:Int,monster_4_id:Int,monster_5_id:Int,monster_6_id:Int,summoner_id_lost:Int,monster_1_id_lost:Int,monster_2_id_lost:Int,monster_3_id_lost:Int,monster_4_id_lost:Int,monster_5_id_lost:Int,monster_6_id_lost:Int)
 case class AgainstMap(mana_cap:Int, ruleset:String,wc:String,lcs:(Int,String))
