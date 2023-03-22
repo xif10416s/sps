@@ -19,6 +19,7 @@ function doConfigInit(username ){
   process.env.MINUTES_BATTLES_INTERVAL = userConfig['MINUTES_BATTLES_INTERVAL'] ? userConfig['MINUTES_BATTLES_INTERVAL'] : process.env.MINUTES_BATTLES_INTERVAL
   process.env.guildLayer = userConfig['guildLayer'] ? userConfig['guildLayer'] : -1
   process.env.guildId = userConfig['guildId'] ? userConfig['guildId'] : ""
+  process.env.mlUrl = userConfig['mlUrl'] ? userConfig['mlUrl'] : ""
   console.log(process.env.ACCOUNT , process.env.PASSWORD ,process.env.ECR_RECOVER_TO,process.env.MINUTES_BATTLES_INTERVAL,process.env.skip_cs  , process.env.max_cnt , process.env.wsport )
 }
 

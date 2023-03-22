@@ -49,7 +49,7 @@ async function getBattleHistoryRaw(player = '', format, data = {}) {
         'https://api2.splinterlands.com/battle/history2?player='
         + player.toLocaleLowerCase() + "&format=" + format
         + "&v=1657932127908&token=O8WX6PK9KG&username=xgq1234"
-       // ,{agent: proxyAgent}
+         // ,{agent: proxyAgent}
         )
     .then((response) => {
       if (!response.ok) {
@@ -62,12 +62,14 @@ async function getBattleHistoryRaw(player = '', format, data = {}) {
       return battleHistory.json();
     })
     .catch((error) => {
-      // console.error('There has been a problem with your fetch operation:',
-      //     error);
+      console.error('There has been a problem with your fetch operation:',
+           error);
     });
     // console.log("get battles -----",player, battleHistory.battles.length)
     return battleHistory.battles;
   } catch (e) {
+    console.error('There has been a problem with your fetch operation:',
+        e);
     return null;
   }
 }
@@ -197,7 +199,7 @@ async function collectData(arr) {
       processedSet.add(arr[i])
       return checkAndSave(checkBattles)
     }).catch((error) => {
-      console.log("checkAndSave error ------------------!!!!");
+      console.log("checkAndSave error ------------------!!!!",error);
     })
 
     processedSet.add(arr[i])

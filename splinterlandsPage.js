@@ -13,25 +13,31 @@ async function login(page, account, password) {
         // .then(() => console.log("login_dialog_v2  use email clicked ......"))
         // .then(() => page.waitForTimeout(1000)) .catch((e)=> console.log("login_dialog_v2  error......",e))
 
+        await page.waitForNavigation({timeout: 5000}).catch(() =>{});
+        var form = await page.evaluate(() => {
+            var innerHTML = document.querySelectorAll('#root')[0].innerHTML;
+            return innerHTML;
+        });
+        console.log('form  ', form);
+
         var isOldVersion = false;
         // #login_dialog_v2 > div > div > div.modal-body > div > div:nth-child(2) > div:nth-child(1) > div:nth-child(3) > div > a
-        await page.waitForSelector('#root > div:nth-child(1) > div.c-kAOnKs > div > div > div > div > form > div.c-ieNaGf')
-        .then(() => console.log("login_dialog_v2 email button visable ......"))
+        // await page.waitForSelector('#root > div:nth-child(1) > div.c-kwJzZO.c-kwJzZO-hjLfVT-withoutMinHeight-false > div > div > div > div > form > div.c-ieNaGf')
+        await page.waitForXPath('//*[@id="root"]/div[1]/div[1]/div/div/div/div/form/div[2]',{timeout: 5000, visible: true})
+       .then(() => console.log("login_dialog_v2 email button visable ......"))
         .then(() => page.waitForTimeout(1000))
-        .then(() => {
-            page.click('#root > div:nth-child(1) > div.c-kAOnKs > div > div > div > div > form > div.c-ieNaGf')
-            page.evaluate(() => {
-                document.querySelector('#root > div:nth-child(1) > div.c-kAOnKs > div > div > div > div > form > div.c-ieNaGf').click();
-            })
-        })
-        .then(() => page.waitForTimeout(2000))
-        .then(() => {
-            console.log("login_dialog_v2 email button clicked ......")
-        })
         .catch((e) =>{
             //isOldVersion = true;
             console.log("login_dialog_v2 email button not visable ......",e )
         })
+
+        const elements = await page.$x('//*[@id="root"]/div[1]/div[1]/div/div/div/div/form/div[2]')
+        if(elements.length >0) {
+            await elements[0].click()
+            console.log("login_dialog_v2 email button clicked ......")
+        } else {
+        	console.log("login_dialog_v2 email button not clicked ....2..")
+        }
 
         // check new
         if( !isOldVersion) {
@@ -89,43 +95,83 @@ async function login(page, account, password) {
         } else {
             console.log("login new version ......******************" )
 //"#root > div:nth-child(1) > div.c-hTwMYH > div > div > div > div > form > div.c-ieNaGf"
-            //
 
-            await page.waitForSelector('#root > div:nth-child(1) > div.c-kAOnKs > div > div > div > div > form > div:nth-child(1) > div > input')
-            .then(() => console.log("email  visable ......"))
-            .then(() => page.waitForTimeout(1000))
-            .then(() => page.focus('#root > div:nth-child(1) > div.c-kAOnKs > div > div > div > div > form > div:nth-child(1) > div > input'))
-            .then(() => page.type('#root > div:nth-child(1) > div.c-kAOnKs > div > div > div > div > form > div:nth-child(1) > div > input', account))
-            .then(() => console.log("email  input finished ......"))
-            .then(() => page.waitForTimeout(3000))
+            await page.waitForXPath('//*[@id="root"]/div[1]/div[1]/div/div/div/div/form/div[1]/div/input',{timeout: 5000, visible: true})
+            .then(() => console.log("email  input  visable ......"))
+            .catch((e) =>{
+                //isOldVersion = true;
+                console.log("email  input not visable ......",e )
+            })
+
+
+            const emailElements = await page.$x(('//*[@id="root"]/div[1]/div[1]/div/div/div/div/form/div[1]/div/input'))
+            if(emailElements.length >0) {
+                await emailElements[0].focus()
+                await emailElements[0].type(account)
+                console.log("emailElements input end ......")
+            } else {
+                console.log("emailElements input  not type ....2..")
+            }
+
+            await page.waitForTimeout(3000);
+
+            // await page.waitForSelector('#root > div:nth-child(1) > div.c-kAOnKs > div > div > div > div > form > div:nth-child(1) > div > input')
+            // .then(() => console.log("email  visable ......"))
+            // .then(() => page.waitForTimeout(1000))
+            // .then(() => page.focus('#root > div:nth-child(1) > div.c-kAOnKs > div > div > div > div > form > div:nth-child(1) > div > input'))
+            // .then(() => page.type('#root > div:nth-child(1) > div.c-kAOnKs > div > div > div > div > form > div:nth-child(1) > div > input', account))
+            // .then(() => console.log("email  input finished ......"))
+            // .then(() => page.waitForTimeout(3000))
 
             var form = await page.evaluate(() => {
-                var innerHTML = document.querySelectorAll('#root > div:nth-child(1) > div.c-kAOnKs > div > div > div > div > form')[0].innerHTML;
+                var innerHTML = document.querySelectorAll('#root')[0].innerHTML;
                 return innerHTML;
             });
             console.log('form 2 ', form);
 
+            const passElements = await page.$x(('//*[@id="root"]/div[1]/div[1]/div/div/div/div/form/div[2]/div/input'))
+            if(passElements.length >0) {
+                await passElements[0].focus()
+                await passElements[0].type(password)
+                console.log("passElements input end ......")
+            } else {
+                console.log("passElements input  not type ....2..")
+            }
 
-            await page.waitForSelector('#root > div:nth-child(1) > div.c-kAOnKs > div > div > div > div > form > div:nth-child(2) > div > input')
-            .then(() => console.log("password  visable ......"))
-            .then(() => page.focus('#root > div:nth-child(1) > div.c-kAOnKs > div > div > div > div > form > div:nth-child(2) > div > input'))
-            .then(() => page.type('#root > div:nth-child(1) > div.c-kAOnKs > div > div > div > div > form > div:nth-child(2) > div > input', password))
-            .then(() => console.log("password  input finished ......"))
-            .then(() => page.waitForTimeout(3000))
+            await page.waitForTimeout(3000);
+
+
+            // await page.waitForSelector('#root > div:nth-child(1) > div.c-kAOnKs > div > div > div > div > form > div:nth-child(2) > div > input')
+            // .then(() => console.log("password  visable ......"))
+            // .then(() => page.focus('#root > div:nth-child(1) > div.c-kAOnKs > div > div > div > div > form > div:nth-child(2) > div > input'))
+            // .then(() => page.type('#root > div:nth-child(1) > div.c-kAOnKs > div > div > div > div > form > div:nth-child(2) > div > input', password))
+            // .then(() => console.log("password  input finished ......"))
+            // .then(() => page.waitForTimeout(3000))
             // .then(() => page.waitForSelector('#login_dialog_v2 > div > div > div.modal-body > div > div > form > div > div.col-sm-offset-1 > button', { visible: true }).then(() => page.click('#login_dialog_v2 > div > div > div.modal-body > div > div > form > div > div.col-sm-offset-1 > button')))
 
-            await page.waitForSelector('#root > div:nth-child(1) > div.c-kAOnKs > div > div > div > div > form > button')
-            .then(() => console.log("loginBtn  visable ......"))
-            .then(() => page.click('#root > div:nth-child(1) > div.c-kAOnKs > div > div > div > div > form > button'))
-            .then(() => page.waitForTimeout(15000))
-            // .then(() => page.click('#loginBtn'))
-            .then(() => console.log("loginBtn clicked........."))
-            // .then(() => page.reload())
-            .then(() => console.log("loginBtn reload........."))
-            // .then(() => page.waitForTimeout(3000))
-            // .then(() => page.click('#loginBtn'))
-            // .then(() => page.reload())
-            .then(() => page.waitForTimeout(10000))
+
+            const submitEles = await page.$x(('//*[@id="root"]/div[1]/div[1]/div/div/div/div/form/button'))
+            if(submitEles.length >0) {
+                await submitEles[0].click()
+                console.log("login  clicked......")
+            } else {
+                console.log("login not clicked......")
+            }
+
+            await page.waitForNavigation({timeout: 15000}).catch(() =>{});
+
+            // await page.waitForSelector('#root > div:nth-child(1) > div.c-kAOnKs > div > div > div > div > form > button')
+            // .then(() => console.log("loginBtn  visable ......"))
+            // .then(() => page.click('#root > div:nth-child(1) > div.c-kAOnKs > div > div > div > div > form > button'))
+            // .then(() => page.waitForTimeout(15000))
+            // // .then(() => page.click('#loginBtn'))
+            // .then(() => console.log("loginBtn clicked........."))
+            // // .then(() => page.reload())
+            // .then(() => console.log("loginBtn reload........."))
+            // // .then(() => page.waitForTimeout(3000))
+            // // .then(() => page.click('#loginBtn'))
+            // // .then(() => page.reload())
+            // .then(() => page.waitForTimeout(10000))
         }
 
 

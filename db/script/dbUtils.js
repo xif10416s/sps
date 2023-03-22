@@ -265,13 +265,13 @@ async function batchInsertRaw(history, fromScore, batchSize, fromDay) {
   }
 
   if (tmp.length > 0) {
-    console.log('last batch insert start ...' + new Date() ,tmp.length);
+    console.log('last batch insert start ...' + new Date() ,tmp.length,tmp[0]);
     await sqlQuery(insertTemplateRaw, [tmp]);
     console.log('last batch insert end ...' + new Date());
   }
 
   if (temM.length > 0) {
-    console.log('last batch insert modern start ...' + new Date() ,temM.length);
+    console.log('last batch insert modern start ...' + new Date() ,temM.length,temM[0]);
     await sqlQuery(insertTemplateRawMorden, [temM]);
     console.log('last batch insert modern end ...' + new Date());
   }

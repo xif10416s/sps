@@ -1650,10 +1650,14 @@ async function doMLPredict(possibleTeams,mana, rating,rules,score,enemyPossbileT
   let topSummoners = battles.matchedEnemyPossbileSummoners(enemyPossbileTeams, true);
   tems = topSummoners.length >0 ? topSummoners[0]: '';
 
+  let mlUrl = 'http://192.168.99.100:28888'
+  if(process.env.mlUrl  &&  process.env.mlUrl != ""){
+     mlUrl = process.env.mlUrl
+  }
   const result = await new Promise((resolve, reject) => {
     request({
       //url: 'http://localhost:8880',
-      url: 'http://192.168.99.100:28888',
+      url: mlUrl,
       method: "POST",
       // json: true,
       headers: {

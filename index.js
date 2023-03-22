@@ -121,12 +121,12 @@ async function checkSeasonRewards(page) {
 async function checkEcr(page) {
   try {
     const ecr = await getElementTextByXpath(page,
-        '//*[@id="bs-example-navbar-collapse-1"]/ul[2]/li[3]/div[1]/div[3]/div[3]/div', 3000);
+        '//*[@id="total_energy"]', 3000);
     if (ecr) {
       console.log(chalk.bold.whiteBright.bgMagenta(
           'Your current Energy Capture Rate is ' + ecr.split('.')[0] + "%"));
       // ask.logger.log(chalk.bold.whiteBright.bgMagenta('Your current Energy Capture Rate is ' + ecr.split('.')[0] + "%"));
-      return parseFloat(ecr)
+      return parseInt(ecr)
     }
   } catch (e) {
     console.log(chalk.bold.redBright.bgBlack('ECR not defined'));
@@ -815,19 +815,19 @@ async function startBotPlayMatch(page, browser) {
       await newQuest(page)
     }
 
-    const isWaitForBeginWithHighECR = ecr && process.env.ECR_RECOVER_TO && ecr
-        <= parseFloat(process.env.ECR_RECOVER_TO);
-    const isOverECR = ecr && ecr >= 95;
-    const isLowEcr = ecr && ecr <= 75 //TODO .....
+    // const isWaitForBeginWithHighECR = ecr && process.env.ECR_RECOVER_TO && ecr
+    //     <= parseFloat(process.env.ECR_RECOVER_TO);
+    const isOverECR = ecr && ecr >= 40;
+    const isLowEcr = ecr && ecr <= 0 //TODO .....
     const checkRatingAndPower = parseInt(rating) >= 1030;
     let dailyTaskAlmostFinished = isDailyTaskAlmostFinished(quest);
 
-    console.log("isWaitForBeginWithHighECR:", isWaitForBeginWithHighECR,
-        "dailyTaskAlmostFinished", dailyTaskAlmostFinished,
-        "checkRatingAndPower:", checkRatingAndPower, "!isOverECR:", !isOverECR)
+    // console.log("isWaitForBeginWithHighECR:", isWaitForBeginWithHighECR,
+    //     "dailyTaskAlmostFinished", dailyTaskAlmostFinished,
+    //     "checkRatingAndPower:", checkRatingAndPower, "!isOverECR:", !isOverECR)
     // do sleep
     // await doGuildBrawl(page)
-    await  doSleepWait(page,isWaitForBeginWithHighECR,dailyTaskAlmostFinished,checkRatingAndPower,isLowEcr,isOverECR
+    await  doSleepWait(page,checkRatingAndPower,isLowEcr,isOverECR
         ,nextQuestTime,RANKED,quest,ecr,seasonRewardCnt,power,deltaPower,dec,league,rating)
 
     console.log('getting user cards collection from splinterlands API...')
@@ -1141,29 +1141,17 @@ async function startBotPlayMatch(page, browser) {
   }
 }
 
-async function doSleepWait(page,isWaitForBeginWithHighECR,dailyTaskAlmostFinished,checkRatingAndPower,isLowEcr,isOverECR
+async function doSleepWait(page,checkRatingAndPower,isLowEcr,isOverECR
     ,nextQuestTime,RANKED,quest,ecr,seasonRewardCnt,power,deltaPower,dec,league,rating) {
   // do sleep .....
   let deltaLost = loseTotal - winTotal
-  if ((isWaitForBeginWithHighECR && !dailyTaskAlmostFinished
-      && checkRatingAndPower && process.env.MAX_REWARDS == "false"
-      || (isLowEcr ) ) && !isOverECR) {
+  if (ecr <= 2) {
     // const random = Math.ceil(Math.random() * 1) * 60000
 
-    let oneMinitusMs = 1 * 1000 * 60
-    let halfAnHoursMs = oneMinitusMs * 30 ;
-    let delayMs  = halfAnHoursMs
-    if(deltaLost > 0 ){
-      if(deltaLost >= 6 )  {
-        deltaLost = 6 ;
-      }
-
-      delayMs = halfAnHoursMs + oneMinitusMs * 10 * deltaLost
-    }
-
-
+    let oneHour = 1 * 1000 * 60* 60
+    let delayMs  = oneHour * 10
     console.log(chalk.bold.white(
-        `Time needed to recover ECR, approximately ${ delayMs / oneMinitusMs } minutes.ecr:`), ecr, isWaitForBeginWithHighECR );
+        `Time needed to recover ECR, approximately ${ delayMs / oneHour } hours.ecr:`), ecr );
     // logsummsary
 
     const summaryInfo = {

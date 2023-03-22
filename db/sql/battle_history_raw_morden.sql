@@ -60,3 +60,8 @@ CREATE TABLE `battle_history_raw_morden`  (
   INDEX `index_mana_sum_rule`(`mana_cap`, `summoner_id`, `ruleset`) USING BTREE
 ) ENGINE = MYISAM CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic ;
 ALTER TABLE `battle_history_raw_morden` ADD UNIQUE (`battle_queue_id`);
+
+
+alter table battle_history_raw_morden drop id;
+alter table battle_history_raw_morden add `id` int(9) NOT NULL ;
+alter table battle_history_raw_morden modify column id int( 11 ) not null auto_increment,add primary key(id);

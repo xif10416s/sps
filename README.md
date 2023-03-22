@@ -413,8 +413,10 @@ sudo supervisorctl
 
 docker:
  fervent_hofstadter 	
- cd /tf/notebooks  && nohup python ./tf2_learn/serverV5.py
- 
+ cd /tf/notebooks  && nohup python ./tf2_learn/serverV5.py &
+ cd /tf/notebooks  && nohup python ./tf2_learn/serverV6.py &
+  
+  
 三、监控窗口
 四，清理
 node D:\source\python\spsAuto\splinterlands-bot\logs\logCleaner.js
