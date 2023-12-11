@@ -7,12 +7,13 @@
   "max_cnt": "9999" ,
   "PREFER_CS": "true",
   "MINUTES_BATTLES_INTERVAL": 2,
-  "RANKED": "M",
+  "RANKED": "W",
   "algorithm": "ml",
-  "algorithm_rating": "0.25",
+  "algorithm_rating": "0.35",
+  "mlUrl": "http://localhost:8880",
   "SKIP_QUEST": "dragon",
   "ECR_RECOVER_TO": 90,
   "guildLayer": -1,
-  "guildId": "ac689b5f8f139b57fda60af237adfdf4e5d63a75",
+  "guildId": "",
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }

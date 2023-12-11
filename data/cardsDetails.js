@@ -182,13 +182,23 @@ function checkType(target,most, secondMost, perferSummonersInfo) {
   }
 }
 
+
+const guildIDs=Object.keys(cardsDetailsIDMap).filter(x => {
+  if (cardsDetailsIDMap[x]['abilities'])
+    return cardsDetailsIDMap[x]['abilities'][0].indexOf('Bloodlust') != -1
+  return false
+}).map(x => parseInt(x))
+console.log(guildIDs)
+
+
+
 module.exports.cardsDetailsNameMap = cardsDetailsNameMap;
 module.exports.cardsDetailsIDMap = cardsDetailsIDMap;
 module.exports.getEnemyBufferRecentInfo = getEnemyBufferRecentInfo;
 module.exports.getEnemyTeamPerfer = getEnemyTeamPerfer;
 module.exports.doModernFilter = doModernFilter
 module.exports.doChaosFilter = doChaosFilter
-
+module.exports.guildIDs = guildIDs;
 
 let test = [["Kelya Frendul","1"],["Serpent of Eld","1"],["Elven Defender","1"],["Flying Squid","1"],["Mantoid","1"],["Deeplurker","1"],["Goblin Chariot","1"],["Kelya Frendul","1"],["Serpent of Eld","1"],["Merdaali Guardian","1"],["Deeplurker","1"],["Ice Pixie","1"],["Albatross","1"],["",""],["Thaddius Brood","1"],["Cursed Windeku","1"],["Carrion Shade","1"],["Death Elemental","1"],["",""],["",""],["",""],["Obsidian","1"],["Unicorn Mustang","1"],["Mycelic Slipspawn","1"],["Goblin Psychic","1"],["Khmer Princess","1"],["",""],["",""],["Kelya Frendul","1"],["Hardy Stonefish","1"],["Albatross","1"],["Ice Pixie","1"],["Deeplurker","1"],["",""],["",""]]
 
@@ -207,9 +217,9 @@ let test = [["Kelya Frendul","1"],["Serpent of Eld","1"],["Elven Defender","1"],
 // }).join(","))
 
 // ############### basiccardis ##############
-// const basicCards = require('./data/basicCards.json');
+// const basicCards = require('./basicCards.json');
 // const ids = basicCards.map(x =>{
-//   return cardsDetail.cardsDetailsNameMap[x]['cardDetailId']
+//   return cardsDetailsNameMap[x]['cardDetailId']
 // })
 // const fs = require('fs');
 // fs.writeFile(`tmp.json`, JSON.stringify(ids), function (err) {
@@ -217,3 +227,5 @@ let test = [["Kelya Frendul","1"],["Serpent of Eld","1"],["Elven Defender","1"],
 //     console.log(err);
 //   }
 // });
+
+

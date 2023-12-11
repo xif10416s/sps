@@ -138,7 +138,7 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule,
   let date = new Date();
   let endDate = new Date(date.setDate(date.getDate() + 2))
   let endDateStr = endDate.toISOString().split("T")[0];
-  let startDate = new Date(date.setDate(date.getDate() - 180))
+  let startDate = new Date(date.setDate(date.getDate() - 60))
   let startDateStr = startDate.toISOString().split("T")[0];
   const selectSql = "   summoner_id, monster_1_id, monster_2_id , monster_3_id , monster_4_id , monster_5_id , monster_6_id "
   const minRSCount = 1000
@@ -147,8 +147,8 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule,
   // 1.1  two rules
   if (keyRules.length > 1) {
     let sql = 'select '+ selectSql +' from ' + tableName
-        + ' where  mana_cap >= ?  and   mana_cap <= ? and summoner_id in (?)  and (ruleset = ? or ruleset = ?) and created_date_day <= ? and created_date_day >= ?  limit 1000000';
-    let params = [fromMana ,mana, summoners, ruleset, keyRules[1] + "|" + keyRules[0],
+        + ' where  mana_cap >= ?  and   mana_cap <= ? and summoner_id in (?)  and ruleset = ?  and created_date_day <= ? and created_date_day >= ?  limit 50000';
+    let params = [fromMana ,mana, summoners, ruleset,
       endDateStr, startDateStr];
     
     let data = await dbUtils.sqlQuery(sql, params);
@@ -157,12 +157,25 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule,
     console.log("1.1  two rules full match rs :" + rs.length, params, sql)
     // 1.1.1  two fules must match 
     if (mustSingleRule != null && mustSingleRule == "ALL") {
-      
-      if (process.env.WEAK_KEY_RULES.indexOf(keyRules[0]) != -1) {
-        mustSingleRule = keyRules[1];
+      let sgRules=[]
+      if (process.env.WEAK_KEY_RULES.indexOf(keyRules[0]) == -1) {
+          sgRules.push(keyRules[0])
       }
-      if (process.env.WEAK_KEY_RULES.indexOf(keyRules[1]) != -1) {
-        mustSingleRule = keyRules[0];
+      if (process.env.WEAK_KEY_RULES.indexOf(keyRules[1]) == -1) {
+          sgRules.push(keyRules[1])
+      }
+
+      if (keyRules.length == 3) {
+        if (process.env.WEAK_KEY_RULES.indexOf(keyRules[2]) == -1) {
+           sgRules.push(keyRules[2])
+        }
+      }
+
+      if(sgRules.length > 0) {
+        mustSingleRule==sgRules.join("|")
+        console.log("1.1.1 filter weekrules remain mustSingleRule",mustSingleRule)
+      } else {
+        mustSingleRule=null
       }
 
       // no week rule
@@ -177,7 +190,7 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule,
     //1.2   one rule match
   } else {
     let sql = 'select '+ selectSql +' from ' + tableName
-        + ' where  mana_cap >= ?  and   mana_cap <= ?  and summoner_id in (?)  and  ruleset like ? and created_date_day <= ? and created_date_day >= ?   limit 1000000';
+        + ' where  mana_cap >= ?  and   mana_cap <= ?  and summoner_id in (?)  and  ruleset like ? and created_date_day <= ? and created_date_day >= ?   limit 50000';
   
     let data = await dbUtils.sqlQuery(sql,
         [fromMana, mana, summoners, "%" + ruleset + "%", endDateStr, startDateStr]);
@@ -197,7 +210,7 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule,
     if (mustSingleRule != null) {
       console.log("1.3.1  two rules one must rule  mustSingleRule.. :", mustSingleRule)
       let sql = 'select '+ selectSql +' from ' + tableName
-          + ' where  mana_cap >= ?  and   mana_cap <= ?   and summoner_id in (?)  and ruleset like ?  and created_date_day <= ? and created_date_day >= ?   limit 100000 ';
+          + ' where  mana_cap >= ?  and   mana_cap <= ?   and summoner_id in (?)  and ruleset like ?  and created_date_day <= ? and created_date_day >= ?   limit 50000 ';
      
       let params = [fromMana, mana, summoners, "%" + mustSingleRule + "%", endDateStr,
         startDateStr]
@@ -211,7 +224,7 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule,
 
     // 1.3.2  two rule no must rule
     let sql = 'select '+ selectSql +'  from ' + tableName
-        + ' where  mana_cap >= ?  and   mana_cap <= ?   and summoner_id in (?)  and ( ruleset like ?  or ruleset like ?) and created_date_day <= ? and created_date_day >= ?  limit 1000000';
+        + ' where  mana_cap >= ?  and   mana_cap <= ?   and summoner_id in (?)  and ( ruleset like ?  or ruleset like ?) and created_date_day <= ? and created_date_day >= ?  limit 50000';
     
     let params = [fromMana,mana, summoners, "%" + keyRules[0] + "%", "%" + keyRules[1] + "%",
       endDateStr, startDateStr]
@@ -236,10 +249,33 @@ const selectBattleDate = async (mana, ruleset, summoners, mustSingleRule,
 }
 
 const battlesFilterByManacap = async (mana, ruleset, summoners, ranked) => {
-  let mustRule = null;
+  let mustRule = "";
 
   let keyRules = ruleset.split('|');
-  if (keyRules.length > 1) {
+  if (keyRules.length == 3) {
+    let rcnt = 0
+    if (process.env.MUST_RULES.indexOf(keyRules[0]) != -1 ) {
+      mustRule = keyRules[0];
+      rcnt = rcnt+ 1
+    }
+
+    if (process.env.MUST_RULES.indexOf(keyRules[1]) != -1 ) {
+      mustRule = keyRules[1];
+      rcnt = rcnt+ 1
+    }
+
+    if (process.env.MUST_RULES.indexOf(keyRules[2]) != -1 ) {
+      mustRule = keyRules[2];
+      rcnt = rcnt+ 1
+    }
+
+    if(rcnt >=2) {
+      mustRule = "ALL";
+    }
+
+  }
+
+  if (keyRules.length == 2) {
     if (process.env.KEY_SINGLE_RULES.indexOf(keyRules[0]) != -1 &&
         process.env.KEY_SINGLE_RULES.indexOf(keyRules[1]) == -1) {
       mustRule = keyRules[0];
@@ -254,7 +290,9 @@ const battlesFilterByManacap = async (mana, ruleset, summoners, ranked) => {
         process.env.KEY_SINGLE_RULES.indexOf(keyRules[1]) != -1) {
       mustRule = "ALL";
     }
-  } else {
+  }
+
+  if(keyRules.length == 1){
     if (process.env.KEY_SINGLE_RULES.indexOf(ruleset) != -1) {
       mustRule = "ALL";
     }
@@ -509,7 +547,7 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
   // logger.log("4-2 third step most bestcombination  :", JSON.stringify(bestCombination))
 
   try{
-    if(process.env.algorithm  &&  process.env.algorithm != "") {
+    if(process.env.algorithm  &&  process.env.algorithm != "" && matchDetails.rating >= 200) {
       const algs = process.env.algorithm.split(",")
       for (let i = 0; i < algs.length; i++) {
         const alg = algs[i]

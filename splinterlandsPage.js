@@ -104,7 +104,7 @@ async function login(page, account, password) {
             })
 
 
-            const emailElements = await page.$x(('//*[@id="root"]/div[1]/div[1]/div/div/div/div/form/div[1]/div/input'))
+            const emailElements = await page.$x(('//*[@id="root"]/div[1]/div[2]/div/div/div/div/form/div[1]/div/input'))
             if(emailElements.length >0) {
                 await emailElements[0].focus()
                 await emailElements[0].type(account)
@@ -129,7 +129,7 @@ async function login(page, account, password) {
             });
             console.log('form 2 ', form);
 
-            const passElements = await page.$x(('//*[@id="root"]/div[1]/div[1]/div/div/div/div/form/div[2]/div/input'))
+            const passElements = await page.$x(('//*[@id="root"]/div[1]/div[2]/div/div/div/div/form/div[2]/div/input'))
             if(passElements.length >0) {
                 await passElements[0].focus()
                 await passElements[0].type(password)
@@ -150,7 +150,7 @@ async function login(page, account, password) {
             // .then(() => page.waitForSelector('#login_dialog_v2 > div > div > div.modal-body > div > div > form > div > div.col-sm-offset-1 > button', { visible: true }).then(() => page.click('#login_dialog_v2 > div > div > div.modal-body > div > div > form > div > div.col-sm-offset-1 > button')))
 
 
-            const submitEles = await page.$x(('//*[@id="root"]/div[1]/div[1]/div/div/div/div/form/button'))
+            const submitEles = await page.$x(('//*[@id="root"]/div[1]/div[2]/div/div/div/div/form/button'))
             if(submitEles.length >0) {
                 await submitEles[0].click()
                 console.log("login  clicked......")
@@ -211,6 +211,12 @@ async function checkMana(page) {
 }
 
 async function checkMatchMana(page) {
+    await page.waitForSelector('#enemy_found_ranked > div > div > div.modal-body > section.combat__conflict > div > div:nth-child(6) > div > div > div > div', {visible: true, timeout: 10000})
+    .then(() => {
+        console.log("checkMatchMana visible")
+    }).catch(() => {
+        console.log('checkMatchMana not visible', new Date().toLocaleString());
+    })
     // const mana = await page.$$eval("#enemy_found_ranked > div > div > div.modal-body > section.combat__conflict.combat_info > div:nth-child(2) > div > div", el => el.map(x => x.getAttribute("data-original-title")));
     const mana = await getElementText(page,"#enemy_found_ranked > div > div > div.modal-body > section.combat__conflict > div > div:nth-child(6) > div > div > div > div")
     console.log("checkMatchMana :" , mana.trim())
@@ -220,14 +226,28 @@ async function checkMatchMana(page) {
 
 
 async function checkMatchRules(page) {
+    await page.waitForSelector('#enemy_found_ranked > div > div > div.modal-body > section.combat__conflict > div > div.combat__rules > div > div > img', {visible: true, timeout: 10000})
+    .then(() => {
+        console.log("checkMatchRules visible")
+    }).catch(() => {
+        console.log('checkMatchRules not visible', new Date().toLocaleString());
+    })
     const rules = await page.$$eval("#enemy_found_ranked > div > div > div.modal-body > section.combat__conflict > div > div.combat__rules > div > div > img", el => el.map(x => x.getAttribute("data-original-title")));
+    console.log("checkMatchRules:",rules)
     return rules.map(x => x.split(':')[0]).join('|')
 }
 
 
 async function checkMatchActiveSplinters(page) {
+    await page.waitForSelector('#enemy_found_ranked > div > div > div.modal-body > section.combat__conflict > div > div.combat__splinters > div > img', {visible: true, timeout: 10000})
+    .then(() => {
+        console.log("checkMatchActiveSplinters visible")
+    }).catch(() => {
+        console.log('checkMatchActiveSplinters not visible', new Date().toLocaleString());
+    })
     const splinterUrls = await page.$$eval("#enemy_found_ranked > div > div > div.modal-body > section.combat__conflict > div > div.combat__splinters > div > img",
             el => el.map(x => x.getAttribute("src")));
+    console.log("checkMatchActiveSplinters:",splinterUrls)
     return splinterUrls.map(splinter => splinterIsActive(splinter)).filter(x => x);
 }
 

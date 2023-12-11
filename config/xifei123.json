@@ -10,9 +10,10 @@
   "MINUTES_BATTLES_INTERVAL": 1,
   "ECR_RECOVER_TO": 65,
   "algorithm": "ml",
-  "algorithm_rating": "0.25",
-  "RANKED": "M",
+  "algorithm_rating": "0.35",
+  "mlUrl": "http://localhost:8880",
+  "RANKED": "W",
   "guildLayer": -1,
-  "guildId": "f40508a6550668f264c979451fd0836ee6949ecd",
+  "guildId": "",
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }

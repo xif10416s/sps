@@ -1,15 +1,6 @@
 [
-   {"name" : "Furious Chicken",
-    "skipRules": ["Odd Ones Out","Taking Sides","Up Close & Personal"],
-    "monsterMaxSize": 5,
-    "position": [1],
-    "positionStrategy": 1 ,
-    "replaceMana" : 0,
-     "quest":"neutral",
-     "order" : 999
-  },
   {"name" : "Corpse Fiend",
-    "skipRules": ["Odd Ones Out","Keep Your Distance","Lost Legendaries","Rise of the Commons"],
+    "skipRules": ["Odd Ones Out","Going the Distance","Lost Legendaries","Rise of the Commons","Wands Out"],
     "monsterMaxSize": 5,
     "position": [1],
     "positionStrategy": 1 ,
@@ -19,7 +10,7 @@
     "order" : 10
   },
   {"name" : "Fungus Fiend",
-    "skipRules": ["Odd Ones Out","Keep Your Distance","Lost Legendaries","Rise of the Commons"],
+    "skipRules": ["Odd Ones Out","Going the Distance","Lost Legendaries","Rise of the Commons","Wands Out"],
     "monsterMaxSize": 5,
     "position": [1],
     "positionStrategy": 1 ,
@@ -29,7 +20,7 @@
     "order" : 10
   },
   {"name" : "Torrent Fiend",
-    "skipRules": ["Odd Ones Out","Keep Your Distance","Lost Legendaries","Rise of the Commons"],
+    "skipRules": ["Odd Ones Out","Going the Distance","Lost Legendaries","Rise of the Commons","Wands Out"],
     "monsterMaxSize": 5,
     "position": [1],
     "positionStrategy": 1 ,
@@ -39,7 +30,7 @@
     "order" : 10
   },
   {"name" : "Scorch Fiend",
-    "skipRules": ["Odd Ones Out","Keep Your Distance","Lost Legendaries","Rise of the Commons"],
+    "skipRules": ["Odd Ones Out","Going the Distance","Lost Legendaries","Rise of the Commons","Wands Out"],
     "monsterMaxSize": 5,
     "position": [1],
     "positionStrategy": 1 ,
@@ -49,7 +40,7 @@
     "order" : 10
   },
   {"name" : "Soul Fiend",
-    "skipRules": ["Odd Ones Out","Keep Your Distance","Lost Legendaries","Rise of the Commons"],
+    "skipRules": ["Odd Ones Out","Going the Distance","Lost Legendaries","Rise of the Commons","Wands Out"],
     "monsterMaxSize": 5,
     "position": [1],
     "positionStrategy": 1 ,
@@ -57,13 +48,5 @@
     "splinter": "life",
     "color":"White",
     "order" : 10
-  },
-  {"name" : "Creeping Ooze",
-    "skipRules": ["Back to Basics","Taking Sides","Even Stevens","Reverse Speed","Up Close & Personal"],
-    "monsterMaxSize": 6,
-    "position": [3,2,4,5,6],
-    "positionStrategy": 2 ,
-    "replaceMana" : 1,
-    "order" : 5
   }
 ]

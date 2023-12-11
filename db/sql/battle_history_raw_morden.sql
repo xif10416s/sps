@@ -57,7 +57,8 @@ CREATE TABLE `battle_history_raw_morden`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `index_created_date_day`(`created_date_day`) USING BTREE,
   INDEX `index_lost_team`(`summoner_id_lost`, `monster_1_id_lost`, `monster_2_id_lost`, `monster_3_id_lost`, `monster_4_id_lost`, `monster_5_id_lost`, `monster_6_id_lost`) USING BTREE,
-  INDEX `index_mana_sum_rule`(`mana_cap`, `summoner_id`, `ruleset`) USING BTREE
+  INDEX `index_mana_sum_rule`(`mana_cap`, `summoner_id`, `ruleset`) USING BTREE,
+  INDEX `index_mana`(`mana_cap`) USING BTREE
 ) ENGINE = MYISAM CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic ;
 ALTER TABLE `battle_history_raw_morden` ADD UNIQUE (`battle_queue_id`);
 

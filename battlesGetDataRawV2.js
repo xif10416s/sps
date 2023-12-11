@@ -3,7 +3,12 @@ const fs = require('fs');
 
 let intUsers = ['xqm123','xqm1234','xifei123','xifei1234','hkd123','hkd1234','sugelafei','sugelafei2','xgq123','xgq1234']
 let remainFileModern = `./data/modern_remain_raw.json`;
-const remainUsersModern = require(remainFileModern);
+let remainUsersModern = []
+try{
+   remainUsersModern = require(remainFileModern);
+} catch(e){
+}
+
 
 let processedFilePath = `./data/battles_get_processed.json`;
 
@@ -154,6 +159,7 @@ let battlesList = [];
 // 排重
 let map = new Map();
 let mergeArray = [];
+mergeArray = intUsers
 
 if (isInit) {
   console.log('init collectdata begin ........');
@@ -200,6 +206,7 @@ async function collectData(arr) {
       return checkAndSave(checkBattles)
     }).catch((error) => {
       console.log("checkAndSave error ------------------!!!!",error);
+      process.exit(0)
     })
 
     processedSet.add(arr[i])

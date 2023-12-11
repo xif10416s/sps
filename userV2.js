@@ -42,6 +42,7 @@ async function  getPlayerCardsV2(username) {
     return x[0]
   })
   a = Array.from(new Set(a))
+  a = a.filter(item => !cardsDetail.guildIDs.includes(item))
   return [a,idMap]
 }
 
@@ -93,8 +94,8 @@ async function getPlayerCardsOnlyOwnerV2(username,isGold){
 module.exports.getPlayerCardsV2 = getPlayerCardsV2;
 module.exports.getPlayerCardsOnlyOwnerV2 = getPlayerCardsOnlyOwnerV2;
 (async ()=>{
-   // const [a,idMap] = await getPlayerCardsV2("hkd1234")
-   // console.log(a)
+   const [a,idMap] = await getPlayerCardsV2("sugelafei")
+   console.log(a)
    // console.log(idMap)
 
 // const [a,idMap] = await getPlayerCardsOnlyOwnerV2("hkd1234",true)

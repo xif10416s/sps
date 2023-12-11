@@ -10,10 +10,11 @@
   "ECR_RECOVER_TO": 90,
   "TARGET_FP": 18000,
   "algorithm": "ml,sm",
-  "algorithm_rating": "0.55",
-  "RANKED": "M",
+  "mlUrl": "http://localhost:8880",
+  "algorithm_rating": "0.35",
+  "RANKED": "W",
   "SKIP_QUEST": "dragon",
   "guildLayer": 8,
-  "guildId": "bf52217a86d4cef1388fe596bc547d5394f54124",
+  "guildId": "",
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }

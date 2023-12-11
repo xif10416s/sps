@@ -10,10 +10,11 @@
   "SKIP_QUEST": "dragon",
   "TARGET_FP": 18000,
   "algorithm": "ml",
-  "algorithm_rating": "0.25",
+  "mlUrl": "http://localhost:8880",
+  "algorithm_rating": "0.35",
   "ECR_RECOVER_TO": 90,
-  "RANKED": "M",
+  "RANKED": "W",
   "guildLayer": -1,
-  "guildId": "f40508a6550668f264c979451fd0836ee6949ecd",
+  "guildId": "",
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }

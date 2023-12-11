@@ -8,11 +8,11 @@
   "PREFER_CS": "true",
   "MINUTES_BATTLES_INTERVAL": 1,
   "ECR_RECOVER_TO": 90,
-  "RANKED": "M",
+  "RANKED": "W",
   "algorithm": "ml",
-  "algorithm_rating": "0.15",
+  "algorithm_rating": "0.35",
   "SKIP_QUEST": "dragon",
   "guildLayer": -1,
-  "guildId": "d350abb95ed1183c3570ea3977ef45c016c04c56",
+  "guildId": "a9991079d811fd548762d94c9c0ec9da7006e3c4",
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }

@@ -124,7 +124,7 @@ async function checkEcr(page) {
         '//*[@id="total_energy"]', 3000);
     if (ecr) {
       console.log(chalk.bold.whiteBright.bgMagenta(
-          'Your current Energy Capture Rate is ' + ecr.split('.')[0] + "%"));
+          'Your current ECR is ' + ecr ));
       // ask.logger.log(chalk.bold.whiteBright.bgMagenta('Your current Energy Capture Rate is ' + ecr.split('.')[0] + "%"));
       return parseInt(ecr)
     }
@@ -282,7 +282,7 @@ async function findCreateTeamButton(page, findOpponentDialogStatus = 0,
   const startDate = new Date();
   const createTeamSelecotr = '#enemy_found_ranked > div > div > div.modal-body > div > div:nth-child(2) > button'
   // let startFlag =  await page.waitForXPath('//*[@id="dialog_container"]/div/div/div/div[2]/div[3]/div[2]/button', { timeout: btnCreateTeamTimeout, visible: true })
-  let startFlag = await page.waitForSelector(createTeamSelecotr,
+  let startFlag = await page.waitForXPath(createTeamSelecotr,
       {timeout: btnCreateTeamTimeout, visible: true})
   .then(() => {
     console.log('############6##########start the match Selector:',
@@ -326,20 +326,21 @@ async function launchBattle(page) {
   let retriesNum = 1;
   let btnCreateTeamTimeout = 50000 * 2;
   // 1  pre battle:  check is already start a battle and search enemy
-  let findOpponentDialogStatus = await findSeekingEnemyModal(page);
+  // let findOpponentDialogStatus = await findSeekingEnemyModal(page);
   // 1.1  pre battle: create team
+  let findOpponentDialogStatus=0
   console.log('####for pre start battles start .................findCreateTeamButton')
   let isStartBattleSuccess = await findCreateTeamButton(page,
       findOpponentDialogStatus);
 
-  console.log('###1####new battle start ..........................')
+  console.log('###1####new battle start ..........................'+findOpponentDialogStatus)
   while (!isStartBattleSuccess && retriesNum <= maxRetries) {
     console.log(`Launch battle iter-[${retriesNum}]`)
     if (findOpponentDialogStatus === 0) {
       console.log('waiting for battle button')
       // 2  wait BATTLE btn and click start battle , new battle
       isStartBattleSuccess = await page.waitForXPath(
-          "//*[@id='battle_category_btn']", {timeout: 30000,visible: true})
+          "//*[@id='battle_category_btn']/span", {timeout: 30000,visible: true})
       .then(button => {
         button.click();
         console.log('#########2#########Battle button clicked');
@@ -357,7 +358,7 @@ async function launchBattle(page) {
         continue
       }
       // 3  search enemy dialog modal
-      findOpponentDialogStatus = await findSeekingEnemyModal(page);
+      // findOpponentDialogStatus = await findSeekingEnemyModal(page);
     }
 
     console.log("findOpponentDialogStatus : ", findOpponentDialogStatus)
@@ -657,7 +658,7 @@ async function clickCreateTeamButton(page) {
 }
 
 async function clickCards(page, teamToPlay, matchDetails, retriesNum) {
-  const maxRetries = 6;
+  const maxRetries = 3;
   // let retriesNum = 1;
   let allCardsClicked = false;
 
@@ -765,7 +766,7 @@ async function startBotPlayMatch(page, browser) {
     await uplevelLeage(page)
 
     const rating = await checkRating(page);
-    const power = await checkPower(page);
+    // const power = await checkPower(page);
     const ecr = await checkEcr(page);
     const dec = await checkDec(page)
     const league = await checkLeague(page)
@@ -775,7 +776,7 @@ async function startBotPlayMatch(page, browser) {
     //     : preDeltaDec;
     // preOwnDec = dec;
     // preDeltaDec = deltaDec;
-    const deltaPower = checkPowerUpgrade(rating,power,RANKED);
+    // const deltaPower = checkPowerUpgrade(rating,power,RANKED);
 
     // if (ecr === undefined) throw new Error('Fail to get ECR.')
     console.log('getting user quest info from splinterlands API...')
@@ -828,7 +829,7 @@ async function startBotPlayMatch(page, browser) {
     // do sleep
     // await doGuildBrawl(page)
     await  doSleepWait(page,checkRatingAndPower,isLowEcr,isOverECR
-        ,nextQuestTime,RANKED,quest,ecr,seasonRewardCnt,power,deltaPower,dec,league,rating)
+        ,nextQuestTime,RANKED,quest,ecr,seasonRewardCnt,1000,1000,dec,league,rating)
 
     console.log('getting user cards collection from splinterlands API...')
 
@@ -846,7 +847,7 @@ async function startBotPlayMatch(page, browser) {
 
     // #666#  开始配置 GET MANA, RULES, SPLINTERS, AND POSSIBLE TEAM
     console.time("battle")
-    await page.waitForTimeout(15000);
+    await page.waitForTimeout(30000);
     let [mana, rules, splinters, enemyRecent] = await Promise.all([
       splinterlandsPage.checkMatchMana(page).then((mana) => mana).catch(
           () => 'no mana'),
@@ -858,9 +859,27 @@ async function startBotPlayMatch(page, browser) {
           (enemyRecent) => enemyRecent).catch(() => 'no enemyRecent')
     ]);
 
-    if (mana == "no mana") {
-      console.log("excepiton no mana , do again")
-      await page.waitForTimeout(10000);
+
+    let isNoParse= mana == "no mana" || rules == null || rules == "" || splinters == null || splinters == "" || splinters.length == 0
+    if (isNoParse) {
+      console.log("excepiton no mana , do again  1111")
+      await page.waitForTimeout(20000);
+      [mana, rules, splinters, enemyRecent] = await Promise.all([
+        splinterlandsPage.checkMatchMana(page).then((mana) => mana).catch(
+            () => 'no mana'),
+        splinterlandsPage.checkMatchRules(page).then(
+            (rulesArray) => rulesArray).catch(() => 'no rules'),
+        splinterlandsPage.checkMatchActiveSplinters(page).then(
+            (splinters) => splinters).catch(() => 'no splinters'),
+        splinterlandsPage.checkMatchEnemy(page).then(
+            (enemyRecent) => enemyRecent).catch(() => 'no enemyRecent')
+      ]);
+    }
+
+    // await page.reload();
+    if (isNoParse) {
+      console.log("excepiton no mana , do again  2222")
+      await page.waitForTimeout(20000);
       [mana, rules, splinters, enemyRecent] = await Promise.all([
         splinterlandsPage.checkMatchMana(page).then((mana) => mana).catch(
             () => 'no mana'),
@@ -877,6 +896,16 @@ async function startBotPlayMatch(page, browser) {
       console.log("still no mana , do return")
       errorCnt++;
       throw new Error('still no mana , do return');
+    }
+
+    console.log("splinters:",splinters)
+    console.log("rules:",rules)
+    if(rules == null || rules == "" ){
+      rules = "Standard"
+    }
+
+    if(splinters == null || splinters == "" || splinters.length == 0 ){
+      splinters = [ 'fire', 'earth', 'water' ]
     }
 
     const matchDetails = {
@@ -1102,7 +1131,7 @@ async function startBotPlayMatch(page, browser) {
       qt: quest?.total,
       qc: quest?.completed,
       rating: rating,
-      power: power + "(" + deltaPower + ")",
+      // power: power + "(" + deltaPower + ")",
       sps: dec, //totalDec.toFixed(2),
       league: league,
       NC: cardNoClickCnt
@@ -1126,6 +1155,7 @@ async function startBotPlayMatch(page, browser) {
     await csvWriter.writeRecords([matchDetails['logContent']]).then(
         () => console.log('The CSV file was written successfully'));
 
+    await doGuildBrawl(page)
   } catch (e) {
     console.log(
         'Error handling browser not opened, internet connection issues, or battle cannot start:',
@@ -1145,7 +1175,7 @@ async function doSleepWait(page,checkRatingAndPower,isLowEcr,isOverECR
     ,nextQuestTime,RANKED,quest,ecr,seasonRewardCnt,power,deltaPower,dec,league,rating) {
   // do sleep .....
   let deltaLost = loseTotal - winTotal
-  if (ecr <= 2) {
+  if (ecr <= 2 && ecr >0) {
     // const random = Math.ceil(Math.random() * 1) * 60000
 
     let oneHour = 1 * 1000 * 60* 60
@@ -1174,7 +1204,6 @@ async function doSleepWait(page,checkRatingAndPower,isLowEcr,isOverECR
       qt: quest != null ? quest?.total : "-",
       qc: quest != null ? quest?.completed : "-",
       rating: rating,
-      power: power + "(" + deltaPower + ")",
       sps: dec,
       league: league,
       NC: cardNoClickCnt
@@ -1190,7 +1219,9 @@ async function doSleepWait(page,checkRatingAndPower,isLowEcr,isOverECR
         `Initiating sleep mode. The bot will awaken at ${new Date(
             Date.now() + delayMs ).toLocaleString()}`));
 
-    await sleep(delayMs);
+    // await sleep(delayMs);
+    console.log("---------------exit------------")
+    process.exit(0)
     runStat = true;
     throw new Error(`Restart needed.`);
   }
@@ -1469,30 +1500,42 @@ function isDailyTaskAlmostFinished(quest) {
   return false;
 }
 
+const allUsers =  {"users":["xqm123","xqm1234","hkd123","hkd1234","xifei123","xifei1234","sugelafei2","sugelafei","xgq123","xgq1234"] }
 function doSummaryLog(summaryInfo) {
-  delete require.cache[require.resolve("./data/log/stat.json")]
-  let statJson = require('./data/log/stat')
-  statJson[process.env.ACCOUNT] = summaryInfo
-  fs.writeFile(`./data/log/stat.json`, JSON.stringify(statJson),
+  const tUserJSONPath = "./data/log/"+process.env.ACCOUNT+".json"
+  fs.writeFileSync(tUserJSONPath, JSON.stringify(summaryInfo),
       function (err) {
         if (err) {
-          console.log(err);
+          console.log("doSummaryLog  writeFile.............");
+          // console.log(err);
         }
       });
 
-  let summaryArray = []
-  const totalSum ={"user":"total","WC":0,"LC":0}
-  statJson['users'].forEach(user => {
-    if (statJson[user]) {
-      totalSum['WC'] = statJson[user]['WC'] + totalSum['WC']
-      totalSum['LC'] = statJson[user]['LC'] + totalSum['LC']
-      summaryArray.push(statJson[user])
-    }
-  })
+  try {
+    let summaryArray = []
+    const totalSum ={"user":"total","WC":0,"LC":0}
+    allUsers['users'].forEach(user => {
+      const path = "./data/log/"+user+".json"
+      try {
+        let userJSON = fs.readFileSync(path,'utf8')
+        userJSON = JSON.parse(userJSON)
+        totalSum['WC'] = userJSON['WC'] + totalSum['WC']
+        totalSum['LC'] = userJSON['LC'] + totalSum['LC']
+        summaryArray.push(userJSON)
+      } catch (e){
+        console.log("doSummaryLog  error............."+user);
+        // console.log(e);
+      }
+    })
 
-  totalSum['WR'] = (totalSum['WC']/(totalSum['WC'] + totalSum['LC'])).toFixed(2)
-  summaryArray.push(totalSum)
-  summaryLogger.table(summaryArray)
+    totalSum['WR'] = (totalSum['WC']/(totalSum['WC'] + totalSum['LC'])).toFixed(2)
+    summaryArray.push(totalSum)
+    summaryLogger.table(summaryArray)
+    // console.log(summaryArray)
+  } catch (e){
+    console.log("doSummaryLog  error.............");
+    // console.log(e);
+  }
 }
 
 function doSummaryErrorLog(summaryInfo) {
