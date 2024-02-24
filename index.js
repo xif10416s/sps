@@ -485,24 +485,26 @@ async function clickMembersCard(page, teamToPlay) {
   for (i = 1; i <= 6; i++) {
     console.log('play: ', teamToPlay.cards[i].toString());
     if (teamToPlay.cards[i]) {
-      clicked = await clickWithCheck(page, teamToPlay, i)
-      if (!clicked) {
-        console.log('break play: ', teamToPlay.cards[i].toString());
-      }
+      await clickWithCheck(page, teamToPlay, i)
     } else {
       console.log('nocard ', i);
     }
 
   }
-  return clicked
+  return true
 }
 
 async function clickWithCheck(page, teamToPlay, i) {
-  await  doCardSelect(page,teamToPlay,i)
-  if(! await checkCardSelected(page,teamToPlay,i)){
-    console.log("2  doCardSelect again.....",teamToPlay.cards[i])
-    await  doCardSelectAgain(page,teamToPlay,i)
+  try {
+    await  doCardSelect(page,teamToPlay,i)
+    if(! await checkCardSelected(page,teamToPlay,i)){
+      console.log("2  doCardSelect again.....",teamToPlay.cards[i])
+      await  doCardSelectAgain(page,teamToPlay,i)
+    }
+  } catch (e) {
+    console.log("clickWithCheck  error ..")
   }
+
 
   await page.waitForTimeout(1000);
 
@@ -523,7 +525,7 @@ async function checkCardSelected(page,teamToPlay,i) {
   let  selected = true;
   await page.waitForXPath(
       `//div[@card_detail_id="${teamToPlay.cards[i].toString()}"]`,
-      {timeout: 20000})
+      {timeout: 2000})
   .then(card => card.getProperty('className'))
   .then((cn) => cn.jsonValue())
   .then(className => {
@@ -548,7 +550,7 @@ async function doCardSelect(page,teamToPlay,i) {
   console.log("1  clickWithCheck ......xpath  contains")
   clicked = await page.waitForXPath(
       `//*[contains(@id, "-${teamToPlay.cards[i].toString()}-")]/img`,
-      {timeout: 20000, visible: true})
+      {timeout: 10000, visible: true})
   .then(card => {
     card.focus();
     page.waitForTimeout(500)
@@ -561,14 +563,14 @@ async function doCardSelect(page,teamToPlay,i) {
       clicked = false;
       console.log(chalk.bold.redBright(teamToPlay.cards[i],
           'xpath  contains not clicked',e));
-      return false;
+      return true;
     });
   })
   .catch((e) => {
     clicked = false;
     console.log(chalk.bold.redBright(teamToPlay.cards[i],
         'xpath  contains not clicked',e));
-    return false;
+    return true;
   });
 
   page.waitForTimeout(1000)
@@ -1890,183 +1892,183 @@ async function doGuildBrawl(page){
     console.log("4.0  enterTeam type isGold ,", isGold, " isChaosOnly :" , isChaosOnly)
 
    // 2 .检查比赛
-    const teamResult = await page.$$eval("#brawl_my_battles_list",
-        (div,account) => {
-          for (let i = 0; i < div.length; i++) {
-            const u = div[i];
-            const entryButton = u.getElementsByClassName("new-button")
-            if(entryButton && entryButton.length>=1) {
-              entryButton[0].click()
-              return "enterTeam"
-            }
-          }
-          return "teamFinished"
-        },process.env.ACCOUNT.trim().toLowerCase())
+   //  const teamResult = await page.$$eval("#brawl_my_battles_list",
+   //      (div,account) => {
+   //        for (let i = 0; i < div.length; i++) {
+   //          const u = div[i];
+   //          const entryButton = u.getElementsByClassName("new-button")
+   //          if(entryButton && entryButton.length>=1) {
+   //            entryButton[0].click()
+   //            return "enterTeam"
+   //          }
+   //        }
+   //        return "teamFinished"
+   //      },process.env.ACCOUNT.trim().toLowerCase())
 
 
 
-    console.log("4  enterTeam: ",teamResult)
-    if("enterTeam" == teamResult) {
-      await page.waitForTimeout(10000)
-      // 检查类型
-      console.log("4.1  enterTeam: visable")
-      let [myCards ,idMap] = await user.getPlayerCardsOnlyOwnerV2(account.toLowerCase(),isGold)
-
-      if(myCards.length == 0) {
-          [myCards ,idMap] = await user.getPlayerCardsOnlyOwnerV2(account.toLowerCase(),isGold)
-      }
-
-
-      myCards = Array.from(new Set(myCards))
-
-      if(isChaosOnly){
-        console.log("4.1  enterTeam isChaosOnly ,",myCards.length)
-        myCards = cardsDetail.doChaosFilter(myCards)
-        console.log("4.1  enterTeam isChaosOnly doChaosFilter ,",myCards.length)
-      }
-
-      console.log("4.2   enterTeam: getPlayerCardsOnlyOwner : myCards : ", myCards.length)
-
-      // // TEST
-      // try {
-      //   const element = await page.waitForSelector("#brawl_enemy_found_page_body", {timeout: 15000 });
-      //   const text = await element.evaluate(el => el.outerHTML);
-      //   console.log(text)
-      // } catch (e) {
-      //   const rs = await page.evaluate(() => {
-      //     let items = document.querySelector("#brawl_enemy_found_page_body");
-      //     return items.outerHTML;
-      //   })
-      //   console.log(rs)
-      // }
-      // // TEST
-
-      let [mana, rules, splinters] = await Promise.all([
-        splinterlandsPage.checkMatchManaBrawl(page).then((mana) => mana).catch(
-            () => 17),
-        splinterlandsPage.checkMatchRulesBrawl(page).then(
-            (rulesArray) => rulesArray).catch(() => 'Standard'),
-        splinterlandsPage.checkMatchActiveSplintersBrawl(page).then(
-            (splinters) => splinters).catch(() => [ 'fire', 'water', 'earth', 'life', 'death', 'dragon' ])
-      ]);
-      if(rules == null || rules == "" ){
-        rules = "Standard"
-      }
-
-      if(splinters == null || splinters ==[] || splinters =="") {
-        splinters = [ 'fire', 'water', 'earth', 'life', 'death', 'dragon' ]
-      }
-
-      console.log("4.3   mana:", mana , " rules: ",rules,"  splinters: ",splinters  )
-
-      const matchDetails = {
-        orgMana: mana,
-        mana: mana,
-        rules: rules,
-        splinters: splinters,
-        myCards: myCards,
-        enemyRecent: [],
-        enemyPossbileTeams:[],
-        rating: 1500,
-        ranked: 3500,
-        quest:"earth",
-        idMap:idMap,
-        logContent: {
-          account: account,
-          isWin: '',
-          mana: mana,
-          rules: rules,
-          splinters: splinters.join("|"),
-          type: 'M'
-        }
-      }
-      await page.waitForTimeout(2000 * 2);
-
-
-      let possibleTeams = await ask.possibleTeams(matchDetails, account).catch(
-          e => console.log('Error from possible team API call: ', e));
-      console.log("possibleTeams .....:",possibleTeams.length)
-      if (possibleTeams && possibleTeams.length) {
-        console.log('1 Possible Teams based on your cards: ',
-            possibleTeams.length);
-      } else {
-        throw new Error('NO TEAMS available to be played');
-      }
-
-      //TEAM SELECTION
-      const result = await ask.teamSelectionForWeb(possibleTeams, matchDetails);
-      // const teamToPlay = await ask.teamSelection(possibleTeams, matchDetails,
-      //     quest, page.favouriteDeck);
-
-      let startFightFail = false;
-      const mlTeam1 = result.mostEnemyAgainstTeam
-      const bcTeam2 = result.mostBcTeam
-      const winTeam3 = result.mostWinTeam
-      const summonerMapTeams = result.summoners
-      if (result) {
-        await page.$eval('#create-team-btn', elem => elem.click())
-        .then(() => console.log('create-team-btn clicked'))
-        .catch(async () => {
-          console.log('Create team didnt work, waiting 5 sec and retry');
-          await page.reload();
-          await page.waitForTimeout(5000 * 2);
-          await page.$eval('#create-team-btn', elem => elem.click())
-          .then(() => console.log('###############7################btn--create-team clicked'))
-          .catch(() => {
-            startFightFail = true;
-            errorCnt++;
-            console.log('Create team didnt work. Did the opponent surrender?');
-          });
-        });
-        if (startFightFail) {
-          return
-        }
-      } else {
-        errorCnt++;
-        throw new Error('Team Selection error: no possible team to play');
-      }
-
-      await page.waitForTimeout(5000);
-      // TODO check TEAM
-      // {summoner: res[0], cards: res[1]}
-      let teamToPlay = mlTeam1 == null ? bcTeam2 : mlTeam1
-      teamToPlay = teamToPlay == null ?  winTeam3 : teamToPlay
-      //
-      const enableSummonerArray = await page.$$eval("#page_container > div > div > div.deck-builder-page2__cards > div",
-          (div) => {
-            let enableList= []
-            for (let i = 0; i < div.length; i++) {
-              const u = div[i];
-              const cardId = u.getAttribute("card_detail_id")
-
-              enableList.push(cardId)
-            }
-            return enableList
-          })
-
-      console.log("enableSummonerArray .....:",enableSummonerArray.length)
-      if(enableSummonerArray.indexOf(teamToPlay[0]) == -1) {
-        console.log("enableSummonerArray .....teamToPlay not exist:",teamToPlay[0])
-        for (let i = 0; i < enableSummonerArray.length; i++) {
-          if(summonerMapTeams[enableSummonerArray[i]] != null) {
-            teamToPlay = summonerMapTeams[enableSummonerArray[i]];
-            break;
-          }
-        }
-      }
-      const teamToPlayClick = {summoner: teamToPlay[0], cards: teamToPlay}
-      console.log("teamToPlayClick .....:",teamToPlayClick)
-      // Click cards based on teamToPlay value.
-      if (!await clickCards(page, teamToPlayClick, matchDetails, 1)) {
-        errorCnt++;
-        return
-      }
-
-      if (await doGreenBtnStart(page)) {
-        errorCnt++;
-        return;
-      }
-    }
+    // console.log("4  enterTeam: ",teamResult)
+    // if("enterTeam" == teamResult) {
+    //   await page.waitForTimeout(10000)
+    //   // 检查类型
+    //   console.log("4.1  enterTeam: visable")
+    //   let [myCards ,idMap] = await user.getPlayerCardsOnlyOwnerV2(account.toLowerCase(),isGold)
+    //
+    //   if(myCards.length == 0) {
+    //       [myCards ,idMap] = await user.getPlayerCardsOnlyOwnerV2(account.toLowerCase(),isGold)
+    //   }
+    //
+    //
+    //   myCards = Array.from(new Set(myCards))
+    //
+    //   if(isChaosOnly){
+    //     console.log("4.1  enterTeam isChaosOnly ,",myCards.length)
+    //     myCards = cardsDetail.doChaosFilter(myCards)
+    //     console.log("4.1  enterTeam isChaosOnly doChaosFilter ,",myCards.length)
+    //   }
+    //
+    //   console.log("4.2   enterTeam: getPlayerCardsOnlyOwner : myCards : ", myCards.length)
+    //
+    //   // // TEST
+    //   // try {
+    //   //   const element = await page.waitForSelector("#brawl_enemy_found_page_body", {timeout: 15000 });
+    //   //   const text = await element.evaluate(el => el.outerHTML);
+    //   //   console.log(text)
+    //   // } catch (e) {
+    //   //   const rs = await page.evaluate(() => {
+    //   //     let items = document.querySelector("#brawl_enemy_found_page_body");
+    //   //     return items.outerHTML;
+    //   //   })
+    //   //   console.log(rs)
+    //   // }
+    //   // // TEST
+    //
+    //   let [mana, rules, splinters] = await Promise.all([
+    //     splinterlandsPage.checkMatchManaBrawl(page).then((mana) => mana).catch(
+    //         () => 17),
+    //     splinterlandsPage.checkMatchRulesBrawl(page).then(
+    //         (rulesArray) => rulesArray).catch(() => 'Standard'),
+    //     splinterlandsPage.checkMatchActiveSplintersBrawl(page).then(
+    //         (splinters) => splinters).catch(() => [ 'fire', 'water', 'earth', 'life', 'death', 'dragon' ])
+    //   ]);
+    //   if(rules == null || rules == "" ){
+    //     rules = "Standard"
+    //   }
+    //
+    //   if(splinters == null || splinters ==[] || splinters =="") {
+    //     splinters = [ 'fire', 'water', 'earth', 'life', 'death', 'dragon' ]
+    //   }
+    //
+    //   console.log("4.3   mana:", mana , " rules: ",rules,"  splinters: ",splinters  )
+    //
+    //   const matchDetails = {
+    //     orgMana: mana,
+    //     mana: mana,
+    //     rules: rules,
+    //     splinters: splinters,
+    //     myCards: myCards,
+    //     enemyRecent: [],
+    //     enemyPossbileTeams:[],
+    //     rating: 1500,
+    //     ranked: 3500,
+    //     quest:"earth",
+    //     idMap:idMap,
+    //     logContent: {
+    //       account: account,
+    //       isWin: '',
+    //       mana: mana,
+    //       rules: rules,
+    //       splinters: splinters.join("|"),
+    //       type: 'M'
+    //     }
+    //   }
+    //   await page.waitForTimeout(2000 * 2);
+    //
+    //
+    //   let possibleTeams = await ask.possibleTeams(matchDetails, account).catch(
+    //       e => console.log('Error from possible team API call: ', e));
+    //   console.log("possibleTeams .....:",possibleTeams.length)
+    //   if (possibleTeams && possibleTeams.length) {
+    //     console.log('1 Possible Teams based on your cards: ',
+    //         possibleTeams.length);
+    //   } else {
+    //     throw new Error('NO TEAMS available to be played');
+    //   }
+    //
+    //   //TEAM SELECTION
+    //   const result = await ask.teamSelection(possibleTeams, matchDetails);
+    //   // const teamToPlay = await ask.teamSelection(possibleTeams, matchDetails,
+    //   //     quest, page.favouriteDeck);
+    //
+    //   let startFightFail = false;
+    //   const mlTeam1 = result.mostEnemyAgainstTeam
+    //   const bcTeam2 = result.mostBcTeam
+    //   const winTeam3 = result.mostWinTeam
+    //   const summonerMapTeams = result.summoners
+    //   if (result) {
+    //     await page.$eval('#create-team-btn', elem => elem.click())
+    //     .then(() => console.log('create-team-btn clicked'))
+    //     .catch(async () => {
+    //       console.log('Create team didnt work, waiting 5 sec and retry');
+    //       await page.reload();
+    //       await page.waitForTimeout(5000 * 2);
+    //       await page.$eval('#create-team-btn', elem => elem.click())
+    //       .then(() => console.log('###############7################btn--create-team clicked'))
+    //       .catch(() => {
+    //         startFightFail = true;
+    //         errorCnt++;
+    //         console.log('Create team didnt work. Did the opponent surrender?');
+    //       });
+    //     });
+    //     if (startFightFail) {
+    //       return
+    //     }
+    //   } else {
+    //     errorCnt++;
+    //     throw new Error('Team Selection error: no possible team to play');
+    //   }
+    //
+    //   await page.waitForTimeout(5000);
+    //   // TODO check TEAM
+    //   // {summoner: res[0], cards: res[1]}
+    //   let teamToPlay = mlTeam1 == null ? bcTeam2 : mlTeam1
+    //   teamToPlay = teamToPlay == null ?  winTeam3 : teamToPlay
+    //   //
+    //   const enableSummonerArray = await page.$$eval("#page_container > div > div > div.deck-builder-page2__cards > div",
+    //       (div) => {
+    //         let enableList= []
+    //         for (let i = 0; i < div.length; i++) {
+    //           const u = div[i];
+    //           const cardId = u.getAttribute("card_detail_id")
+    //
+    //           enableList.push(cardId)
+    //         }
+    //         return enableList
+    //       })
+    //
+    //   console.log("enableSummonerArray .....:",enableSummonerArray.length)
+    //   if(enableSummonerArray.indexOf(teamToPlay[0]) == -1) {
+    //     console.log("enableSummonerArray .....teamToPlay not exist:",teamToPlay[0])
+    //     for (let i = 0; i < enableSummonerArray.length; i++) {
+    //       if(summonerMapTeams[enableSummonerArray[i]] != null) {
+    //         teamToPlay = summonerMapTeams[enableSummonerArray[i]];
+    //         break;
+    //       }
+    //     }
+    //   }
+    //   const teamToPlayClick = {summoner: teamToPlay[0], cards: teamToPlay}
+    //   console.log("teamToPlayClick .....:",teamToPlayClick)
+    //   // Click cards based on teamToPlay value.
+    //   if (!await clickCards(page, teamToPlayClick, matchDetails, 1)) {
+    //     errorCnt++;
+    //     return
+    //   }
+    //
+    //   if (await doGreenBtnStart(page)) {
+    //     errorCnt++;
+    //     return;
+    //   }
+    // }
     console.log("9、guild brawl leave..........:",result)
   } catch (e) {
     console.log("99、doGuildBrawl exception ..........",e)

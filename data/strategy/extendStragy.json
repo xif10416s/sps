@@ -1,6 +1,6 @@
 [
   {"name" : "Corpse Fiend",
-    "skipRules": ["Odd Ones Out","Going the Distance","Lost Legendaries","Rise of the Commons","Wands Out"],
+    "skipRules": ["Odd Ones Out","Going the Distance","Lost Legendaries","Rise of the Commons","Wands Out","Tis but Scratches"],
     "monsterMaxSize": 5,
     "position": [1],
     "positionStrategy": 1 ,
@@ -10,7 +10,7 @@
     "order" : 10
   },
   {"name" : "Fungus Fiend",
-    "skipRules": ["Odd Ones Out","Going the Distance","Lost Legendaries","Rise of the Commons","Wands Out"],
+    "skipRules": ["Odd Ones Out","Going the Distance","Lost Legendaries","Rise of the Commons","Wands Out","Tis but Scratches"],
     "monsterMaxSize": 5,
     "position": [1],
     "positionStrategy": 1 ,
@@ -20,7 +20,7 @@
     "order" : 10
   },
   {"name" : "Torrent Fiend",
-    "skipRules": ["Odd Ones Out","Going the Distance","Lost Legendaries","Rise of the Commons","Wands Out"],
+    "skipRules": ["Odd Ones Out","Going the Distance","Lost Legendaries","Rise of the Commons","Wands Out","Tis but Scratches"],
     "monsterMaxSize": 5,
     "position": [1],
     "positionStrategy": 1 ,
@@ -30,7 +30,7 @@
     "order" : 10
   },
   {"name" : "Scorch Fiend",
-    "skipRules": ["Odd Ones Out","Going the Distance","Lost Legendaries","Rise of the Commons","Wands Out"],
+    "skipRules": ["Odd Ones Out","Going the Distance","Lost Legendaries","Rise of the Commons","Wands Out","Tis but Scratches"],
     "monsterMaxSize": 5,
     "position": [1],
     "positionStrategy": 1 ,
@@ -40,7 +40,7 @@
     "order" : 10
   },
   {"name" : "Soul Fiend",
-    "skipRules": ["Odd Ones Out","Going the Distance","Lost Legendaries","Rise of the Commons","Wands Out"],
+    "skipRules": ["Odd Ones Out","Going the Distance","Lost Legendaries","Rise of the Commons","Wands Out","Tis but Scratches"],
     "monsterMaxSize": 5,
     "position": [1],
     "positionStrategy": 1 ,

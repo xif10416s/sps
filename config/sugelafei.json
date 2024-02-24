@@ -9,12 +9,12 @@
   "MINUTES_BATTLES_INTERVAL": 1,
   "ECR_RECOVER_TO": 90,
   "TARGET_FP": 18000,
-  "algorithm": "ml,sm",
+  "algorithm": "ml",
   "mlUrl": "http://localhost:8880",
   "algorithm_rating": "0.35",
   "RANKED": "W",
   "SKIP_QUEST": "dragon",
-  "guildLayer": 8,
-  "guildId": "",
+  "guildLayer": 9,
+  "guildId": "a9991079d811fd548762d94c9c0ec9da7006e3c4",
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }

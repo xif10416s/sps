@@ -73,7 +73,7 @@ http.createServer(async function (request, response) {
       let rule = arg1.rule;
       rule = rule.replace(" and"," &").replace(" and"," &").replace(" and"," &");
       let mana = arg1.mana;
-      let enemy = JSON.parse(arg1.enemy)
+      let enemy = ""
       // console.log("enemy : " , enemy)
       let sp = arg1.sp
       let rateNum = parseInt(arg1.rateNum.replace(",","").replace("(","").replace(")",""))

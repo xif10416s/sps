@@ -17,6 +17,9 @@ async function login(page, account, password) {
         var form = await page.evaluate(() => {
             var innerHTML = document.querySelectorAll('#root')[0].innerHTML;
             return innerHTML;
+        }) .catch((e) =>{
+            //isOldVersion = true;
+            console.log("innerHTML  not visable ......",e )
         });
         console.log('form  ', form);
 
@@ -254,7 +257,7 @@ async function checkMatchActiveSplinters(page) {
 
 
 async function checkMatchManaBrawl(page) {
-    const mana = await getElementText(page,"#brawl_enemy_found_page_body > div > div:nth-child(2) > div.panel > div:nth-child(3) > div.col-xs-5 > div > div > div > div > div > div")
+    const mana = await getElementText(page,"#brawl_enemy_found_page_body > div > div:nth-child(2) > div.panel > div:nth-child(3) > div:nth-child(2) > div > div > div > div > div > div")
     console.log("checkMatchManaBrawl :" , mana.trim())
     const manaValue = parseInt(mana.trim(), 10);
     return manaValue;
@@ -264,7 +267,7 @@ async function checkMatchRulesBrawl(page) {
     //const rules = await page.$$eval("#brawl_enemy_found_page_body > div > div:nth-child(2) > div.panel > div:nth-child(3) > div.col-xs-4 > div > div > img", el => el.map(x => x.getAttribute("data-original-title")));
     const rules = await page.evaluate(() => {
         let results = [];
-        let items = document.querySelectorAll("#brawl_enemy_found_page_body > div > div:nth-child(2) > div.panel > div:nth-child(3) > div.col-xs-4 > div > div > img");
+        let items = document.querySelectorAll("#brawl_enemy_found_page_body > div > div:nth-child(2) > div.panel > div:nth-child(3) > div:nth-child(1) > div > div > img");
         items.forEach((item) => {
             results.push(item.getAttribute('data-original-title'));
         });
@@ -280,7 +283,7 @@ async function checkMatchActiveSplintersBrawl(page) {
     // console.log("checkMatchActiveSplintersBrawl :" , splinters.length)
     const splinters = await page.evaluate(() => {
         let results = [];
-        let items = document.querySelectorAll("#brawl_enemy_found_page_body > div > div > div.panel > div > div.col-xs-3 > div > div > img");
+        let items = document.querySelectorAll("#brawl_enemy_found_page_body > div > div:nth-child(2) > div.panel > div:nth-child(3) > div:nth-child(3) > div > div > img");
         items.forEach((item) => {
             results.push(item.getAttribute('data-original-title'));
         });

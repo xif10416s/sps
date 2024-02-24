@@ -24,7 +24,7 @@ let processedSet = new Set(processedList);
 
 const dbUtil = require('./db/script/dbUtils');
 const HttpsProxyAgent = require('https-proxy-agent');
-const proxyAgent = new HttpsProxyAgent('http://192.168.99.1:1081');
+const proxyAgent = new HttpsProxyAgent('http://192.168.1.88:1081');
 
 let date = new Date();
 let dateStr = date.toISOString();
@@ -47,13 +47,13 @@ remainUsers = remainUsersModern;
 remainFile = remainFileModern;
 
 console.log("date ----:", dateStr , intUsers.length)
-
+const token="JWDGLYV1MO"
 async function getBattleHistoryRaw(player = '', format, data = {}) {
   try {
     const battleHistory = await fetch(
         'https://api2.splinterlands.com/battle/history2?player='
         + player.toLocaleLowerCase() + "&format=" + format
-        + "&v=1657932127908&token=O8WX6PK9KG&username=xgq1234"
+        + "&v=1657932127908&token="+token+"&username=xgq1234"
          // ,{agent: proxyAgent}
         )
     .then((response) => {
@@ -69,6 +69,9 @@ async function getBattleHistoryRaw(player = '', format, data = {}) {
     .catch((error) => {
       console.error('There has been a problem with your fetch operation:',
            error);
+      console.log('https://api2.splinterlands.com/battle/history2?player='
+          + player.toLocaleLowerCase() + "&format=" + format
+          + "&v=1657932127908&token="+token+"&username=xgq1234")
     });
     // console.log("get battles -----",player, battleHistory.battles.length)
     return battleHistory.battles;

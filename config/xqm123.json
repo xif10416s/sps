@@ -13,7 +13,7 @@
   "algorithm": "ml",
   "algorithm_rating": "0.35",
   "mlUrl": "http://localhost:8880",
-  "guildLayer": -1,
-  "guildId": "",
+  "guildLayer": 7,
+  "guildId": "a9991079d811fd548762d94c9c0ec9da7006e3c4",
   "CLAIM_DAILY_QUEST_REWARD": "true"
 }
